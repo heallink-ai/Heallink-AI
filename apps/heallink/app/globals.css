@@ -1,0 +1,311 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+
+/* Configure theme variables */
+@theme {
+  /* Colors */
+  --color-biloba-flower: #bda8e5;
+  --color-purple-heart: #5a2dcf;
+  --color-purple-heart-600: #7730ca;
+  --color-royal-blue: #2066e4;
+  --color-royal-blue-500: #2c5cde;
+  --color-royal-blue-600: #3253dc;
+  --color-royal-blue-700: #3c4cdb;
+  --color-royal-blue-800: #4144dc;
+  --color-portage: #9aa5ec;
+  --color-havelock-blue: #6578e4;
+
+  /* Font family */
+  --font-sans: "Mona Sans", MonaSansFallback, -apple-system, system-ui,
+    "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+
+  /* Theme colors */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 10%;
+  --primary: 262 73% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 79% 58%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 5% 90%;
+  --muted-foreground: 240 4% 30%;
+  --accent: 262 73% 84%;
+  --accent-foreground: 240 75% 10%;
+  --border: 240 5% 84%;
+  --input: 240 5% 90%;
+  --ring: 262 73% 50%;
+
+  /* Dark mode colors */
+  --dark-background: 0 0% 7%;
+  --dark-foreground: 0 0% 98%;
+  --dark-card: 0 0% 10%;
+  --dark-card-foreground: 0 0% 98%;
+  --dark-primary: 262 73% 50%;
+  --dark-primary-foreground: 0 0% 100%;
+  --dark-secondary: 240 79% 58%;
+  --dark-secondary-foreground: 0 0% 100%;
+  --dark-muted: 240 5% 20%;
+  --dark-muted-foreground: 240 5% 65%;
+  --dark-accent: 262 73% 30%;
+  --dark-accent-foreground: 0 0% 100%;
+  --dark-border: 240 5% 26%;
+  --dark-input: 240 5% 20%;
+  --dark-ring: 262 73% 50%;
+}
+
+/* Default root variables - Light theme with improved contrast */
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 10%);
+  --card: hsl(0 0% 98%);
+  --card-foreground: hsl(0 0% 10%);
+  --primary: hsl(262 73% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 79% 58%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 5% 90%);
+  --muted-foreground: hsl(240 4% 30%);
+  --accent: hsl(262 73% 84%);
+  --accent-foreground: hsl(240 75% 10%);
+  --border: hsl(240 5% 84%);
+  --input: hsl(240 5% 90%);
+  --ring: hsl(262 73% 50%);
+
+  /* Nav colors - improved contrast for light mode */
+  --nav-text: hsl(225 14% 25%); /* Darker text for better contrast */
+  --nav-text-hover: hsl(262 73% 50%); /* Purple accent on hover */
+  --button-outline-text: hsl(
+    262 73% 45%
+  ); /* Darker purple for outline buttons */
+
+  /* Added for better contrast in light mode */
+  --header-btn-text-light: hsl(
+    262 73% 45%
+  ); /* Dark purple for header buttons in light mode */
+  --header-btn-bg-light: hsl(
+    0 0% 100%
+  ); /* White background for header buttons in light mode */
+  --hero-text-light: hsl(
+    225 14% 25%
+  ); /* Much darker text for hero paragraph in light mode */
+  --app-store-btn-text-light: hsl(
+    0 0% 100%
+  ); /* White text for app store buttons */
+  --app-store-btn-bg-light: hsl(
+    262 73% 45%
+  ); /* Dark purple background for app store buttons */
+}
+
+/* Dark mode class selector - applied by default */
+.dark {
+  --background: hsl(0 0% 7%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 10%);
+  --card-foreground: hsl(0 0% 98%);
+  --primary: hsl(262 73% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 79% 58%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 5% 20%);
+  --muted-foreground: hsl(240 5% 65%);
+  --accent: hsl(262 73% 30%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(240 5% 26%);
+  --input: hsl(240 5% 20%);
+  --ring: hsl(262 73% 50%);
+
+  /* Nav colors - maintained for dark mode */
+  --nav-text: hsl(0 0% 85%);
+  --nav-text-hover: hsl(0 0% 100%);
+  --button-outline-text: hsl(0 0% 100%);
+
+  /* Match added variables for dark mode */
+  --header-btn-text-light: hsl(0 0% 100%);
+  --header-btn-bg-light: transparent;
+  --hero-text-light: hsl(0 0% 85%);
+  --app-store-btn-text-light: hsl(0 0% 100%);
+  --app-store-btn-bg-light: transparent;
+}
+
+/* Light mode class selector with improved contrast */
+.light {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 10%);
+  --card: hsl(0 0% 98%);
+  --card-foreground: hsl(0 0% 10%);
+  --primary: hsl(262 73% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 79% 58%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 5% 90%);
+  --muted-foreground: hsl(240 4% 30%);
+  --accent: hsl(262 73% 84%);
+  --accent-foreground: hsl(240 75% 10%);
+  --border: hsl(240 5% 84%);
+  --input: hsl(240 5% 90%);
+  --ring: hsl(262 73% 50%);
+
+  /* Nav colors - improved contrast for light mode */
+  --nav-text: hsl(225 14% 25%); /* Darker text for better contrast */
+  --nav-text-hover: hsl(262 73% 50%); /* Purple accent on hover */
+  --button-outline-text: hsl(
+    262 73% 45%
+  ); /* Darker purple for outline buttons */
+
+  /* Better contrast in light mode for specific components */
+  --header-btn-text-light: hsl(
+    262 73% 45%
+  ); /* Dark purple for header buttons in light mode */
+  --header-btn-bg-light: hsl(
+    0 0% 100%
+  ); /* White background for header buttons in light mode */
+  --hero-text-light: hsl(
+    225 14% 25%
+  ); /* Much darker text for hero paragraph in light mode */
+  --app-store-btn-text-light: hsl(
+    0 0% 100%
+  ); /* White text for app store buttons */
+  --app-store-btn-bg-light: hsl(
+    262 73% 45%
+  ); /* Dark purple background for app store buttons */
+}
+
+/* Custom utilities */
+@layer utilities {
+  /* Neumorphic design classes */
+  .neumorph-flat {
+    @reference dark:shadow-[6px_6px_12px_#101010,_-6px_-6px_12px_#303030] shadow-[6px_6px_12px_#cacaca,_-6px_-6px_12px_#ffffff] bg-transparent;
+  }
+
+  .neumorph-pressed {
+    @reference dark:shadow-[inset_6px_6px_12px_#101010,_inset_-6px_-6px_12px_#303030] shadow-[inset_6px_6px_12px_#cacaca,_inset_-6px_-6px_12px_#ffffff] bg-transparent;
+  }
+
+  /* Gradient text utility */
+  .gradient-text {
+    @reference bg-clip-text text-transparent bg-gradient-to-r from-purple-heart to-royal-blue;
+  }
+
+  /* Improved light mode text classes for better contrast */
+  .light-nav-link {
+    @reference text-[color:var(--nav-text)] hover:text-[color:var(--nav-text-hover)];
+  }
+
+  /* We need darker text on light backgrounds for sufficient contrast */
+  .light-text-contrast {
+    @reference dark:text-gray-300 text-gray-700;
+  }
+
+  /* For muted text that still needs to be readable */
+  .light-text-muted {
+    @reference dark:text-gray-400 text-gray-600;
+  }
+
+  /* For hero text with better contrast in light mode */
+  .hero-paragraph {
+    @reference dark:text-gray-300 text-[color:var(--hero-text-light)] text-lg md:text-xl;
+  }
+
+  /* Improved app store buttons */
+  .app-store-button {
+    @reference flex items-center gap-2 rounded-xl px-6 py-3 transition-all duration-200;
+    @reference dark:bg-transparent light:bg-[color:var(--app-store-btn-bg-light)];
+    @reference text-[color:var(--app-store-btn-text-light)];
+  }
+
+  /* For text that needs even higher contrast */
+  .high-contrast-text {
+    @reference dark:text-white text-gray-900;
+  }
+
+  /* For section titles in light mode */
+  .section-title {
+    @reference text-3xl md:text-4xl font-bold mb-6 dark:text-white text-gray-900;
+  }
+
+  /* For section descriptions in light mode */
+  .section-description {
+    @reference text-lg dark:text-gray-300 text-gray-700 mb-8;
+  }
+
+  /* Special header button styles for better visibility before scroll */
+  .header-phone-button {
+    @reference dark:text-white text-[color:var(--header-btn-text-light)];
+    @reference dark:border-white light:border-[color:var(--header-btn-text-light)];
+    @reference dark:bg-transparent light:bg-[color:var(--header-btn-bg-light)];
+  }
+}
+
+/* Custom animations */
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.floating {
+  animation: floating 6s ease-in-out infinite;
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @reference border-border;
+  }
+
+  html {
+    @reference dark; /* Ensure dark mode by default */
+  }
+
+  body {
+    @reference bg-background text-foreground font-sans min-h-screen;
+    font-feature-settings: "ss01", "ss02", "ss03", "ss04";
+  }
+
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @reference bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @reference bg-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @reference bg-purple-heart/50;
+  }
+
+  /* Section styling with better contrast */
+  section {
+    @reference py-20;
+  }
+
+  h2 {
+    @reference dark:text-white text-gray-900;
+  }
+
+  h3 {
+    @reference dark:text-white text-gray-800;
+  }
+}
+
+/* Import Mona Sans font */
+@font-face {
+  font-family: "Mona Sans";
+  src: url("/fonts/MonaSans.woff2") format("woff2");
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+}
