@@ -1,5 +1,5 @@
 // src/app/layout.tsx
-import { ThemeProvider } from "@/app/theme/ThemeProvider";
+import Providers from "@/app/providers";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -91,7 +91,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-foreground">
-        <ThemeProvider>{children}</ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

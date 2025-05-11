@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Heallink User Application
+
+The main Heallink application for patients to access healthcare services.
 
 ## Getting Started
 
@@ -10,27 +12,82 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Authentication Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This application uses Auth.js (formerly NextAuth.js) for authentication with multiple providers:
 
-## Learn More
+- Email authentication
+- Phone authentication (OTP)
+- Social authentication (Google, Facebook, Apple)
 
-To learn more about Next.js, take a look at the following resources:
+### Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Copy the `.env.local.example` file to `.env.local`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.local.example .env.local
+```
 
-## Deploy on Vercel
+2. Fill in the environment variables with your credentials:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `NEXTAUTH_SECRET`: A random string used to hash tokens, sign cookies and generate cryptographic keys. You can generate one using `openssl rand -base64 32`
+- `NEXTAUTH_URL`: The canonical URL of your site
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### OAuth Providers Setup
+
+#### Google
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Go to "APIs & Services" > "Credentials"
+4. Click "Create Credentials" > "OAuth client ID"
+5. Set the application type to "Web application"
+6. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google` (and your production URL)
+7. Copy Client ID and Client Secret to your `.env.local` file
+
+#### Facebook
+
+1. Go to [Facebook Developers](https://developers.facebook.com/)
+2. Create a new app
+3. Add the Facebook Login product
+4. Configure the OAuth settings with redirect URI: `http://localhost:3000/api/auth/callback/facebook` (and your production URL)
+5. Copy App ID and App Secret to your `.env.local` file
+
+#### Apple
+
+1. Go to the [Apple Developer Portal](https://developer.apple.com/)
+2. Navigate to "Certificates, IDs & Profiles"
+3. Register a new App ID with "Sign In with Apple" capability
+4. Create a Services ID for web authentication
+5. Configure the domain and return URL (redirect URL): `http://localhost:3000/api/auth/callback/apple` (and your production URL)
+6. Copy Client ID and Client Secret Key to your `.env.local` file
+
+### Email Provider Setup
+
+For email authentication, you'll need an SMTP server or email delivery service. We recommend using [Resend](https://resend.com/) for reliable email delivery.
+
+1. Sign up for a Resend account
+2. Create an API key
+3. Add the API key to your `.env.local` file as `RESEND_API_KEY`
+
+### Phone Authentication
+
+The phone authentication uses a custom credentials provider with OTP verification. In a production environment, you'll need to implement the actual OTP sending and verification logic, potentially using a service like Twilio or Firebase Authentication.
+
+## Authentication Pages
+
+The following authentication pages are included:
+
+- Sign In: `/auth/signin`
+- Sign Out: `/auth/signout`
+- Error: `/auth/error`
+- Verify Request: `/auth/verify-request` (for email verification)
+- New User: `/auth/new-user` (for new user profile completion)
+
+## Protected Routes
+
+Routes that require authentication should be placed inside the `/dashboard` directory. The authentication middleware will automatically redirect unauthenticated users to the sign-in page.

@@ -26,6 +26,8 @@ docker-compose up heallink
 docker-compose up heallink-admin
 docker-compose up heallink-providers
 docker-compose up api
+docker-compose up mongodb
+docker-compose up mongo-express
 ```
 
 The applications will be available at:
@@ -33,6 +35,8 @@ The applications will be available at:
 - Heallink Admin: http://localhost:3001
 - Heallink Providers: http://localhost:3002
 - API: http://localhost:3003
+- MongoDB: mongodb://localhost:27017
+- Mongo Express (MongoDB UI): http://localhost:8081
 
 ### Development Features
 
@@ -40,6 +44,15 @@ The applications will be available at:
 - Volume mounting: The local codebase is mounted inside the containers, so changes are immediately available.
 - Shared package dependencies: The `packages` directory is shared across all services.
 - Isolated node_modules: Each service has its own node_modules volume to avoid conflicts.
+- Persistent MongoDB data: MongoDB data is stored in a named volume for persistence between restarts.
+
+## Database
+
+The MongoDB database is accessible via:
+- From within the Docker network: `mongodb:27017` (use this in your application config)
+- From your host machine: `localhost:27017` (for connecting with tools like MongoDB Compass)
+
+The mongo-express web interface provides a simple UI for managing the database and is available at http://localhost:8081.
 
 ## Production Deployment
 

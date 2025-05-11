@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   heallink:
@@ -80,9 +80,50 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3003
+      - DATABASE_URL=mongodb://mongodb:27018/heallink
+      - JWT_SECRET=dev-jwt-secret-key
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_SECRET=dev-jwt-refresh-secret-key
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:3000,http://localhost:3001,http://localhost:3002
+    depends_on:
+      - mongodb
     networks:
       - heallink-network
     restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    container_name: heallink-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=heallink
+    networks:
+      - heallink-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  mongo-express:
+    image: mongo-express
+    container_name: heallink-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27018
+    depends_on:
+      - mongodb
+    networks:
+      - heallink-network
 
 networks:
   heallink-network:
@@ -93,3 +134,4 @@ volumes:
   heallink-admin-node-modules:
   heallink-providers-node-modules:
   api-node-modules:
+  mongodb-data:
