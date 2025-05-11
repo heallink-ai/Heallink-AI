@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  heallink:
+    build:
+      context: .
+      dockerfile: ./apps/heallink/Dockerfile.dev
+    container_name: heallink
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/heallink:/app/apps/heallink
+      - ./packages:/app/packages
+      - heallink-node-modules:/app/apps/heallink/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - API_URL=http://api:3003
+    depends_on:
+      - api
+    networks:
+      - heallink-network
+    restart: unless-stopped
+
+  heallink-admin:
+    build:
+      context: .
+      dockerfile: ./apps/heallink-admin/Dockerfile.dev
+    container_name: heallink-admin
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/heallink-admin:/app/apps/heallink-admin
+      - ./packages:/app/packages
+      - heallink-admin-node-modules:/app/apps/heallink-admin/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3001
+      - API_URL=http://api:3003
+    depends_on:
+      - api
+    networks:
+      - heallink-network
+    restart: unless-stopped
+
+  heallink-providers:
+    build:
+      context: .
+      dockerfile: ./apps/heallink-providers/Dockerfile.dev
+    container_name: heallink-providers
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./apps/heallink-providers:/app/apps/heallink-providers
+      - ./packages:/app/packages
+      - heallink-providers-node-modules:/app/apps/heallink-providers/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3002
+      - API_URL=http://api:3003
+    depends_on:
+      - api
+    networks:
+      - heallink-network
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile.dev
+    container_name: heallink-api
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - api-node-modules:/app/apps/api/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+    networks:
+      - heallink-network
+    restart: unless-stopped
+
+networks:
+  heallink-network:
+    driver: bridge
+
+volumes:
+  heallink-node-modules:
+  heallink-admin-node-modules:
+  heallink-providers-node-modules:
+  api-node-modules:

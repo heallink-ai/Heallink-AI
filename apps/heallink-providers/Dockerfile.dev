@@ -1,0 +1,40 @@
+FROM node:20-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# Copy root package.json and workspace files
+COPY package.json ./
+COPY yarn.lock ./
+COPY tsconfig.json ./
+
+# Copy the app package.json
+COPY apps/heallink-providers/package.json ./apps/heallink-providers/
+
+# Copy packages if they exist
+COPY packages ./packages/
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Development image
+FROM base AS dev
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/heallink-providers/node_modules ./apps/heallink-providers/node_modules
+COPY --from=deps /app/packages ./packages
+
+# Copy project files
+COPY package.json yarn.lock tsconfig.json ./
+COPY apps/heallink-providers ./apps/heallink-providers/
+
+# Set working directory to the app
+WORKDIR /app/apps/heallink-providers
+
+# Expose port
+EXPOSE 3002
+
+# Start the development server with hot reloading
+CMD ["yarn", "dev", "--port", "3002"]
