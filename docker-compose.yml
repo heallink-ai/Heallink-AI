@@ -77,15 +77,8 @@ services:
       - ./apps/api:/app/apps/api
       - ./packages:/app/packages
       - api-node-modules:/app/apps/api/node_modules
-    environment:
-      - NODE_ENV=development
-      - PORT=3003
-      - DATABASE_URL=mongodb://mongodb:27018/heallink
-      - JWT_SECRET=dev-jwt-secret-key
-      - JWT_EXPIRES_IN=15m
-      - JWT_REFRESH_SECRET=dev-jwt-refresh-secret-key
-      - JWT_REFRESH_EXPIRES_IN=7d
-      - CORS_ORIGIN=http://localhost:3000,http://localhost:3001,http://localhost:3002
+    env_file:
+      - ./apps/api/.env
     depends_on:
       - mongodb
     networks:
@@ -101,6 +94,8 @@ services:
       - mongodb-data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=heallink
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
     networks:
       - heallink-network
     restart: unless-stopped
@@ -118,8 +113,11 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - ME_CONFIG_MONGODB_SERVER=mongodb
-      - ME_CONFIG_MONGODB_PORT=27018
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=example
+      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongodb:27018
+      - ME_CONFIG_BASICAUTH=false
+
     depends_on:
       - mongodb
     networks:
