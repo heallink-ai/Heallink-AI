@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/samsonkwakunkrumah/Desktop/companies/heallink/code/heallink",
+        "/Users/samsonkwakunkrumah/Desktop/companies/heallink/code/heallink"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "Zapier MCP": {
+      "url": "https://actions.zapier.com/mcp/sk-ak-nVavYPQSEyq0uRerNn1YdUM9fe/sse"
+    }
+  }
+}
