@@ -33,7 +33,7 @@ export default function Hero() {
 
             <ScrollReveal direction="up" delay={400}>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button href="#download" size="lg">
+                <Button href="/auth/signup" size="lg">
                   Get Started
                 </Button>
                 <Button
@@ -48,7 +48,39 @@ export default function Hero() {
             </ScrollReveal>
 
             <ScrollReveal direction="up" delay={500}>
-              <div className="mt-12">
+              <div className="flex items-center mt-8 gap-2">
+                <div className="w-12 h-12 rounded-full bg-purple-heart/10 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6 text-purple-heart"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Need immediate assistance?
+                  </p>
+                  <a
+                    href="tel:+35387483177"
+                    className="font-semibold text-purple-heart hover:underline"
+                  >
+                    +353 8 7483 1977
+                  </a>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="up" delay={550}>
+              <div className="mt-8">
                 <p className="text-sm high-contrast-text mb-3">
                   Download our app:
                 </p>
@@ -101,8 +133,8 @@ export default function Hero() {
                       {/* AI analyzing bubble */}
                       <div className="mb-4 p-3 bg-gray-800 rounded-lg rounded-tl-none max-w-[90%]">
                         <div className="text-xs text-white">
-                          I'll help you find the right care. Let me ask a few
-                          questions...
+                          I&apos;ll help you find the right care. Let me ask a
+                          few questions...
                         </div>
                       </div>
 

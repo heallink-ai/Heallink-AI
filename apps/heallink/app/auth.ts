@@ -35,7 +35,7 @@ export const authConfig: NextAuthConfig = {
       const isProtected = nextUrl.pathname.startsWith("/dashboard");
 
       if (isProtected && !isLoggedIn) {
-        const redirectUrl = new URL("/auth/signin", nextUrl.origin);
+        const redirectUrl = new URL("/auth-required", nextUrl.origin);
         redirectUrl.searchParams.append("callbackUrl", nextUrl.href);
         return Response.redirect(redirectUrl);
       }
