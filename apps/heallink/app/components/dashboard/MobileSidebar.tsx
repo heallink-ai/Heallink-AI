@@ -177,7 +177,11 @@ export default function MobileSidebar({ onClose }: MobileSidebarProps) {
         animate={{ x: 0 }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed left-0 top-0 h-full w-[80%] max-w-[300px] z-50 bg-card shadow-xl py-4 px-2 overflow-y-auto"
+        className={`fixed left-0 top-0 h-full w-[80%] max-w-[300px] z-50 bg-card shadow-xl py-4 px-2 overflow-y-auto ${
+          theme === "dark"
+            ? "border-r border-gray-800"
+            : "border-r border-gray-200"
+        }`}
       >
         {/* Header */}
         <div className="px-4 mb-6">
@@ -189,9 +193,9 @@ export default function MobileSidebar({ onClose }: MobileSidebarProps) {
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-xl bg-background neumorph-flat">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-primary/10">
               <Image
-                src="/images/avatar-placeholder.png"
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=48&h=48&q=80"
                 alt="User Profile"
                 width={48}
                 height={48}

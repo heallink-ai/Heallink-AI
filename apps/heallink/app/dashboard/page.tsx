@@ -15,6 +15,8 @@ import ActionButton from "@/app/components/dashboard/ActionButton";
 import NotificationItem from "@/app/components/dashboard/NotificationItem";
 import AiInsightCard from "@/app/components/dashboard/AiInsightCard";
 import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
+import BottomNavigation from "@/app/components/dashboard/BottomNavigation";
+import Footer from "@/app/components/layout/Footer";
 
 export default function Dashboard() {
   // Theme state
@@ -26,6 +28,13 @@ export default function Dashboard() {
   // State for loading skeleton
   const [loading, setLoading] = useState(true);
 
+  // Add state for the floating button position
+  const [floatingBtnPosition, setFloatingBtnPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [isDragging, setIsDragging] = useState(false);
+
   // Simulate data loading
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -33,6 +42,32 @@ export default function Dashboard() {
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Load saved position on component mount
+  useEffect(() => {
+    try {
+      const savedPosition = localStorage.getItem("floatingBtnPosition");
+      if (savedPosition) {
+        setFloatingBtnPosition(JSON.parse(savedPosition));
+      }
+    } catch (error) {
+      console.error("Error loading button position:", error);
+    }
+  }, []);
+
+  // Save position to localStorage when it changes
+  useEffect(() => {
+    if (floatingBtnPosition.x !== 0 || floatingBtnPosition.y !== 0) {
+      try {
+        localStorage.setItem(
+          "floatingBtnPosition",
+          JSON.stringify(floatingBtnPosition)
+        );
+      } catch (error) {
+        console.error("Error saving button position:", error);
+      }
+    }
+  }, [floatingBtnPosition]);
 
   // Toggle theme function
   const toggleTheme = () => {
@@ -42,14 +77,16 @@ export default function Dashboard() {
   // Mock data - in production would come from API
   const userData = {
     name: "Alex Johnson",
-    avatar: "/images/avatar-placeholder.png",
+    avatar:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&h=256&q=80",
     nextAppointment: {
       doctor: "Dr. Sarah Williams",
       specialty: "Cardiologist",
       date: "Today",
       time: "3:30 PM",
       isVirtual: true,
-      avatar: "/images/doctor-avatar.png",
+      avatar:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&h=256&q=80",
     },
     notifications: [
       {
@@ -80,7 +117,8 @@ export default function Dashboard() {
           "Your latest test results look good. Let's discuss in our appointment.",
         time: "1 hour ago",
         unread: true,
-        avatar: "/images/doctor-avatar.png",
+        avatar:
+          "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&h=256&q=80",
       },
       {
         id: 2,
@@ -88,7 +126,8 @@ export default function Dashboard() {
         message: "Please remember to take your medication as prescribed.",
         time: "Yesterday",
         unread: false,
-        avatar: "/images/doctor-avatar-2.png",
+        avatar:
+          "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&h=256&q=80",
       },
     ],
     healthSnapshot: {
@@ -117,7 +156,7 @@ export default function Dashboard() {
   );
 
   return (
-    <main className="min-h-screen bg-background text-foreground pb-20 relative">
+    <main className="min-h-screen bg-background text-foreground pb-0 relative">
       <BackgroundGradient />
 
       {/* Mobile Header */}
@@ -192,19 +231,20 @@ export default function Dashboard() {
               )}
             </button>
 
-            <button className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+            <button className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/10">
               {loading ? (
                 <Skeleton className="w-full h-full" />
               ) : (
                 <Image
                   src={userData.avatar}
                   alt="User Avatar"
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-full"
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
+                  unoptimized
                 />
               )}
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border border-background rounded-full"></span>
             </button>
           </div>
         </div>
@@ -216,7 +256,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Main content */}
-      <div className="pt-20 px-4 md:px-6 max-w-7xl mx-auto">
+      <div className="pt-20 pb-24 md:pb-0 px-4 max-w-7xl mx-auto relative z-10">
         {/* Greeting */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -496,14 +536,36 @@ export default function Dashboard() {
         {/* AI Assistant Floating Button */}
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            x: floatingBtnPosition.x,
+            y: floatingBtnPosition.y,
+          }}
           transition={{
             type: "spring",
             stiffness: 260,
             damping: 20,
             delay: 1.2,
           }}
-          className="fixed right-5 bottom-5 z-30 w-14 h-14 bg-gradient-to-tr from-purple-heart to-royal-blue rounded-full flex items-center justify-center shadow-lg"
+          drag
+          dragMomentum={false}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={(e, info) => {
+            setIsDragging(false);
+            setFloatingBtnPosition((prev) => ({
+              x: prev.x + info.offset.x,
+              y: prev.y + info.offset.y,
+            }));
+          }}
+          onClick={(e) => {
+            if (isDragging) {
+              e.preventDefault();
+              return;
+            }
+            // Add your click handler here
+          }}
+          className="fixed right-5 bottom-24 md:bottom-5 z-30 w-14 h-14 bg-gradient-to-tr from-purple-heart to-royal-blue rounded-full flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -524,6 +586,14 @@ export default function Dashboard() {
           </svg>
         </motion.button>
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation
+        unreadMessages={userData.messages.filter((msg) => msg.unread).length}
+      />
+
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }

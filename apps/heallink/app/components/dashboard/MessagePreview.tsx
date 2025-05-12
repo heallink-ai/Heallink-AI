@@ -21,17 +21,17 @@ export default function MessagePreview({ message }: MessageProps) {
       className="flex items-start gap-3 p-3 rounded-lg hover:bg-background transition-colors relative"
     >
       <div className="relative">
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+        <div className="w-10 h-10 rounded-full overflow-hidden border border-primary/10">
           <Image
             src={message.avatar}
             alt={message.sender}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-full"
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
           />
         </div>
         {message.unread && (
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-heart rounded-full border-2 border-card"></span>
+          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-purple-heart rounded-full border border-card"></span>
         )}
       </div>
 

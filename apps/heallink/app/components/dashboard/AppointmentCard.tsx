@@ -34,13 +34,13 @@ export default function AppointmentCard({ appointment }: AppointmentProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="relative w-16 h-16 rounded-full border-2 border-primary/20 overflow-hidden">
+          <div className="relative w-16 h-16 rounded-full border border-primary/10 overflow-hidden">
             <Image
               src={appointment.avatar}
               alt={appointment.doctor}
-              layout="fill"
-              objectFit="cover"
-              className="rounded-full"
+              width={64}
+              height={64}
+              className="rounded-full object-cover"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function AppointmentCard({ appointment }: AppointmentProps) {
                 ? "/appointments/join"
                 : "/appointments/details"
             }
-            className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg text-center transition-colors"
+            className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg text-center transition-colors dark:text-white light:text-white"
           >
             {appointment.isVirtual ? "Join Call" : "View Details"}
           </Link>
