@@ -78,7 +78,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="#"
+                  href="/legal/terms"
                   className="light-text-contrast hover:text-purple-heart transition-colors"
                 >
                   Terms of Service
@@ -86,7 +86,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/legal/privacy"
                   className="light-text-contrast hover:text-purple-heart transition-colors"
                 >
                   Privacy Policy
