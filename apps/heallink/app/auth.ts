@@ -10,14 +10,21 @@ import { AuthProvider, UserRole } from "./types/auth-types";
 // Force Node.js runtime
 export const runtime = "nodejs";
 
-// Helper to check if a provider is properly configured
-const isProviderConfigured = (clientId?: string, clientSecret?: string) => {
-  return (
-    clientId &&
-    clientSecret &&
-    !clientId.startsWith("placeholder-") &&
-    !clientSecret.startsWith("placeholder-")
+// Helper function to check if provider credentials are configured
+function isProviderConfigured(...credentials: (string | undefined)[]) {
+  return credentials.every(
+    (cred) => typeof cred === "string" && cred.length > 0
   );
+}
+
+// Enable console debugging in development
+const DEBUG = process.env.NODE_ENV === "development";
+
+// Log helper for debugging
+const authLog = (...args: any[]) => {
+  if (DEBUG) {
+    console.log("[Auth Debug]", ...args);
+  }
 };
 
 export const authConfig: NextAuthConfig = {
@@ -42,14 +49,47 @@ export const authConfig: NextAuthConfig = {
 
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       // Initial sign in
       if (account && user) {
+        authLog("JWT Callback - Initial Sign In:", {
+          provider: account.provider,
+          tokenType: account.token_type,
+        });
+
         // Store the API access and refresh tokens from custom providers
         if (account.provider === "credentials") {
           token.accessToken = user.accessToken;
           token.refreshToken = user.refreshToken;
         }
+
+        // Handle Google OAuth token
+        if (account.provider === "google" && account.id_token) {
+          try {
+            authLog("Handling Google token");
+            const { data, error } = await socialLogin(
+              AuthProvider.GOOGLE,
+              account.id_token
+            );
+
+            if (error || !data) {
+              authLog("Error in Google social login:", error);
+              throw new Error(error || "Failed to authenticate with Google");
+            }
+
+            // Add API tokens to session
+            token.accessToken = data.accessToken;
+            token.refreshToken = data.refreshToken;
+            token.role = data.user.role;
+            token.sub = data.user.id;
+
+            authLog("Google authentication successful");
+          } catch (error) {
+            authLog("Error in Google token processing:", error);
+          }
+        }
+
+        // Add more provider-specific logic as needed
 
         return {
           ...token,
@@ -172,33 +212,7 @@ export const authConfig: NextAuthConfig = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            profile: async (profile, tokens) => {
-              try {
-                const { data, error } = await socialLogin(
-                  AuthProvider.GOOGLE,
-                  tokens.id_token as string
-                );
-
-                if (error || !data) {
-                  throw new Error(
-                    error || "Failed to authenticate with Google"
-                  );
-                }
-
-                return {
-                  id: data.user.id,
-                  name: data.user.name,
-                  email: data.user.email,
-                  image: profile.picture,
-                  role: data.user.role,
-                  accessToken: data.accessToken,
-                  refreshToken: data.refreshToken,
-                };
-              } catch (error) {
-                console.error("Error in Google profile mapping:", error);
-                throw error;
-              }
-            },
+            allowDangerousEmailAccountLinking: true, // Allows linking to an existing account with the same email
           }),
         ]
       : []),

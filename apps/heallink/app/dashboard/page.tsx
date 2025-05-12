@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useTheme } from "@/app/theme/ThemeProvider";
 
 // Component imports
 import MobileSidebar from "@/app/components/dashboard/MobileSidebar";
@@ -16,6 +17,9 @@ import AiInsightCard from "@/app/components/dashboard/AiInsightCard";
 import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
 
 export default function Dashboard() {
+  // Theme state
+  const { theme, setTheme } = useTheme();
+
   // State for sidebar toggle on mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -29,6 +33,11 @@ export default function Dashboard() {
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   // Mock data - in production would come from API
   const userData = {
@@ -100,11 +109,11 @@ export default function Dashboard() {
     },
   };
 
-  // Skeleton loaders for UI elements
+  // Skeleton loaders for UI elements - Using span instead of div to fix the nesting issues
   const Skeleton = ({ className }: { className?: string }) => (
-    <div
-      className={`animate-pulse bg-primary/10 rounded-lg ${className}`}
-    ></div>
+    <span
+      className={`animate-pulse bg-primary/10 rounded-lg inline-block ${className}`}
+    ></span>
   );
 
   return (
@@ -137,7 +146,52 @@ export default function Dashboard() {
 
           <span className="text-xl font-medium gradient-text">HealLink</span>
 
-          <div className="relative">
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-primary/10"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            >
+              {theme === "dark" ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="M4.93 4.93l1.41 1.41" />
+                  <path d="M17.66 17.66l1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="M6.34 17.66l-1.41 1.41" />
+                  <path d="M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              )}
+            </button>
+
             <button className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
               {loading ? (
                 <Skeleton className="w-full h-full" />
@@ -177,13 +231,13 @@ export default function Dashboard() {
               Hello, <span className="gradient-text">{userData.name}</span>
             </h1>
           )}
-          <p className="text-foreground/70">
+          <div className="text-foreground/70">
             {loading ? (
               <Skeleton className="h-5 w-1/2" />
             ) : (
               `${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`
             )}
-          </p>
+          </div>
         </motion.div>
 
         {/* Dashboard Grid */}
@@ -449,7 +503,7 @@ export default function Dashboard() {
             damping: 20,
             delay: 1.2,
           }}
-          className="fixed right-5 bottom-5 z-30 w-14 h-14 bg-gradient-to-tr from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg"
+          className="fixed right-5 bottom-5 z-30 w-14 h-14 bg-gradient-to-tr from-purple-heart to-royal-blue rounded-full flex items-center justify-center shadow-lg"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface SocialButtonsProps {
   className?: string;
@@ -8,11 +10,30 @@ interface SocialButtonsProps {
 
 export default function SocialButtons({ className = "" }: SocialButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSocialLogin = (provider: string) => {
-    setLoadingProvider(provider);
-    // In a real implementation, this would trigger the OAuth flow
-    setTimeout(() => setLoadingProvider(null), 2000);
+  const handleSocialLogin = async (provider: string) => {
+    try {
+      setLoadingProvider(provider);
+      // Trigger the NextAuth sign-in flow with the selected provider
+      const result = await signIn(provider, {
+        redirect: false,
+        callbackUrl: "/dashboard",
+      });
+
+      // If there was an error, the result will contain an error property
+      if (result?.error) {
+        console.error(`Error during ${provider} sign-in:`, result.error);
+        // Handle specific errors here if needed
+      } else if (result?.url) {
+        // Successful authentication with redirect URL
+        router.push(result.url);
+      }
+    } catch (error) {
+      console.error(`Unexpected error during ${provider} sign-in:`, error);
+    } finally {
+      setLoadingProvider(null);
+    }
   };
 
   return (
@@ -45,7 +66,9 @@ export default function SocialButtons({ className = "" }: SocialButtonsProps) {
           </svg>
         )}
         <span className="text-sm font-medium light-text-contrast">
-          {loadingProvider === "google" ? "Connecting..." : "Continue with Google"}
+          {loadingProvider === "google"
+            ? "Connecting..."
+            : "Continue with Google"}
         </span>
       </button>
 
@@ -62,7 +85,9 @@ export default function SocialButtons({ className = "" }: SocialButtonsProps) {
           </svg>
         )}
         <span className="text-sm font-medium light-text-contrast">
-          {loadingProvider === "facebook" ? "Connecting..." : "Continue with Facebook"}
+          {loadingProvider === "facebook"
+            ? "Connecting..."
+            : "Continue with Facebook"}
         </span>
       </button>
 
@@ -79,7 +104,9 @@ export default function SocialButtons({ className = "" }: SocialButtonsProps) {
           </svg>
         )}
         <span className="text-sm font-medium light-text-contrast">
-          {loadingProvider === "apple" ? "Connecting..." : "Continue with Apple"}
+          {loadingProvider === "apple"
+            ? "Connecting..."
+            : "Continue with Apple"}
         </span>
       </button>
     </div>

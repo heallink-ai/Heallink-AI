@@ -1,124 +1,116 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
-interface HealthSnapshotData {
-  bloodPressure: string;
-  glucose: string;
-  weight: string;
-  lastUpdated: string;
-  trends: {
-    bloodPressure: number[];
-    glucose: number[];
-    weight: number[];
+interface HealthTrends {
+  bloodPressure: number[];
+  glucose: number[];
+  weight: number[];
+}
+
+interface HealthSnapshotProps {
+  data: {
+    bloodPressure: string;
+    glucose: string;
+    weight: string;
+    lastUpdated: string;
+    trends: HealthTrends;
   };
 }
 
-interface HealthSnapshotCardProps {
-  data: HealthSnapshotData;
-}
+export default function HealthSnapshotCard({ data }: HealthSnapshotProps) {
+  const [activeTab, setActiveTab] = useState<
+    "bloodPressure" | "glucose" | "weight"
+  >("bloodPressure");
 
-export default function HealthSnapshotCard({ data }: HealthSnapshotCardProps) {
-  // Mini sparkline component
-  const Sparkline = ({
-    data,
-    color,
-    height = 30,
-  }: {
-    data: number[];
-    color: string;
-    height?: number;
-  }) => {
-    // Get min and max for scaling
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const range = max - min || 1; // Avoid division by zero
-
-    // Create points
-    const points = data
-      .map((value, index) => {
-        const x = (index / (data.length - 1)) * 100;
-        const y = 100 - ((value - min) / range) * 100;
-        return `${x},${y}`;
-      })
-      .join(" ");
-
-    return (
-      <svg
-        height={height}
-        width="100%"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="overflow-visible"
-      >
-        <polyline
-          points={points}
-          fill="none"
-          stroke={color}
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Latest value dot */}
-        <circle
-          cx="100"
-          cy={100 - ((data[data.length - 1] - min) / range) * 100}
-          r="3"
-          fill={color}
-        />
-      </svg>
-    );
+  // Map tabs to display data
+  const tabsData = {
+    bloodPressure: {
+      label: "Blood Pressure",
+      value: data.bloodPressure,
+      trend: data.trends.bloodPressure,
+      color: "from-purple-heart to-royal-blue",
+    },
+    glucose: {
+      label: "Glucose",
+      value: data.glucose,
+      trend: data.trends.glucose,
+      color: "from-purple-heart to-royal-blue-600",
+    },
+    weight: {
+      label: "Weight",
+      value: data.weight,
+      trend: data.trends.weight,
+      color: "from-purple-heart to-royal-blue-700",
+    },
   };
+
+  const activeData = tabsData[activeTab];
+
+  // Calculate trend visualization
+  const trendMax = Math.max(...activeData.trend);
+  const trendMin = Math.min(...activeData.trend);
+  const range = trendMax - trendMin;
 
   return (
-    <motion.div
-      className="p-4 rounded-xl bg-card neumorph-flat h-full"
-      whileHover={{ translateY: -5 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold">Health Snapshot</h3>
-        <span className="text-xs text-foreground/70">{data.lastUpdated}</span>
+    <div className="p-4 bg-card rounded-xl neumorph-flat">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Health Snapshot</h2>
+        <span className="text-xs text-foreground/60">{data.lastUpdated}</span>
       </div>
 
-      <div className="space-y-3">
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-foreground/70">Blood Pressure</span>
-            <span className="font-semibold">{data.bloodPressure}</span>
-          </div>
-          <Sparkline
-            data={data.trends.bloodPressure}
-            color="rgba(220, 38, 38, 0.7)"
-          />
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-foreground/70">Glucose</span>
-            <span className="font-semibold">{data.glucose}</span>
-          </div>
-          <Sparkline
-            data={data.trends.glucose}
-            color="rgba(79, 70, 229, 0.7)"
-          />
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-foreground/70">Weight</span>
-            <span className="font-semibold">{data.weight}</span>
-          </div>
-          <Sparkline
-            data={data.trends.weight}
-            color="rgba(16, 185, 129, 0.7)"
-          />
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-4 bg-background/50 p-1 rounded-lg">
+        {Object.entries(tabsData).map(([key, tab]) => (
+          <button
+            key={key}
+            onClick={() =>
+              setActiveTab(key as "bloodPressure" | "glucose" | "weight")
+            }
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+              activeTab === key
+                ? "bg-primary text-white"
+                : "text-foreground/70 hover:bg-background/80"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <button className="w-full mt-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm">
-        Log New Vitals
-      </button>
-    </motion.div>
+      {/* Current Value */}
+      <div className="text-center mb-4">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="text-2xl font-bold gradient-text"
+        >
+          {activeData.value}
+        </motion.div>
+      </div>
+
+      {/* Trend Sparkline */}
+      <div className="h-14 w-full relative">
+        <div className="absolute inset-0 flex items-end justify-between">
+          {activeData.trend.map((point, index) => {
+            const height =
+              range === 0 ? 50 : ((point - trendMin) / range) * 80 + 20;
+            return (
+              <motion.div
+                key={index}
+                initial={{ height: 0 }}
+                animate={{ height: `${height}%` }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`w-1 rounded-t-full bg-gradient-to-t ${activeData.color}`}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

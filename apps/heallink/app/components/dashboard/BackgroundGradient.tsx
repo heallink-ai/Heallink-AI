@@ -1,78 +1,83 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useTheme } from "@/app/theme/ThemeProvider";
 
 export default function BackgroundGradient() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
+  // Set mounted to true once component is mounted (to avoid hydration issues)
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX,
-        y: e.clientY,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
+    setMounted(true);
   }, []);
 
-  return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      {/* Background base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background/95"></div>
+  if (!mounted) {
+    // Return a placeholder with no opacity to avoid hydration mismatch
+    return <div className="fixed inset-0 opacity-0" />;
+  }
 
-      {/* Animated orbs */}
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      {/* Top gradient */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[50vh] bg-gradient-to-b opacity-20"
+        style={{
+          backgroundImage:
+            theme === "dark"
+              ? "linear-gradient(to bottom, rgba(90, 45, 207, 0.2), transparent)"
+              : "linear-gradient(to bottom, rgba(90, 45, 207, 0.15), transparent)",
+        }}
+      />
+
+      {/* Animated gradient orbs */}
       <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-br from-primary/10 to-primary/5 blur-3xl"
+        className="absolute top-[10%] left-[20%] w-[300px] h-[300px] rounded-full opacity-20 blur-[80px]"
+        style={{
+          background:
+            theme === "dark"
+              ? "radial-gradient(circle, rgba(90, 45, 207, 0.5), rgba(32, 102, 228, 0.3))"
+              : "radial-gradient(circle, rgba(90, 45, 207, 0.4), rgba(32, 102, 228, 0.2))",
+        }}
         animate={{
-          x: [0, 50, -50, 0],
-          y: [0, 30, -30, 0],
+          x: [0, 30, 0],
+          y: [0, 40, 0],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          repeatType: "reverse",
+        }}
+      />
+
+      <motion.div
+        className="absolute bottom-[20%] right-[10%] w-[250px] h-[250px] rounded-full opacity-20 blur-[80px]"
+        style={{
+          background:
+            theme === "dark"
+              ? "radial-gradient(circle, rgba(32, 102, 228, 0.5), rgba(90, 45, 207, 0.3))"
+              : "radial-gradient(circle, rgba(32, 102, 228, 0.4), rgba(90, 45, 207, 0.2))",
+        }}
+        animate={{
+          x: [0, -20, 0],
+          y: [0, -30, 0],
         }}
         transition={{
           duration: 15,
           repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        style={{
-          top: "10%",
-          left: "5%",
+          repeatType: "reverse",
         }}
       />
 
-      <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-br from-primary/5 to-primary/10 blur-3xl"
-        animate={{
-          x: [0, -30, 30, 0],
-          y: [0, 50, -50, 0],
-        }}
-        transition={{
-          duration: 18,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1,
-        }}
+      {/* Bottom gradient */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[30vh] bg-gradient-to-t opacity-20"
         style={{
-          bottom: "15%",
-          right: "10%",
-        }}
-      />
-
-      {/* Mouse follower subtle highlight */}
-      <motion.div
-        className="absolute w-[300px] h-[300px] rounded-full bg-primary/5 blur-3xl"
-        animate={{
-          x: mousePosition.x - 150,
-          y: mousePosition.y - 150,
-        }}
-        transition={{
-          type: "spring",
-          damping: 30,
-          stiffness: 50,
-          mass: 0.5,
+          backgroundImage:
+            theme === "dark"
+              ? "linear-gradient(to top, rgba(32, 102, 228, 0.2), transparent)"
+              : "linear-gradient(to top, rgba(32, 102, 228, 0.15), transparent)",
         }}
       />
     </div>
