@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import InputField from "./InputField";
 import Button from "./Button";
 import Modal from "./Modal";
@@ -29,19 +30,25 @@ export default function LoginForm() {
     setError("");
 
     try {
-      // In a real application, this would call an API endpoint to authenticate
-      // const response = await loginAdmin(email, password);
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (result?.error) {
+        setError("Invalid email or password. Please try again.");
+        setIsLoading(false);
+        return;
+      }
 
       // Redirect to dashboard on success
       router.push("/dashboard");
+      router.refresh(); // Refresh to ensure session is updated
     } catch (err) {
       // Log the error in development
       console.error("Login error:", err);
-      setError("Invalid email or password. Please try again.");
-    } finally {
+      setError("An error occurred. Please try again.");
       setIsLoading(false);
     }
   };

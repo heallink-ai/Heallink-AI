@@ -3,6 +3,7 @@
 import { useState } from "react";
 import InputField from "./InputField";
 import Button from "./Button";
+import { requestPasswordReset } from "../../api/auth-api";
 
 interface ForgotPasswordFormProps {
   onClose: () => void;
@@ -28,11 +29,13 @@ export default function ForgotPasswordForm({
     setError("");
 
     try {
-      // In a real application, this would call an API endpoint
-      // await resetPassword(email);
+      // Call the API to request password reset
+      const { error: resetError } = await requestPasswordReset(email);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (resetError) {
+        setError(resetError);
+        return;
+      }
 
       setIsSubmitted(true);
     } catch (err) {
