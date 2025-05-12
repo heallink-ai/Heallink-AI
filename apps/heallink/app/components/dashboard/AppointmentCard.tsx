@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "@/app/theme/ThemeProvider";
 
 interface AppointmentProps {
   appointment: {
@@ -15,6 +16,14 @@ interface AppointmentProps {
 }
 
 export default function AppointmentCard({ appointment }: AppointmentProps) {
+  const { theme } = useTheme();
+
+  // CSS styles directly using the color hex values from globals.css
+  const buttonStyle = {
+    backgroundColor: theme === "light" ? "#5a2dcf" : "var(--primary)", // Use the darker purple-heart color in light mode
+    color: "white",
+  };
+
   return (
     <div className="p-4 bg-card rounded-xl neumorph-flat relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-heart/10 to-royal-blue/5 rounded-bl-[100px] -z-0" />
@@ -74,21 +83,37 @@ export default function AppointmentCard({ appointment }: AppointmentProps) {
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4">
-          <Link
-            href={
-              appointment.isVirtual
-                ? "/appointments/join"
-                : "/appointments/details"
-            }
-            className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg text-center transition-colors dark:text-white light:text-white"
-          >
-            {appointment.isVirtual ? "Join Call" : "View Details"}
-          </Link>
+        <div className="flex items-center justify-center gap-3 mt-4">
+          {appointment.isVirtual ? (
+            <>
+              <Link
+                href="/appointments/join"
+                style={buttonStyle}
+                className="py-2 px-4 rounded-lg text-center transition-colors font-medium cursor-pointer hover:opacity-90"
+              >
+                Join Call
+              </Link>
+
+              <Link
+                href="/appointments/details"
+                className="py-2 px-4 rounded-lg bg-background hover:bg-background/80 border border-primary/20 text-foreground transition-colors text-center cursor-pointer"
+              >
+                Details
+              </Link>
+            </>
+          ) : (
+            <Link
+              href="/appointments/details"
+              style={buttonStyle}
+              className="py-2 px-4 rounded-lg text-center transition-colors font-medium cursor-pointer hover:opacity-90"
+            >
+              View Details
+            </Link>
+          )}
 
           <Link
             href="/appointments/reschedule"
-            className="py-2 px-4 rounded-lg bg-background hover:bg-background/80 border border-primary/20 text-foreground transition-colors"
+            className="py-2 px-4 rounded-lg bg-background hover:bg-background/80 border border-primary/20 text-foreground transition-colors text-center cursor-pointer"
           >
             Reschedule
           </Link>
