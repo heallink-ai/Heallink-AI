@@ -91,7 +91,8 @@ services:
     ports:
       - "27018:27017"
     volumes:
-      - mongodb-data:/data/db
+      - ./data/mongodb:/data/db
+      - ./data/mongodb-config:/data/configdb
     environment:
       - MONGO_INITDB_DATABASE=heallink
       - MONGO_INITDB_ROOT_USERNAME=root
@@ -106,23 +107,6 @@ services:
       retries: 5
       start_period: 10s
 
-  mongo-express:
-    image: mongo-express
-    container_name: heallink-mongo-express
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=example
-      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongodb:27018
-      - ME_CONFIG_BASICAUTH=false
-
-    depends_on:
-      - mongodb
-    networks:
-      - heallink-network
-
 networks:
   heallink-network:
     driver: bridge
@@ -132,4 +116,3 @@ volumes:
   heallink-admin-node-modules:
   heallink-providers-node-modules:
   api-node-modules:
-  mongodb-data:
