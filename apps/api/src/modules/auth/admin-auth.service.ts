@@ -355,7 +355,7 @@ export class AdminAuthService {
    */
   private async generateTokens(user: AdminUser) {
     const payload = {
-      sub: user._id.toString(),
+      sub: String(user._id),
       email: user.email,
       role: user.role,
       adminRole: user.adminRole,

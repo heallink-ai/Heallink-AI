@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -8,6 +12,9 @@ import { User, AuthProvider, UserDocument } from '../users/schemas/user.schema';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { SocialProvider } from './dto/social-login.dto';
+import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,23 +26,31 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    
-    if (user && await user.comparePassword(password)) {
-      const { password, refreshToken, ...result } = user.toJSON();
+
+    if (user && (await user.comparePassword(password))) {
+      const {
+        password: _password,
+        refreshToken: _refreshToken,
+        ...result
+      } = user.toJSON();
       return result;
     }
-    
+
     return null;
   }
 
   async validateUserByPhone(phone: string, password: string): Promise<any> {
     const user = await this.usersService.findByPhone(phone);
-    
-    if (user && await user.comparePassword(password)) {
-      const { password, refreshToken, ...result } = user.toJSON();
+
+    if (user && (await user.comparePassword(password))) {
+      const {
+        password: _password,
+        refreshToken: _refreshToken,
+        ...result
+      } = user.toJSON();
       return result;
     }
-    
+
     return null;
   }
 
@@ -45,13 +60,16 @@ export class AuthService {
     }
 
     // Check if user already exists
-    const existingUser = await this.usersService.validateUserExistenceByEmailOrPhone(
-      registerDto.email,
-      registerDto.phone,
-    );
+    const existingUser =
+      await this.usersService.validateUserExistenceByEmailOrPhone(
+        registerDto.email,
+        registerDto.phone,
+      );
 
     if (existingUser) {
-      throw new BadRequestException('User with this email or phone already exists');
+      throw new BadRequestException(
+        'User with this email or phone already exists',
+      );
     }
 
     // Create new user
@@ -63,26 +81,39 @@ export class AuthService {
       providers: [AuthProvider.LOCAL],
     });
 
-    const { password, refreshToken, ...result } = user.toJSON();
+    // Return sanitized user object without sensitive fields
+    const userObj = user.toJSON();
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      ...result
+    } = userObj;
     return result;
   }
 
-  async login(user: any): Promise<{ accessToken: string; refreshToken: string; user: any }> {
+  async login(
+    user: any,
+  ): Promise<{ accessToken: string; refreshToken: string; user: any }> {
     const payload = { sub: user._id, email: user.email, role: user.role };
-    
+
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
       expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
     });
-    
+
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.refreshSecret') || 'dev-jwt-refresh-secret',
+      secret:
+        this.configService.get<string>('jwt.refreshSecret') ||
+        'dev-jwt-refresh-secret',
       expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
     });
-    
+
     // Store the refresh token in the user document
-    await this.usersService.updateRefreshToken(user._id.toString(), refreshToken);
-    
+    await this.usersService.updateRefreshToken(
+      user._id.toString(),
+      refreshToken,
+    );
+
     return {
       accessToken,
       refreshToken,
@@ -96,28 +127,36 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: string, refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async refreshTokens(
+    userId: string,
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersService.findOne(userId);
-    
+
     if (!user || user.refreshToken !== refreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    
+
     const payload = { sub: user._id, email: user.email, role: user.role };
-    
+
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
       expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
     });
-    
+
     const newRefreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.refreshSecret') || 'dev-jwt-refresh-secret',
+      secret:
+        this.configService.get<string>('jwt.refreshSecret') ||
+        'dev-jwt-refresh-secret',
       expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
     });
-    
+
     // Update the refresh token in the user document
-    await this.usersService.updateRefreshToken(user._id.toString(), newRefreshToken);
-    
+    await this.usersService.updateRefreshToken(
+      user._id.toString(),
+      newRefreshToken,
+    );
+
     return {
       accessToken,
       refreshToken: newRefreshToken,
@@ -128,15 +167,17 @@ export class AuthService {
     await this.usersService.updateRefreshToken(userId, null);
   }
 
-  async validateSocialLogin(socialLoginDto: SocialLoginDto): Promise<UserDocument> {
+  async validateSocialLogin(
+    socialLoginDto: SocialLoginDto,
+  ): Promise<UserDocument> {
     // In a real-world app, you'd verify the token with the provider
     // For Google, Facebook, Apple, etc.
-    
+
     // For demonstration, we'll mock the validation process
     let providerData;
-    
+
     switch (socialLoginDto.provider) {
-      case AuthProvider.GOOGLE:
+      case SocialProvider.GOOGLE:
         // In a real app, you'd call Google's API to verify the token
         providerData = {
           provider: AuthProvider.GOOGLE,
@@ -145,8 +186,8 @@ export class AuthService {
           name: 'User Name', // This would come from Google's response
         };
         break;
-        
-      case AuthProvider.FACEBOOK:
+
+      case SocialProvider.FACEBOOK:
         // In a real app, you'd call Facebook's API to verify the token
         providerData = {
           provider: AuthProvider.FACEBOOK,
@@ -155,8 +196,8 @@ export class AuthService {
           name: 'User Name', // This would come from Facebook's response
         };
         break;
-        
-      case AuthProvider.APPLE:
+
+      case SocialProvider.APPLE:
         // In a real app, you'd call Apple's API to verify the token
         providerData = {
           provider: AuthProvider.APPLE,
@@ -165,11 +206,11 @@ export class AuthService {
           name: 'User Name', // This would come from Apple's response
         };
         break;
-        
+
       default:
         throw new BadRequestException('Unsupported provider');
     }
-    
+
     // Find existing user or create a new one
     return this.usersService.findByIdOrCreate(providerData);
   }
@@ -177,38 +218,62 @@ export class AuthService {
   async sendOtp(sendOtpDto: SendOtpDto): Promise<{ success: boolean }> {
     // In a real app, you'd send an OTP via SMS here
     // For demonstration, we'll just return success
-    
+
     // You could use Twilio, Nexmo, or similar service to send SMS
     console.log(`Sending OTP to ${sendOtpDto.phone}`);
-    
+
     return { success: true };
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<any> {
     // In a real app, you'd verify the OTP against what was sent
     // For demonstration, we'll assume OTP is valid if it's 123456
-    
-    if (verifyOtpDto.otp !== '123456') {
+
+    if (verifyOtpDto.code !== '123456') {
       throw new UnauthorizedException('Invalid OTP');
     }
-    
+
     // Find or create user with the given phone number
-    let user = await this.usersService.findByPhone(verifyOtpDto.phone);
-    
+    if (!verifyOtpDto.phone && !verifyOtpDto.email) {
+      throw new BadRequestException('Either phone or email is required');
+    }
+
+    let user;
+
+    if (verifyOtpDto.phone) {
+      user = await this.usersService.findByPhone(verifyOtpDto.phone);
+    } else if (verifyOtpDto.email) {
+      user = await this.usersService.findByEmail(verifyOtpDto.email);
+    }
+
     if (!user) {
-      // Create a new user with this phone number
+      // Create a new user with this phone number or email
       const createUserDto: CreateUserDto = {
         phone: verifyOtpDto.phone,
+        email: verifyOtpDto.email,
         providers: [AuthProvider.LOCAL],
       };
-      
-      createUserDto.phoneVerified = true;
+
+      if (verifyOtpDto.phone) {
+        createUserDto.phoneVerified = true;
+      } else {
+        createUserDto.emailVerified = true;
+      }
+
       user = await this.usersService.create(createUserDto);
     } else {
-      // Update phone verification status
-      user = await this.usersService.update(user._id.toString(), { phoneVerified: true });
+      // Update verification status
+      const updateData: any = {};
+
+      if (verifyOtpDto.phone) {
+        updateData.phoneVerified = true;
+      } else if (verifyOtpDto.email) {
+        updateData.emailVerified = true;
+      }
+
+      user = await this.usersService.update(user._id.toString(), updateData);
     }
-    
+
     // Generate tokens and return
     return this.login(user);
   }
