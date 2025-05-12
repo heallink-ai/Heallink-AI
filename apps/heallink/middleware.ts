@@ -7,5 +7,5 @@ export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
 
-// Force Node.js runtime instead of Edge
-export const runtime = "nodejs";
+// Use experimental-edge runtime as recommended
+export const runtime = "experimental-edge";

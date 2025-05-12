@@ -21,7 +21,7 @@ function isProviderConfigured(...credentials: (string | undefined)[]) {
 const DEBUG = process.env.NODE_ENV === "development";
 
 // Log helper for debugging
-const authLog = (...args: any[]) => {
+const authLog = (...args: unknown[]) => {
   if (DEBUG) {
     console.log("[Auth Debug]", ...args);
   }
@@ -40,7 +40,14 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isProtected = nextUrl.pathname.startsWith("/dashboard");
+      const isHomepage = nextUrl.pathname === "/";
 
+      // Redirect logged-in users from homepage to dashboard
+      if (isLoggedIn && isHomepage) {
+        return Response.redirect(new URL("/dashboard", nextUrl.origin));
+      }
+
+      // Redirect unauthenticated users from protected routes
       if (isProtected && !isLoggedIn) {
         const redirectUrl = new URL("/auth-required", nextUrl.origin);
         redirectUrl.searchParams.append("callbackUrl", nextUrl.href);
@@ -49,7 +56,7 @@ export const authConfig: NextAuthConfig = {
 
       return true;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account }) {
       // Initial sign in
       if (account && user) {
         authLog("JWT Callback - Initial Sign In:", {

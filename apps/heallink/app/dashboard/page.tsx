@@ -18,6 +18,16 @@ import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
 import BottomNavigation from "@/app/components/dashboard/BottomNavigation";
 import Footer from "@/app/components/layout/Footer";
 
+// Type definitions
+type NotificationType = "appointment" | "message" | "payment";
+
+interface Notification {
+  id: number;
+  type: NotificationType;
+  message: string;
+  time: string;
+}
+
 export default function Dashboard() {
   // Theme state
   const { theme, setTheme } = useTheme();
@@ -91,24 +101,24 @@ export default function Dashboard() {
     notifications: [
       {
         id: 1,
-        type: "appointment",
+        type: "appointment" as NotificationType,
         message:
           "Reminder: Appointment with Dr. Sarah Williams tomorrow at 3:30 PM",
         time: "1 hour ago",
       },
       {
         id: 2,
-        type: "message",
+        type: "message" as NotificationType,
         message: "Dr. Williams sent you lab results",
         time: "Yesterday",
       },
       {
         id: 3,
-        type: "payment",
+        type: "payment" as NotificationType,
         message: "Invoice #HEA-1023 payment successful",
         time: "2 days ago",
       },
-    ],
+    ] as Notification[],
     messages: [
       {
         id: 1,
