@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
+/* Admin theme variables */
 :root {
+  /* Colors */
+  --color-purple-heart: #5a2dcf;
+  --color-purple-heart-600: #4922a8;
+  --color-royal-blue: #2066e4;
+  --color-royal-blue-600: #1853b9;
+  --color-havelock-blue: #6578e4;
+  --color-muted-indigo: #6366f1;
+  --color-deep-cove: #051642;
+
+  /* Theme colors - Light mode default */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #121212;
+  --card: #f7f8fc;
+  --card-foreground: #1e1e2f;
+  --primary: #5a2dcf;
+  --primary-foreground: #ffffff;
+  --secondary: #1e53aa;
+  --secondary-foreground: #ffffff;
+  --muted: #f1f3f9;
+  --muted-foreground: #565674;
+  --accent: #ebeffd;
+  --accent-foreground: #1e1e2f;
+  --border: #dde1ee;
+  --input: #f1f3f9;
+  --ring: #5a2dcf;
+
+  /* UI elements */
+  --sidebar: #f7f8fc;
+  --sidebar-foreground: #2d2d3f;
+  --topbar: #ffffff;
+  --topbar-foreground: #1e1e2f;
+  --navbar-item: transparent;
+  --navbar-item-hover: #ebeefe;
+  --navbar-item-selected: #e2e5ff;
+  --button-outline: #5a2dcf;
+  --button-text: #5a2dcf;
+  --error: #e53e3e;
+  --success: #38a169;
+  --warning: #eab308;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Dark mode */
+.dark {
+  --background: #0f1222;
+  --foreground: #f7f8fc;
+  --card: #1a1e33;
+  --card-foreground: #f7f8fc;
+  --primary: #6b46c1;
+  --primary-foreground: #ffffff;
+  --secondary: #3a66bb;
+  --secondary-foreground: #ffffff;
+  --muted: #242748;
+  --muted-foreground: #9ca3af;
+  --accent: #2d325a;
+  --accent-foreground: #f7f8fc;
+  --border: #2d325a;
+  --input: #242748;
+  --ring: #6b46c1;
+
+  /* UI elements */
+  --sidebar: #17192f;
+  --sidebar-foreground: #f7f8fc;
+  --topbar: #1a1e33;
+  --topbar-foreground: #f7f8fc;
+  --navbar-item: transparent;
+  --navbar-item-hover: #2d325a;
+  --navbar-item-selected: #333a6b;
+  --button-outline: #6b46c1;
+  --button-text: #f7f8fc;
+  --error: #f56565;
+  --success: #48bb78;
+  --warning: #f6e05e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Custom utilities */
+@layer utilities {
+  /* Neumorphic design classes */
+  .neumorph-flat {
+    @reference dark:shadow-[4px_4px_10px_#0a0d1a,_-4px_-4px_10px_#141a2a] 
+           shadow-[4px_4px_10px_#e6eaf6,_-4px_-4px_10px_#ffffff] 
+           bg-transparent;
+  }
+
+  .neumorph-pressed {
+    @reference dark:shadow-[inset_4px_4px_10px_#0a0d1a,_inset_-4px_-4px_10px_#141a2a] 
+           shadow-[inset_4px_4px_10px_#e6eaf6,_inset_-4px_-4px_10px_#ffffff] 
+           bg-transparent;
+  }
+
+  /* Gradient text utility */
+  .gradient-text {
+    @reference bg-clip-text text-transparent bg-gradient-to-r from-purple-heart to-royal-blue;
+  }
+
+  /* Admin specific utilities */
+  .admin-sidebar-link {
+    @reference flex items-center gap-3 px-3 py-2 rounded-lg transition-colors 
+           text-[color:var(--sidebar-foreground)]
+           hover:bg-[color:var(--navbar-item-hover)];
+  }
+
+  .admin-sidebar-link-active {
+    @reference bg-[color:var(--navbar-item-selected)] font-medium;
+  }
+
+  .card-admin {
+    @reference bg-[color:var(--card)] rounded-xl p-5 border border-[color:var(--border)];
+  }
+
+  .admin-table {
+    @reference w-full text-sm text-left;
+  }
+
+  .admin-table th {
+    @reference px-4 py-3 font-medium text-[color:var(--muted-foreground)] bg-[color:var(--muted)];
+  }
+
+  .admin-table td {
+    @reference px-4 py-3 border-b border-[color:var(--border)];
+  }
+
+  .admin-table tr:hover {
+    @reference bg-[color:var(--navbar-item-hover)];
   }
 }
 
+/* Animations */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+/* Base styles */
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }
