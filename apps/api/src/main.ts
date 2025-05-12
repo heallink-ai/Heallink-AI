@@ -2,15 +2,29 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { LoggingService } from './modules/logging/logging.service';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // Initialize app with Winston logger
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  // Use resolve for transient scoped service
+  const loggingService = await app.resolve(LoggingService);
+  loggingService.setContext('Bootstrap');
+
+  // Use custom logger for NestJS
+  app.useLogger(loggingService);
+
+  // Log server startup
+  loggingService.logSystem('Server starting', {
+    nodeEnv: configService.get<string>('nodeEnv') || 'development',
+  });
+
   // Enable CORS
   app.enableCors({
-    origin: (configService.get<string>('cors.origin') || '*').split(','),
+    origin: '*', // Allow all origins in development
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
@@ -97,9 +111,30 @@ async function bootstrap() {
 
   const port = configService.get<number>('port') || 3003;
   await app.listen(port);
-  console.log(`API is running on: http://localhost:${port}/api/v1`);
-  console.log(
-    `API Documentation available at: http://localhost:${port}/api/docs`,
-  );
+
+  const serverUrl = `http://localhost:${port}`;
+  loggingService.logSystem('Server started', {
+    port,
+    apiUrl: `${serverUrl}/api/v1`,
+    docsUrl: `${serverUrl}/api/docs`,
+  });
+
+  loggingService.log(`API is running on: ${serverUrl}/api/v1`);
+  loggingService.log(`API Documentation available at: ${serverUrl}/api/docs`);
 }
-bootstrap();
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Application specific logging
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Application specific logging
+  process.exit(1);
+});
+
+bootstrap().catch((err) => {
+  console.error('Error during bootstrap:', err);
+  process.exit(1);
+});

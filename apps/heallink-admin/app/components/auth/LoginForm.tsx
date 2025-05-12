@@ -30,11 +30,14 @@ export default function LoginForm() {
     setError("");
 
     try {
+      console.log("Attempting login with:", email);
       const result = await signIn("credentials", {
         redirect: false,
         email,
         password,
       });
+
+      console.log("SignIn result:", result);
 
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
@@ -172,6 +175,9 @@ export default function LoginForm() {
         <div className="text-center text-sm text-[color:var(--muted-foreground)]">
           <p>Protected access for Heallink administrators only.</p>
           <p>Unauthorized access attempts will be logged.</p>
+          <p className="text-xs mt-1">
+            API URL: {process.env.NEXT_PUBLIC_API_URL || "Not configured"}
+          </p>
         </div>
       </form>
 

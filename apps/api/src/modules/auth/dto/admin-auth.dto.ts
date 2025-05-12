@@ -31,6 +31,11 @@ export class AdminLoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
+  // Internal property - not sent from client
+  @IsOptional()
+  @IsString()
+  ip?: string;
 }
 
 /**
@@ -209,4 +214,9 @@ export class InitialAdminSetupDto {
   @IsString()
   @IsNotEmpty()
   setupKey: string;
+
+  // Internal property - not sent from client
+  @IsOptional()
+  @IsString()
+  ip?: string;
 }

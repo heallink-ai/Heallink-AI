@@ -10,17 +10,22 @@ import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { AdminRoleGuard } from './guards/admin-role.guard';
+import { LoggingModule } from '../logging/logging.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    LoggingModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.secret'),
-        signOptions: { expiresIn: configService.get<string>('jwt.expiresIn') },
+        secret: configService.get<string>('jwt.secret') || 'dev-jwt-secret',
+        signOptions: {
+          expiresIn: configService.get<string>('jwt.expiresIn') || '15m',
+        },
       }),
     }),
   ],
@@ -31,7 +36,8 @@ import { LocalStrategy } from './strategies/local.strategy';
     JwtStrategy,
     JwtRefreshStrategy,
     LocalStrategy,
+    AdminRoleGuard,
   ],
-  exports: [AuthService, AdminAuthService],
+  exports: [AuthService, AdminAuthService, JwtStrategy],
 })
 export class AuthModule {}

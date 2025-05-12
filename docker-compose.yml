@@ -15,7 +15,10 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
-      - API_URL=http://api:3003
+      # For browser-side requests (must be accessible from user's browser)
+      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+      # For server-side requests (within Docker network)
+      - API_URL=http://api:3003/api/v1
     depends_on:
       - api
     networks:
@@ -37,7 +40,10 @@ services:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
       - PORT=3001
-      - API_URL=http://api:3003
+      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+      - API_URL=http://api:3003/api/v1
+      - NEXTAUTH_URL=http://localhost:3001
+      - NEXTAUTH_SECRET=heallink-admin-dev-auth-secret-key-123
     depends_on:
       - api
     networks:
@@ -59,7 +65,10 @@ services:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
       - PORT=3002
-      - API_URL=http://api:3003
+      # For browser-side requests (must be accessible from user's browser)
+      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+      # For server-side requests (within Docker network)
+      - API_URL=http://api:3003/api/v1
     depends_on:
       - api
     networks:
@@ -77,8 +86,16 @@ services:
       - ./apps/api:/app/apps/api
       - ./packages:/app/packages
       - api-node-modules:/app/apps/api/node_modules
+      - ./logs:/app/logs
     env_file:
       - ./apps/api/.env
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DATABASE_URL=mongodb://root:example@mongodb:27017/heallink?authSource=admin
+      - LOG_DIR=/app/logs
+      - ENABLE_FILE_LOGGING=true
+      - CORS_ORIGIN=*
     depends_on:
       - mongodb
     networks:

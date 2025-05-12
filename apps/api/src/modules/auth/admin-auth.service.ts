@@ -26,6 +26,7 @@ import {
   InitialAdminSetupDto,
 } from './dto/admin-auth.dto';
 import { ADMIN_PERMISSIONS } from './constants/admin-permissions.constant';
+import { LoggingService } from '../logging/logging.service';
 
 interface JwtPayload {
   sub: string;
@@ -41,42 +42,72 @@ export class AdminAuthService {
     @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUser>,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+    private loggingService: LoggingService,
+  ) {
+    this.loggingService.setContext('AdminAuthService');
+  }
 
   /**
    * Login admin user with email and password
    */
-  async login(loginDto: AdminLoginDto) {
-    const { email, password } = loginDto;
+  async login(adminLoginDto: AdminLoginDto) {
+    const { email, password } = adminLoginDto;
 
-    // Find the admin user by email
-    const user = await this.adminUserModel.findOne({ email });
+    const user = await this.adminUserModel.findOne({ email }).exec();
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      this.loggingService.logAuth('unknown', 'admin-login', false, {
+        email,
+        reason: 'User not found',
+      });
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Check if the user is active
     if (!user.isActive) {
-      throw new ForbiddenException('Account is disabled');
+      this.loggingService.logAuth(
+        user._id?.toString() || 'unknown',
+        'admin-login',
+        false,
+        {
+          reason: 'Account inactive',
+        },
+      );
+      throw new UnauthorizedException('Your account has been deactivated');
     }
 
-    // Check if password matches
     const isPasswordValid = await user.comparePassword(password);
+
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      this.loggingService.logAuth(
+        user._id?.toString() || 'unknown',
+        'admin-login',
+        false,
+        {
+          reason: 'Invalid password',
+        },
+      );
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     // Update last login timestamp
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate tokens
     const tokens = await this.generateTokens(user);
 
     // Store refresh token
     user.addRefreshToken(tokens.refreshToken);
     await user.save();
+
+    this.loggingService.logAuth(
+      user._id?.toString() || 'unknown',
+      'admin-login',
+      true,
+      {
+        adminRole: user.adminRole,
+        ip: adminLoginDto.ip || 'unknown',
+      },
+    );
 
     return {
       accessToken: tokens.accessToken,
@@ -99,7 +130,7 @@ export class AdminAuthService {
     // Check if creator has permission to create this type of admin
     if (
       creatorAdminRole !== AdminRole.SUPER_ADMIN &&
-      adminRole === AdminRole.SUPER_ADMIN
+      (adminRole as AdminRole) === AdminRole.SUPER_ADMIN
     ) {
       throw new ForbiddenException(
         'Only super admins can create other super admins',
@@ -113,7 +144,8 @@ export class AdminAuthService {
     }
 
     // Get permissions for the role
-    const rolePermissions = ADMIN_PERMISSIONS[adminRole as AdminRole] || [];
+    const adminRoleEnum = adminRole as AdminRole;
+    const rolePermissions = ADMIN_PERMISSIONS[adminRoleEnum] || [];
 
     // Create new admin user
     const newUser = new this.adminUserModel({
@@ -121,7 +153,7 @@ export class AdminAuthService {
       password,
       name,
       role: UserRole.ADMIN,
-      adminRole,
+      adminRole: adminRoleEnum,
       permissions: rolePermissions,
     });
 
@@ -140,27 +172,41 @@ export class AdminAuthService {
     const { email, password, name, setupKey } = setupDto;
 
     // Verify setup key
-    const configuredSetupKey = this.configService.get<string>('admin.setupKey');
+    const configuredSetupKey =
+      this.configService.get<string>('admin.setupKey') || 'heallink_setup_key';
     if (setupKey !== configuredSetupKey) {
+      this.loggingService.logAuth('unknown', 'initial-admin-setup', false, {
+        email,
+        reason: 'Invalid setup key',
+      });
       throw new UnauthorizedException('Invalid setup key');
     }
 
     // Check if any admin users already exist
     const existingAdminsCount = await this.adminUserModel.countDocuments();
     if (existingAdminsCount > 0) {
+      this.loggingService.logAuth('unknown', 'initial-admin-setup', false, {
+        email,
+        reason: 'Admin already exists',
+      });
       throw new ForbiddenException(
         'Initial admin setup has already been completed',
       );
     }
 
     // Check if user with the email already exists
-    const existingUser = await this.adminUserModel.findOne({ email });
+    const existingUser = await this.adminUserModel.findOne({ email }).exec();
     if (existingUser) {
-      throw new BadRequestException('User with this email already exists');
+      this.loggingService.logAuth('unknown', 'initial-admin-setup', false, {
+        email,
+        reason: 'Email already exists',
+      });
+      throw new BadRequestException('Email is already in use');
     }
 
     // Create the initial admin as SUPER_ADMIN
-    const rolePermissions = ADMIN_PERMISSIONS[AdminRole.SUPER_ADMIN] || ['*'];
+    const superAdminRole = AdminRole.SUPER_ADMIN;
+    const rolePermissions = ADMIN_PERMISSIONS[superAdminRole] || ['*'];
 
     // Create new admin user
     const newUser = new this.adminUserModel({
@@ -168,24 +214,34 @@ export class AdminAuthService {
       password,
       name,
       role: UserRole.ADMIN,
-      adminRole: AdminRole.SUPER_ADMIN, // Always create as super admin
+      adminRole: superAdminRole, // Always create as super admin
       permissions: rolePermissions,
       emailVerified: true, // Auto-verify for initial setup
       isActive: true,
     });
 
-    // Save the user
+    // Hash password before saving
+    await newUser.hashPassword();
     await newUser.save();
 
-    // Generate tokens for immediate login
+    // Generate JWT tokens
     const tokens = await this.generateTokens(newUser);
 
     // Store refresh token
     newUser.addRefreshToken(tokens.refreshToken);
     await newUser.save();
 
+    this.loggingService.logAuth(
+      newUser._id?.toString() || 'unknown',
+      'initial-admin-setup',
+      true,
+      {
+        adminRole: newUser.adminRole,
+        ip: setupDto.ip || 'unknown',
+      },
+    );
+
     return {
-      message: 'Initial admin account created successfully',
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       user: this.sanitizeUser(newUser),
@@ -390,7 +446,8 @@ export class AdminAuthService {
       user.permissions = customPermissions;
     } else {
       // Use default permissions for this role
-      const rolePermissions = ADMIN_PERMISSIONS[adminRole as AdminRole] || [];
+      const adminRoleEnum = adminRole as AdminRole;
+      const rolePermissions = ADMIN_PERMISSIONS[adminRoleEnum] || [];
       user.permissions = rolePermissions;
     }
 
@@ -446,18 +503,18 @@ export class AdminAuthService {
    */
   private sanitizeUser(user: AdminUser) {
     // Convert Mongoose document to plain JavaScript object
-    const userObj = user.toObject();
+    const userObj = user.toObject ? user.toObject() : user;
 
     return {
-      id: userObj._id,
-      email: userObj.email,
-      name: userObj.name,
+      id: userObj._id?.toString() || '',
+      email: userObj.email || '',
+      name: userObj.name || '',
       role: userObj.role,
       adminRole: userObj.adminRole,
-      permissions: userObj.permissions,
-      emailVerified: userObj.emailVerified,
-      isActive: userObj.isActive,
-      lastLogin: userObj.lastLogin,
+      permissions: userObj.permissions || [],
+      emailVerified: userObj.emailVerified || false,
+      isActive: userObj.isActive || false,
+      lastLogin: userObj.lastLogin || null,
     };
   }
 }

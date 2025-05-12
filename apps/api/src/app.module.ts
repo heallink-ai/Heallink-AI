@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { LoggingModule } from './modules/logging/logging.module';
+import { LoggingInterceptor } from './modules/logging/logging.interceptor';
 import configuration, { validationSchema } from './config/configuration';
 
 @Module({
@@ -29,18 +32,35 @@ import configuration, { validationSchema } from './config/configuration';
       serveRoot: '/',
       exclude: ['/api*'],
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60,
-          limit: 10,
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): ThrottlerModuleOptions => {
+        const ttl = configService.get<number>('rate_limit.ttl') || 60;
+        const limit = configService.get<number>('rate_limit.limit') || 100;
+
+        // Return in the format expected by ThrottlerModule
+        return {
+          throttlers: [
+            {
+              ttl,
+              limit,
+            },
+          ],
+        };
+      },
     }),
+    LoggingModule,
     UsersModule,
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
