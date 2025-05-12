@@ -88,7 +88,6 @@ bun.lockb
 *.rmeta
 *.rlib
 *.parquet
-*.svg
 .egg-info/
 .venv/
 node_modules/

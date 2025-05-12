@@ -9,12 +9,16 @@ interface PhoneInputProps {
   error?: string;
 }
 
-export default function PhoneInput({ value, onChange, error }: PhoneInputProps) {
+export default function PhoneInput({
+  value,
+  onChange,
+  error,
+}: PhoneInputProps) {
   const [countryCode, setCountryCode] = useState("+1");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [focused, setFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  
+
   // Update the combined value whenever country code or phone number changes
   useEffect(() => {
     const combinedValue = countryCode + phoneNumber;
@@ -31,7 +35,7 @@ export default function PhoneInput({ value, onChange, error }: PhoneInputProps) 
       if (codeMatch) {
         const code = codeMatch[0];
         const number = value.slice(code.length);
-        
+
         if (code !== countryCode) {
           setCountryCode(code);
         }
@@ -49,12 +53,12 @@ export default function PhoneInput({ value, onChange, error }: PhoneInputProps) 
   const [searchTerm, setSearchTerm] = useState("");
   const filteredCountries = searchTerm
     ? countries.filter(
-        country =>
+        (country) =>
           country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           country.code.includes(searchTerm)
       )
     : countries;
-    
+
   // Handle phone number input, allowing only numbers
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
@@ -65,15 +69,16 @@ export default function PhoneInput({ value, onChange, error }: PhoneInputProps) 
 
   return (
     <div className="mb-4">
-      <label htmlFor="phone" className="block text-sm font-medium light-text-contrast mb-2">
+      <label
+        htmlFor="phone"
+        className="block text-sm font-medium light-text-contrast mb-2"
+      >
         Phone Number
       </label>
-      
-      <div 
+
+      <div
         className={`relative flex rounded-xl transition-all duration-300 ${
-          focused 
-            ? "neumorph-pressed" 
-            : "neumorph-flat hover:shadow-md"
+          focused ? "neumorph-pressed" : "neumorph-flat hover:shadow-md"
         }`}
       >
         {/* Country code dropdown */}
@@ -104,37 +109,67 @@ export default function PhoneInput({ value, onChange, error }: PhoneInputProps) 
 
           {/* Dropdown menu */}
           {dropdownOpen && (
-            <div className="absolute z-10 w-64 mt-1 left-0 bg-background rounded-xl neumorph-flat shadow-lg">
-              <div className="p-2">
-                <input
-                  type="text"
-                  placeholder="Search countries..."
-                  className="w-full p-2 rounded-lg bg-input text-sm mb-2"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredCountries.map((country) => (
-                    <button
-                      key={country.code}
-                      type="button"
-                      className="w-full flex items-center px-3 py-2 text-sm hover:bg-purple-heart/10 rounded-md"
-                      onClick={() => {
-                        setCountryCode(country.dial_code);
-                        setDropdownOpen(false);
-                      }}
-                    >
-                      <span className="mr-2">{country.emoji}</span>
-                      <span className="mr-auto">{country.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {country.dial_code}
-                      </span>
-                    </button>
-                  ))}
+            <>
+              {/* Backdrop to capture clicks outside the dropdown */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setDropdownOpen(false)}
+              />
+
+              <div
+                className="absolute z-50 w-64 mt-2 left-0 rounded-xl shadow-lg overflow-hidden animate-fadeIn"
+                style={{
+                  backgroundColor: "var(--background)",
+                  border: "1px solid rgba(107, 70, 193, 0.2)",
+                  boxShadow:
+                    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="rounded-t-xl p-3 bg-gradient-to-r from-purple-heart/5 to-royal-blue/5">
+                  <input
+                    type="text"
+                    placeholder="Search countries..."
+                    className="w-full p-2 rounded-lg border border-border text-sm mb-1 neumorph-pressed"
+                    style={{ backgroundColor: "var(--input)" }}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <div
+                  className="max-h-60 overflow-y-auto"
+                  style={{ backgroundColor: "var(--background)" }}
+                >
+                  {filteredCountries.length === 0 ? (
+                    <div className="text-center py-4 text-sm opacity-70">
+                      No countries found
+                    </div>
+                  ) : (
+                    filteredCountries.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        className="w-full flex items-center px-4 py-2.5 text-sm hover:bg-purple-heart/10 border-t border-border/10"
+                        style={{ backgroundColor: "var(--background)" }}
+                        onClick={() => {
+                          setCountryCode(country.dial_code);
+                          setDropdownOpen(false);
+                        }}
+                      >
+                        <span className="mr-3 text-base">{country.emoji}</span>
+                        <span className="mr-auto font-medium">
+                          {country.name}
+                        </span>
+                        <span className="text-sm font-mono opacity-70">
+                          {country.dial_code}
+                        </span>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
@@ -153,10 +188,8 @@ export default function PhoneInput({ value, onChange, error }: PhoneInputProps) 
           }}
         />
       </div>
-      
-      {error && (
-        <p className="text-sm text-red-500 mt-1">{error}</p>
-      )}
+
+      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
     </div>
   );
 }

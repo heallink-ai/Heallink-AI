@@ -1,0 +1,41 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background elements -->
+  <circle cx="200" cy="150" r="120" fill="#F5F7FF" />
+  <circle cx="200" cy="150" r="80" fill="#E6EBFF" />
+
+  <!-- Doctor figure -->
+  <path d="M260 120C260 97.9086 242.091 80 220 80H180C157.909 80 140 97.9086 140 120V220H260V120Z"
+    fill="#6B46C1" fill-opacity="0.1" />
+
+  <!-- Stylized Shield -->
+  <path
+    d="M200 80C213 100 233 110 260 110V170C260 210 200 230 200 230C200 230 140 210 140 170V110C167 110 187 100 200 80Z"
+    fill="#6B46C1" fill-opacity="0.2" stroke="#6B46C1" stroke-width="2" />
+
+  <!-- Lock symbol -->
+  <rect x="185" y="150" width="30" height="25" rx="5" fill="#6B46C1" />
+  <circle cx="200" cy="140" r="12" fill="#6B46C1" />
+  <circle cx="200" cy="140" r="6" fill="white" />
+  <rect x="197" y="150" width="6" height="15" rx="1" fill="white" />
+
+  <!-- Heartbeat line -->
+  <path
+    d="M110 180H150L160 160L170 200L180 170L190 190L200 160L210 190L220 170L230 200L240 160L250 180H290"
+    stroke="#6B46C1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Decorative elements -->
+  <circle cx="120" cy="80" r="15" fill="#6B46C1" fill-opacity="0.2" />
+  <circle cx="280" cy="220" r="20" fill="#3B82F6" fill-opacity="0.2" />
+  <circle cx="80" cy="200" r="10" fill="#6B46C1" fill-opacity="0.2" />
+
+  <!-- Healthcare related icons -->
+  <rect x="100" y="120" width="30" height="40" rx="5" fill="#3B82F6" fill-opacity="0.2" />
+  <path d="M115 130V150M105 140H125" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Device with login screen -->
+  <rect x="260" y="130" width="40" height="60" rx="5" fill="#3B82F6" fill-opacity="0.2" />
+  <circle cx="280" cy="145" r="6" fill="#6B46C1" fill-opacity="0.6" />
+  <rect x="270" y="155" width="20" height="3" rx="1.5" fill="#6B46C1" fill-opacity="0.4" />
+  <rect x="270" y="165" width="20" height="3" rx="1.5" fill="#6B46C1" fill-opacity="0.4" />
+  <rect x="275" y="175" width="10" height="5" rx="2" fill="#6B46C1" />
+</svg>
