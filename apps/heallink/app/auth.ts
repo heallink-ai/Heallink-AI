@@ -1,20 +1,27 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
-import AppleProvider from "next-auth/providers/apple";
-import EmailProvider from "next-auth/providers/email";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { Resend } from 'resend';
 
 // Import API client for custom authentication
-import { loginUser, socialLogin, verifyOtp } from './api/auth-api';
-import { AuthProvider } from './types/auth-types';
+import { loginUser, socialLogin, verifyOtp } from "./api/auth-api";
+import { AuthProvider, UserRole } from "./types/auth-types";
 
-// Initialize Resend for email delivery
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Force Node.js runtime
+export const runtime = "nodejs";
+
+// Helper to check if a provider is properly configured
+const isProviderConfigured = (clientId?: string, clientSecret?: string) => {
+  return (
+    clientId &&
+    clientSecret &&
+    !clientId.startsWith("placeholder-") &&
+    !clientSecret.startsWith("placeholder-")
+  );
+};
 
 export const authConfig: NextAuthConfig = {
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/auth/signin",
     signOut: "/auth/signout",
@@ -26,20 +33,20 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isProtected = nextUrl.pathname.startsWith("/dashboard");
-      
+
       if (isProtected && !isLoggedIn) {
         const redirectUrl = new URL("/auth/signin", nextUrl.origin);
         redirectUrl.searchParams.append("callbackUrl", nextUrl.href);
         return Response.redirect(redirectUrl);
       }
-      
+
       return true;
     },
-    async jwt({ token, user, account, trigger }) {
+    async jwt({ token, user, account }) {
       // Initial sign in
       if (account && user) {
         // Store the API access and refresh tokens from custom providers
-        if (account.provider === 'credentials') {
+        if (account.provider === "credentials") {
           token.accessToken = user.accessToken;
           token.refreshToken = user.refreshToken;
         }
@@ -57,8 +64,12 @@ export const authConfig: NextAuthConfig = {
       if (token && session.user) {
         session.user.id = token.sub as string;
         session.user.provider = token.provider as string;
-        session.user.role = token.role as string;
-        
+
+        // Ensure the role is of type UserRole
+        if (token.role) {
+          session.user.role = token.role as UserRole;
+        }
+
         // Add API tokens to session
         session.accessToken = token.accessToken as string;
         session.refreshToken = token.refreshToken as string;
@@ -67,123 +78,7 @@ export const authConfig: NextAuthConfig = {
     },
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Custom profile callback to integrate with our backend
-      profile: async (profile, tokens) => {
-        // Call our API to handle social login and get our internal tokens
-        const { data, error } = await socialLogin(
-          AuthProvider.GOOGLE,
-          tokens.id_token as string
-        );
-
-        if (error || !data) {
-          throw new Error(error || 'Failed to authenticate with Google');
-        }
-
-        return {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          image: profile.picture,
-          role: data.user.role,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        };
-      },
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      // Custom profile callback to integrate with our backend
-      profile: async (profile, tokens) => {
-        // Call our API to handle social login and get our internal tokens
-        const { data, error } = await socialLogin(
-          AuthProvider.FACEBOOK,
-          tokens.access_token as string
-        );
-
-        if (error || !data) {
-          throw new Error(error || 'Failed to authenticate with Facebook');
-        }
-
-        return {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          image: profile.picture.data.url,
-          role: data.user.role,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        };
-      },
-    }),
-    AppleProvider({
-      clientId: process.env.APPLE_ID!,
-      clientSecret: process.env.APPLE_SECRET!,
-      // Custom profile callback to integrate with our backend
-      profile: async (profile, tokens) => {
-        // Call our API to handle social login and get our internal tokens
-        const { data, error } = await socialLogin(
-          AuthProvider.APPLE,
-          tokens.id_token as string
-        );
-
-        if (error || !data) {
-          throw new Error(error || 'Failed to authenticate with Apple');
-        }
-
-        return {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          role: data.user.role,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        };
-      },
-    }),
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: Number(process.env.EMAIL_SERVER_PORT),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
-      },
-      from: process.env.EMAIL_FROM,
-      // Custom email verification handler using Resend
-      async sendVerificationRequest({
-        identifier: email,
-        url,
-        provider,
-      }) {
-        try {
-          const { data, error } = await resend.emails.send({
-            from: 'onboarding@heallink.com',
-            to: email,
-            subject: 'Sign in to Heallink',
-            html: `
-              <body>
-                <h1>Welcome to Heallink</h1>
-                <p>Click the link below to sign in:</p>
-                <a href="${url}">Sign in</a>
-              </body>
-            `,
-          });
-
-          if (error) {
-            throw new Error(`Email could not be sent: ${error.message}`);
-          }
-        } catch (error) {
-          console.error('Error sending verification email', error);
-          throw new Error('SEND_VERIFICATION_EMAIL_ERROR');
-        }
-      },
-    }),
-    // Email/Password credentials provider
+    // Email/Password credentials provider - always enabled
     CredentialsProvider({
       id: "credentials",
       name: "Credentials",
@@ -199,8 +94,8 @@ export const authConfig: NextAuthConfig = {
         try {
           // Call our API to validate credentials
           const { data, error } = await loginUser({
-            email: credentials.email,
-            password: credentials.password,
+            email: credentials.email as string,
+            password: credentials.password as string,
           });
 
           if (error || !data) {
@@ -217,16 +112,22 @@ export const authConfig: NextAuthConfig = {
             refreshToken: data.refreshToken,
           };
         } catch (error) {
+          console.error("Error in credentials authentication:", error);
           return null;
         }
       },
     }),
-    // Phone authentication with credentials
+
+    // Phone authentication with credentials - always enabled
     CredentialsProvider({
       id: "phone",
       name: "Phone",
       credentials: {
-        phone: { label: "Phone Number", type: "tel", placeholder: "+1234567890" },
+        phone: {
+          label: "Phone Number",
+          type: "tel",
+          placeholder: "+1234567890",
+        },
         otp: { label: "OTP", type: "text", placeholder: "123456" },
       },
       async authorize(credentials) {
@@ -236,7 +137,10 @@ export const authConfig: NextAuthConfig = {
 
         try {
           // Call our API to validate OTP
-          const { data, error } = await verifyOtp(credentials.phone, credentials.otp);
+          const { data, error } = await verifyOtp(
+            credentials.phone as string,
+            credentials.otp as string
+          );
 
           if (error || !data) {
             return null;
@@ -253,10 +157,51 @@ export const authConfig: NextAuthConfig = {
             refreshToken: data.refreshToken,
           };
         } catch (error) {
+          console.error("Error in phone authentication:", error);
           return null;
         }
       },
     }),
+
+    // Social providers added conditionally
+    ...(isProviderConfigured(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    )
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            profile: async (profile, tokens) => {
+              try {
+                const { data, error } = await socialLogin(
+                  AuthProvider.GOOGLE,
+                  tokens.id_token as string
+                );
+
+                if (error || !data) {
+                  throw new Error(
+                    error || "Failed to authenticate with Google"
+                  );
+                }
+
+                return {
+                  id: data.user.id,
+                  name: data.user.name,
+                  email: data.user.email,
+                  image: profile.picture,
+                  role: data.user.role,
+                  accessToken: data.accessToken,
+                  refreshToken: data.refreshToken,
+                };
+              } catch (error) {
+                console.error("Error in Google profile mapping:", error);
+                throw error;
+              }
+            },
+          }),
+        ]
+      : []),
   ],
 };
 

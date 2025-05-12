@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true, // Disables ESLint during builds
     // If you want more granular control, consider creating an .eslintrc.json file
   },
+  experimental: {
+    // Help with auth.js compatibility
+    skipMiddlewareUrlNormalize: true,
+    skipTrailingSlashRedirect: true,
+  },
 };
 
 export default nextConfig;
