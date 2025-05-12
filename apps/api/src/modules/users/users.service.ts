@@ -210,4 +210,25 @@ export class UsersService {
 
     return this.create(createUserDto);
   }
+
+  async findByResetToken(resetToken: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOne({
+        resetToken,
+        resetTokenExpiry: { $gt: new Date() },
+      })
+      .exec();
+  }
+
+  /**
+   * Find users with reset tokens
+   */
+  async findUsersWithResetToken(): Promise<UserDocument[]> {
+    return this.userModel
+      .find({
+        passwordResetToken: { $exists: true, $ne: null },
+        passwordResetRequestedAt: { $exists: true, $ne: null },
+      })
+      .exec();
+  }
 }

@@ -12,12 +12,14 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AdminRoleGuard } from './guards/admin-role.guard';
 import { LoggingModule } from '../logging/logging.module';
+import { EmailModule } from '../emails/email.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     LoggingModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

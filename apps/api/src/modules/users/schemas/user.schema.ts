@@ -22,6 +22,10 @@ export type UserDocument = User & Document;
   toJSON: {
     transform: (doc, ret) => {
       delete ret.password;
+      delete ret.resetToken;
+      delete ret.resetTokenExpiry;
+      delete ret.passwordResetToken;
+      delete ret.passwordResetRequestedAt;
       delete ret.__v;
       return ret;
     },
@@ -66,6 +70,18 @@ export class User {
 
   @Prop()
   refreshToken?: string;
+
+  @Prop()
+  resetToken?: string;
+
+  @Prop({ type: Date })
+  resetTokenExpiry?: Date;
+
+  @Prop()
+  passwordResetToken?: string;
+
+  @Prop({ type: Date })
+  passwordResetRequestedAt?: Date;
 
   @Prop({
     type: MongooseSchema.Types.Mixed,

@@ -11,6 +11,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LoggingModule } from './modules/logging/logging.module';
 import { LoggingInterceptor } from './modules/logging/logging.interceptor';
+import { EmailModule } from './modules/emails/email.module';
 import configuration, { validationSchema } from './config/configuration';
 
 @Module({
@@ -53,6 +54,7 @@ import configuration, { validationSchema } from './config/configuration';
     LoggingModule,
     UsersModule,
     AuthModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [

@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -27,6 +28,7 @@ import {
 } from './dto/admin-auth.dto';
 import { ADMIN_PERMISSIONS } from './constants/admin-permissions.constant';
 import { LoggingService } from '../logging/logging.service';
+import { EmailService } from '../emails/email.service';
 
 interface JwtPayload {
   sub: string;
@@ -38,11 +40,14 @@ interface JwtPayload {
 
 @Injectable()
 export class AdminAuthService {
+  private readonly logger = new Logger(AdminAuthService.name);
+
   constructor(
     @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUser>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private loggingService: LoggingService,
+    private emailService: EmailService,
   ) {
     this.loggingService.setContext('AdminAuthService');
   }
@@ -160,6 +165,9 @@ export class AdminAuthService {
     // Save the user
     await newUser.save();
 
+    // Send email with admin creation notification
+    await this.emailService.sendAdminCreationEmail(email, name, password);
+
     return {
       user: this.sanitizeUser(newUser),
     };
@@ -274,15 +282,16 @@ export class AdminAuthService {
     user.passwordResetRequestedAt = new Date();
     await user.save();
 
-    // In a real implementation, send email with reset link
-    // const resetLink = `${process.env.ADMIN_URL}/reset-password?token=${token}`;
-    // await this.mailService.sendPasswordResetEmail(email, resetLink);
+    // Send email with reset link
+    await this.emailService.sendPasswordResetEmail(
+      email,
+      token,
+      user.name || 'Admin User',
+    );
 
     return {
       message:
         'If an account with this email exists, a password reset link will be sent',
-      // For development only, remove in production:
-      token,
     };
   }
 

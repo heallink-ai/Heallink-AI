@@ -46,6 +46,9 @@ ENV NODE_ENV production
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./package.json
 
+# Copy email templates
+COPY --from=builder /app/apps/api/src/modules/emails/templates ./dist/modules/emails/templates
+
 # Install only production dependencies
 RUN yarn install --production --frozen-lockfile
 

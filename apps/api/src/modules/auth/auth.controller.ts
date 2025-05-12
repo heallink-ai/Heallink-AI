@@ -27,6 +27,10 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
+import {
+  PasswordResetRequestDto,
+  PasswordResetDto,
+} from './dto/password-reset.dto';
 
 // Response classes for Swagger documentation
 class AuthTokenResponse {
@@ -219,5 +223,36 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Invalid or expired OTP' })
   async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.authService.verifyOtp(verifyOtpDto);
+  }
+
+  @Post('request-password-reset')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request password reset',
+    description: 'Send a password reset link to user email',
+  })
+  @ApiBody({ type: PasswordResetRequestDto })
+  @ApiOkResponse({
+    description: 'Reset link sent if email exists',
+    type: MessageResponse,
+  })
+  async requestPasswordReset(@Body() resetRequestDto: PasswordResetRequestDto) {
+    return this.authService.requestPasswordReset(resetRequestDto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset password',
+    description: 'Reset password using a valid token',
+  })
+  @ApiBody({ type: PasswordResetDto })
+  @ApiOkResponse({
+    description: 'Password reset successful',
+    type: MessageResponse,
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired token' })
+  async resetPassword(@Body() resetDto: PasswordResetDto) {
+    return this.authService.resetPassword(resetDto.token, resetDto.newPassword);
   }
 }

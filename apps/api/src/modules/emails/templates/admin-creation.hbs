@@ -1,0 +1,250 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Your Heallink Admin Account</title>
+    <style>
+      /* Base styles */
+      body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f7f9fc;
+        color: #333;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Container for email content */
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Header section */
+      .header {
+        background: linear-gradient(135deg, #5b4df2, #2e87fb);
+        padding: 30px;
+        text-align: center;
+      }
+
+      .logo {
+        max-width: 180px;
+        height: auto;
+      }
+
+      /* Main content section */
+      .content {
+        padding: 40px 30px;
+        line-height: 1.6;
+      }
+
+      h1 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-top: 0;
+        margin-bottom: 24px;
+        font-size: 28px;
+      }
+
+      p {
+        margin: 0 0 16px;
+        color: #4a5568;
+      }
+
+      /* Button styling */
+      .button-container {
+        text-align: center;
+        margin: 35px 0;
+      }
+
+      .button {
+        display: inline-block;
+        background: linear-gradient(to right, #5a2dcf, #2066e4);
+        color: white;
+        text-decoration: none;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        box-shadow: 0 4px 6px rgba(90, 45, 207, 0.2);
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 14px rgba(90, 45, 207, 0.25);
+      }
+
+      /* Credentials box */
+      .credentials-box {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+      }
+
+      .credentials-item {
+        margin-bottom: 12px;
+      }
+
+      .credentials-label {
+        font-weight: 600;
+        color: #4b5563;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .credentials-value {
+        font-family: monospace;
+        background-color: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        padding: 8px 12px;
+        color: #374151;
+        font-size: 14px;
+      }
+
+      /* Alert box */
+      .alert {
+        background-color: #fff8e1;
+        border-left: 4px solid #ffc107;
+        padding: 16px 20px;
+        margin: 24px 0;
+        border-radius: 4px;
+      }
+
+      .alert-title {
+        color: #b45309;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .alert-icon {
+        margin-right: 8px;
+      }
+
+      .alert-content {
+        color: #92400e;
+        margin: 0;
+      }
+
+      /* Footer styling */
+      .footer {
+        background-color: #f9fafb;
+        padding: 30px;
+        text-align: center;
+        font-size: 14px;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .social {
+        margin: 20px 0;
+      }
+
+      .social a {
+        display: inline-block;
+        margin: 0 8px;
+        color: #6b7280;
+        text-decoration: none;
+      }
+
+      .social a:hover {
+        color: #3b82f6;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        .container {
+          border-radius: 0;
+        }
+
+        .content {
+          padding: 30px 20px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='header'>
+        <img
+          src='https://heallink.com/logo-white.png'
+          alt='Heallink Logo'
+          class='logo'
+        />
+      </div>
+
+      <div class='content'>
+        <h1>Your Admin Account Is Ready</h1>
+
+        <p>Hello {{name}},</p>
+
+        <p>Your Heallink admin account has been created. You now have access to
+          the administration dashboard where you can manage users, providers,
+          system settings, and more.</p>
+
+        <p>Here are your account credentials:</p>
+
+        <div class='credentials-box'>
+          <div class='credentials-item'>
+            <span class='credentials-label'>Email:</span>
+            <div class='credentials-value'>{{to}}</div>
+          </div>
+          <div class='credentials-item'>
+            <span class='credentials-label'>Temporary Password:</span>
+            <div class='credentials-value'>{{tempPassword}}</div>
+          </div>
+        </div>
+
+        <div class='alert'>
+          <div class='alert-title'>
+            <span class='alert-icon'>🔒</span>Security Note
+          </div>
+          <p class='alert-content'>For security reasons, you'll be required to
+            change your password on first login. Please use a strong, unique
+            password.</p>
+        </div>
+
+        <p>To access the admin dashboard, click the button below:</p>
+
+        <div class='button-container'>
+          <a href='{{loginLink}}' class='button'>Login to Admin Dashboard</a>
+        </div>
+
+        <p>If you have any questions or need assistance, please contact the
+          system administrator.</p>
+
+        <p>Best regards,<br />The Heallink Team</p>
+      </div>
+
+      <div class='footer'>
+        <p>© {{currentYear}} Heallink. All rights reserved.</p>
+        <p>2 Tower of David, Accra - Ghana</p>
+
+        <div class='social'>
+          <a href='https://facebook.com/heallink'>Facebook</a>
+          |
+          <a href='https://twitter.com/heallink'>Twitter</a>
+          |
+          <a href='https://instagram.com/heallink'>Instagram</a>
+        </div>
+
+        <p>This is an automated message. Please do not reply to this email.</p>
+      </div>
+    </div>
+  </body>
+</html>

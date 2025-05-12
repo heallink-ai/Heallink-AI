@@ -2,30 +2,21 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
-import { AuthProvider, UserDocument } from '../users/schemas/user.schema';
-import { SocialLoginDto } from './dto/social-login.dto';
-import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { SocialProvider } from './dto/social-login.dto';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { EmailService } from '../emails/email.service';
-import { randomBytes } from 'crypto';
-
-interface UserPayload {
-  _id: string;
-  email?: string;
-  phone?: string;
-  name?: string;
-  role: string;
-  [key: string]: any;
-}
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcrypt";
+import { UsersService } from "../users/users.service";
+import { RegisterDto } from "./dto/register.dto";
+import { User, AuthProvider, UserDocument } from "../users/schemas/user.schema";
+import { SocialLoginDto } from "./dto/social-login.dto";
+import { SendOtpDto, VerifyOtpDto } from "./dto/otp.dto";
+import { CreateUserDto } from "../users/dto/create-user.dto";
+import { SocialProvider } from "./dto/social-login.dto";
+import { LoginDto } from "./dto/login.dto";
+import { RefreshTokenDto } from "./dto/refresh-token.dto";
+import { randomBytes } from "crypto";
+import { EmailService } from "../emails/email.service";
 
 @Injectable()
 export class AuthService {
@@ -33,14 +24,13 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly emailService: EmailService,
+    private readonly emailService: EmailService
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
 
     if (user && (await user.comparePassword(password))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const {
         password: _password,
         refreshToken: _refreshToken,
@@ -56,7 +46,6 @@ export class AuthService {
     const user = await this.usersService.findByPhone(phone);
 
     if (user && (await user.comparePassword(password))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const {
         password: _password,
         refreshToken: _refreshToken,
@@ -70,19 +59,19 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<any> {
     if (!registerDto.email && !registerDto.phone) {
-      throw new BadRequestException('Either email or phone is required');
+      throw new BadRequestException("Either email or phone is required");
     }
 
     // Check if user already exists
     const existingUser =
       await this.usersService.validateUserExistenceByEmailOrPhone(
         registerDto.email,
-        registerDto.phone,
+        registerDto.phone
       );
 
     if (existingUser) {
       throw new BadRequestException(
-        'User with this email or phone already exists',
+        "User with this email or phone already exists"
       );
     }
 
@@ -95,12 +84,14 @@ export class AuthService {
       providers: [AuthProvider.LOCAL],
     });
 
-    // Send welcome email if email is provided
+    // Send welcome email (non-blocking)
     if (registerDto.email) {
-      await this.emailService.sendWelcomeEmail(
-        registerDto.email,
-        registerDto.name || 'Heallink User',
-      );
+      this.emailService
+        .sendWelcomeEmail(registerDto.email, registerDto.name || "New User")
+        .catch((error) => {
+          // Just log error but don't block registration
+          console.error("Failed to send welcome email:", error);
+        });
     }
 
     // Return sanitized user object without sensitive fields
@@ -114,26 +105,26 @@ export class AuthService {
   }
 
   async login(
-    user: UserPayload,
+    user: any
   ): Promise<{ accessToken: string; refreshToken: string; user: any }> {
     const payload = { sub: user._id, email: user.email, role: user.role };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
-      expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
+      secret: this.configService.get<string>("jwt.secret") || "dev-jwt-secret",
+      expiresIn: this.configService.get<string>("jwt.expiresIn") || "15m",
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret:
-        this.configService.get<string>('jwt.refreshSecret') ||
-        'dev-jwt-refresh-secret',
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
+        this.configService.get<string>("jwt.refreshSecret") ||
+        "dev-jwt-refresh-secret",
+      expiresIn: this.configService.get<string>("jwt.refreshExpiresIn") || "7d",
     });
 
     // Store the refresh token in the user document
     await this.usersService.updateRefreshToken(
       user._id.toString(),
-      refreshToken,
+      refreshToken
     );
 
     return {
@@ -151,32 +142,32 @@ export class AuthService {
 
   async refreshTokens(
     userId: string,
-    refreshToken: string,
+    refreshToken: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.usersService.findOne(userId);
 
     if (!user || user.refreshToken !== refreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException("Invalid refresh token");
     }
 
     const payload = { sub: user._id, email: user.email, role: user.role };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
-      expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
+      secret: this.configService.get<string>("jwt.secret") || "dev-jwt-secret",
+      expiresIn: this.configService.get<string>("jwt.expiresIn") || "15m",
     });
 
     const newRefreshToken = this.jwtService.sign(payload, {
       secret:
-        this.configService.get<string>('jwt.refreshSecret') ||
-        'dev-jwt-refresh-secret',
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
+        this.configService.get<string>("jwt.refreshSecret") ||
+        "dev-jwt-refresh-secret",
+      expiresIn: this.configService.get<string>("jwt.refreshExpiresIn") || "7d",
     });
 
     // Update the refresh token in the user document
     await this.usersService.updateRefreshToken(
       user._id.toString(),
-      newRefreshToken,
+      newRefreshToken
     );
 
     return {
@@ -190,7 +181,7 @@ export class AuthService {
   }
 
   async validateSocialLogin(
-    socialLoginDto: SocialLoginDto,
+    socialLoginDto: SocialLoginDto
   ): Promise<UserDocument> {
     // In a real-world app, you'd verify the token with the provider
     // For Google, Facebook, Apple, etc.
@@ -203,9 +194,9 @@ export class AuthService {
         // In a real app, you'd call Google's API to verify the token
         providerData = {
           provider: AuthProvider.GOOGLE,
-          providerId: 'google-123456', // This would be the ID from Google
-          email: 'user@example.com', // This would come from Google's response
-          name: 'User Name', // This would come from Google's response
+          providerId: "google-123456", // This would be the ID from Google
+          email: "user@example.com", // This would come from Google's response
+          name: "User Name", // This would come from Google's response
         };
         break;
 
@@ -213,9 +204,9 @@ export class AuthService {
         // In a real app, you'd call Facebook's API to verify the token
         providerData = {
           provider: AuthProvider.FACEBOOK,
-          providerId: 'facebook-123456', // This would be the ID from Facebook
-          email: 'user@example.com', // This would come from Facebook's response
-          name: 'User Name', // This would come from Facebook's response
+          providerId: "facebook-123456", // This would be the ID from Facebook
+          email: "user@example.com", // This would come from Facebook's response
+          name: "User Name", // This would come from Facebook's response
         };
         break;
 
@@ -223,18 +214,30 @@ export class AuthService {
         // In a real app, you'd call Apple's API to verify the token
         providerData = {
           provider: AuthProvider.APPLE,
-          providerId: 'apple-123456', // This would be the ID from Apple
-          email: 'user@example.com', // This would come from Apple's response
-          name: 'User Name', // This would come from Apple's response
+          providerId: "apple-123456", // This would be the ID from Apple
+          email: "user@example.com", // This would come from Apple's response
+          name: "User Name", // This would come from Apple's response
         };
         break;
 
       default:
-        throw new BadRequestException('Unsupported provider');
+        throw new BadRequestException("Unsupported provider");
     }
 
     // Find existing user or create a new one
-    return this.usersService.findByIdOrCreate(providerData);
+    const user = await this.usersService.findByIdOrCreate(providerData);
+
+    // Send welcome email if this is a new user (check createdAt vs updatedAt)
+    if (user.createdAt.getTime() === user.updatedAt.getTime() && user.email) {
+      this.emailService
+        .sendWelcomeEmail(user.email, user.name || "New User")
+        .catch((error) => {
+          // Just log error but don't block login
+          console.error("Failed to send welcome email:", error);
+        });
+    }
+
+    return user;
   }
 
   async sendOtp(sendOtpDto: SendOtpDto): Promise<{ success: boolean }> {
@@ -251,13 +254,13 @@ export class AuthService {
     // In a real app, you'd verify the OTP against what was sent
     // For demonstration, we'll assume OTP is valid if it's 123456
 
-    if (verifyOtpDto.code !== '123456') {
-      throw new UnauthorizedException('Invalid OTP');
+    if (verifyOtpDto.code !== "123456") {
+      throw new UnauthorizedException("Invalid OTP");
     }
 
     // Find or create user with the given phone number
     if (!verifyOtpDto.phone && !verifyOtpDto.email) {
-      throw new BadRequestException('Either phone or email is required');
+      throw new BadRequestException("Either phone or email is required");
     }
 
     let user;
@@ -283,6 +286,16 @@ export class AuthService {
       }
 
       user = await this.usersService.create(createUserDto);
+
+      // Send welcome email for new users
+      if (verifyOtpDto.email) {
+        this.emailService
+          .sendWelcomeEmail(verifyOtpDto.email, user.name || "New User")
+          .catch((error) => {
+            // Just log error but don't block verification
+            console.error("Failed to send welcome email:", error);
+          });
+      }
     } else {
       // Update verification status
       const updateData: any = {};
@@ -301,89 +314,66 @@ export class AuthService {
   }
 
   /**
-   * Request password reset for a user
+   * Request a password reset for a user
    */
-  async requestPasswordReset(email: string): Promise<{ message: string }> {
+  async requestPasswordReset(email: string): Promise<{ success: boolean }> {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      // Don't reveal if user exists for security
-      return {
-        message:
-          'If an account with this email exists, a password reset link will be sent',
-      };
+      // Don't reveal whether the email exists or not for security
+      return { success: true };
     }
 
-    // Generate token
-    const token = randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(token, 10);
-
-    // Store token and request timestamp
-    user.passwordResetToken = hashedToken;
-    user.passwordResetRequestedAt = new Date();
-    await user.save();
-
-    // Send email with reset link
-    await this.emailService.sendPasswordResetEmail(
-      email,
-      token,
-      user.name || 'Heallink User',
+    // Generate a reset token
+    const resetToken = randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date();
+    resetTokenExpiry.setMinutes(
+      resetTokenExpiry.getMinutes() +
+        (this.configService.get<number>("email.passwordResetExpiryMinutes") ||
+          30)
     );
 
-    return {
-      message:
-        'If an account with this email exists, a password reset link will be sent',
-    };
+    // Save the reset token to the user
+    await this.usersService.update(user._id.toString(), {
+      resetToken,
+      resetTokenExpiry,
+    });
+
+    // Send the password reset email
+    await this.emailService.sendPasswordResetEmail(
+      email,
+      resetToken,
+      user.name || "User"
+    );
+
+    return { success: true };
   }
 
   /**
-   * Reset password with token
+   * Reset a user's password using a valid reset token
    */
   async resetPassword(
     token: string,
-    newPassword: string,
-  ): Promise<{ message: string }> {
-    // Find user with reset token
-    const users = await this.usersService.findUsersWithResetToken();
+    newPassword: string
+  ): Promise<{ success: boolean }> {
+    // Find user with this reset token and valid expiry
+    const user = await this.usersService.findByResetToken(token);
 
-    // Find user with matching token
-    let matchedUser: UserDocument | null = null;
-    for (const user of users) {
-      if (user.passwordResetToken) {
-        const isMatch = await bcrypt.compare(token, user.passwordResetToken);
-        if (isMatch) {
-          matchedUser = user;
-          break;
-        }
-      }
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new UnauthorizedException("Invalid or expired reset token");
     }
 
-    if (!matchedUser) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
+    // Hash the new password
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Check if token is expired (1 hour validity)
-    if (matchedUser.passwordResetRequestedAt) {
-      const tokenAge =
-        Date.now() - matchedUser.passwordResetRequestedAt.getTime();
-      if (tokenAge > 3600000) {
-        // 1 hour in milliseconds
-        // Clear the reset token
-        matchedUser.passwordResetToken = undefined;
-        matchedUser.passwordResetRequestedAt = undefined;
-        await matchedUser.save();
+    // Update the user's password and clear the reset token
+    await this.usersService.update(user._id.toString(), {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    });
 
-        throw new UnauthorizedException('Token has expired');
-      }
-    }
-
-    // Update password
-    matchedUser.password = newPassword;
-    matchedUser.passwordResetToken = undefined;
-    matchedUser.passwordResetRequestedAt = undefined;
-    matchedUser.refreshToken = undefined;
-    await matchedUser.save();
-
-    return { message: 'Password has been reset successfully' };
+    return { success: true };
   }
 }
