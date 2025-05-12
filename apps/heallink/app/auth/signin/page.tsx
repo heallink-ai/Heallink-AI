@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import AuthLayout from "@/app/components/auth/AuthLayout";
 import InputField from "@/app/components/auth/InputField";
 import PhoneInput from "@/app/components/auth/PhoneInput";
@@ -10,7 +11,8 @@ import SocialButtons from "@/app/components/auth/SocialButtons";
 import AuthDivider from "@/app/components/auth/AuthDivider";
 import Button from "@/app/components/ui/Button";
 
-export default function SignInPage() {
+// Component that uses useSearchParams
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -92,10 +94,7 @@ export default function SignInPage() {
   };
 
   return (
-    <AuthLayout
-      title="Welcome Back"
-      subtitle="Sign in to your account to continue your healthcare journey"
-    >
+    <>
       {error && (
         <div className="mb-6 p-4 rounded-xl neumorph-pressed bg-red-500/5 text-red-500 text-sm">
           {error}
@@ -403,6 +402,24 @@ export default function SignInPage() {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function SignInPage() {
+  return (
+    <AuthLayout
+      title="Welcome Back"
+      subtitle="Sign in to your account to continue your healthcare journey"
+    >
+      <Suspense
+        fallback={
+          <div className="text-center p-4">Loading sign-in options...</div>
+        }
+      >
+        <SignInContent />
+      </Suspense>
     </AuthLayout>
   );
 }
