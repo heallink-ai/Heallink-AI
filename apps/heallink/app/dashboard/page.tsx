@@ -1,137 +1,475 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import Button from "../components/ui/Button";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
-export default function DashboardPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+// Component imports
+import MobileSidebar from "@/app/components/dashboard/MobileSidebar";
+import HealthSnapshotCard from "@/app/components/dashboard/HealthSnapshotCard";
+import AppointmentCard from "@/app/components/dashboard/AppointmentCard";
+import MessagePreview from "@/app/components/dashboard/MessagePreview";
+import ActionButton from "@/app/components/dashboard/ActionButton";
+import NotificationItem from "@/app/components/dashboard/NotificationItem";
+import AiInsightCard from "@/app/components/dashboard/AiInsightCard";
+import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
 
-  // If not authenticated, redirect to auth-required page
+export default function Dashboard() {
+  // State for sidebar toggle on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // State for loading skeleton
+  const [loading, setLoading] = useState(true);
+
+  // Simulate data loading
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth-required?callbackUrl=/dashboard");
-    }
-  }, [status, router]);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-purple-heart border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  // Mock data - in production would come from API
+  const userData = {
+    name: "Alex Johnson",
+    avatar: "/images/avatar-placeholder.png",
+    nextAppointment: {
+      doctor: "Dr. Sarah Williams",
+      specialty: "Cardiologist",
+      date: "Today",
+      time: "3:30 PM",
+      isVirtual: true,
+      avatar: "/images/doctor-avatar.png",
+    },
+    notifications: [
+      {
+        id: 1,
+        type: "appointment",
+        message:
+          "Reminder: Appointment with Dr. Sarah Williams tomorrow at 3:30 PM",
+        time: "1 hour ago",
+      },
+      {
+        id: 2,
+        type: "message",
+        message: "Dr. Williams sent you lab results",
+        time: "Yesterday",
+      },
+      {
+        id: 3,
+        type: "payment",
+        message: "Invoice #HEA-1023 payment successful",
+        time: "2 days ago",
+      },
+    ],
+    messages: [
+      {
+        id: 1,
+        sender: "Dr. Sarah Williams",
+        message:
+          "Your latest test results look good. Let's discuss in our appointment.",
+        time: "1 hour ago",
+        unread: true,
+        avatar: "/images/doctor-avatar.png",
+      },
+      {
+        id: 2,
+        sender: "Dr. Robert Chen",
+        message: "Please remember to take your medication as prescribed.",
+        time: "Yesterday",
+        unread: false,
+        avatar: "/images/doctor-avatar-2.png",
+      },
+    ],
+    healthSnapshot: {
+      bloodPressure: "120/80",
+      glucose: "95 mg/dL",
+      weight: "170 lbs",
+      lastUpdated: "Today, 9:30 AM",
+      trends: {
+        bloodPressure: [118, 122, 125, 119, 120],
+        glucose: [100, 98, 97, 96, 95],
+        weight: [172, 171, 170, 170, 170],
+      },
+    },
+    billing: {
+      outstanding: "$125.00",
+      nextDue: "Oct 15, 2023",
+      invoiceId: "HEA-1089",
+    },
+  };
+
+  // Skeleton loaders for UI elements
+  const Skeleton = ({ className }: { className?: string }) => (
+    <div
+      className={`animate-pulse bg-primary/10 rounded-lg ${className}`}
+    ></div>
+  );
 
   return (
-    <div className="min-h-screen pt-20 pb-16">
-      <div className="container mx-auto px-4">
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black rounded-2xl neumorph-flat p-6 md:p-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold high-contrast-text">
-                Welcome to your Dashboard
-              </h1>
-              <p className="light-text-muted mt-1">
-                {session?.user?.name
-                  ? `Hello, ${session.user.name}`
-                  : "Your healthcare journey starts here"}
-              </p>
-            </div>
-            <Button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              variant="outline"
-              className="neumorph-flat"
+    <main className="min-h-screen bg-background text-foreground pb-20 relative">
+      <BackgroundGradient />
+
+      {/* Mobile Header */}
+      <header className="w-full z-20 fixed top-0 bg-background/80 backdrop-blur-md border-b border-primary/10 px-4 py-3">
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-primary/10"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              Sign Out
-            </Button>
-          </div>
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="18" y2="18" />
+            </svg>
+          </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Dashboard Card Example 1 */}
-            <div className="p-6 rounded-xl neumorph-flat bg-purple-heart/5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-heart to-royal-blue flex items-center justify-center text-white mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Appointments</h3>
-              <p className="text-sm light-text-muted mb-4">
-                View and manage all your upcoming appointments
-              </p>
-              <Button href="#" variant="ghost" size="sm" className="w-full">
-                View Appointments
-              </Button>
-            </div>
+          <span className="text-xl font-medium gradient-text">HealLink</span>
 
-            {/* Dashboard Card Example 2 */}
-            <div className="p-6 rounded-xl neumorph-flat bg-royal-blue/5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-royal-blue to-havelock-blue flex items-center justify-center text-white mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Medical Records</h3>
-              <p className="text-sm light-text-muted mb-4">
-                Access your health history and documents
-              </p>
-              <Button href="#" variant="ghost" size="sm" className="w-full">
-                View Records
-              </Button>
-            </div>
-
-            {/* Dashboard Card Example 3 */}
-            <div className="p-6 rounded-xl neumorph-flat bg-havelock-blue/5">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-havelock-blue to-purple-heart flex items-center justify-center text-white mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Messages</h3>
-              <p className="text-sm light-text-muted mb-4">
-                Securely communicate with healthcare providers
-              </p>
-              <Button href="#" variant="ghost" size="sm" className="w-full">
-                Open Messages
-              </Button>
-            </div>
+          <div className="relative">
+            <button className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+              {loading ? (
+                <Skeleton className="w-full h-full" />
+              ) : (
+                <Image
+                  src={userData.avatar}
+                  alt="User Avatar"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-full"
+                />
+              )}
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+            </button>
           </div>
         </div>
+      </header>
+
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && <MobileSidebar onClose={() => setSidebarOpen(false)} />}
+      </AnimatePresence>
+
+      {/* Main content */}
+      <div className="pt-20 px-4 md:px-6 max-w-7xl mx-auto">
+        {/* Greeting */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          {loading ? (
+            <Skeleton className="h-8 w-3/4 mb-2" />
+          ) : (
+            <h1 className="text-2xl font-semibold">
+              Hello, <span className="gradient-text">{userData.name}</span>
+            </h1>
+          )}
+          <p className="text-foreground/70">
+            {loading ? (
+              <Skeleton className="h-5 w-1/2" />
+            ) : (
+              `${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`
+            )}
+          </p>
+        </motion.div>
+
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Next Appointment */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="col-span-1 md:col-span-2 lg:col-span-2"
+          >
+            {loading ? (
+              <Skeleton className="h-40 w-full" />
+            ) : (
+              <AppointmentCard appointment={userData.nextAppointment} />
+            )}
+          </motion.div>
+
+          {/* Health Snapshot */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="col-span-1"
+          >
+            {loading ? (
+              <Skeleton className="h-40 w-full" />
+            ) : (
+              <HealthSnapshotCard data={userData.healthSnapshot} />
+            )}
+          </motion.div>
+
+          {/* AI Insights */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="col-span-1 md:col-span-2 lg:col-span-3"
+          >
+            {loading ? <Skeleton className="h-24 w-full" /> : <AiInsightCard />}
+          </motion.div>
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="col-span-1 md:col-span-2 lg:col-span-3"
+          >
+            <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {loading ? (
+                <>
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </>
+              ) : (
+                <>
+                  <ActionButton
+                    icon={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect
+                          width="18"
+                          height="18"
+                          x="3"
+                          y="4"
+                          rx="2"
+                          ry="2"
+                        />
+                        <line x1="16" x2="16" y1="2" y2="6" />
+                        <line x1="8" x2="8" y1="2" y2="6" />
+                        <line x1="3" x2="21" y1="10" y2="10" />
+                        <path d="M8 14h.01" />
+                        <path d="M12 14h.01" />
+                        <path d="M16 14h.01" />
+                        <path d="M8 18h.01" />
+                        <path d="M12 18h.01" />
+                        <path d="M16 18h.01" />
+                      </svg>
+                    }
+                    label="Book Appointment"
+                    href="/appointments/book"
+                  />
+                  <ActionButton
+                    icon={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+                        <path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z" />
+                        <path d="M5 18v2" />
+                        <path d="M19 18v2" />
+                      </svg>
+                    }
+                    label="Log Vitals"
+                    href="/health/log"
+                  />
+                  <ActionButton
+                    icon={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect width="20" height="14" x="2" y="5" rx="2" />
+                        <line x1="2" x2="22" y1="10" y2="10" />
+                      </svg>
+                    }
+                    label="Pay Invoice"
+                    href="/billing/pay"
+                  />
+                  <ActionButton
+                    icon={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z" />
+                        <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                      </svg>
+                    }
+                    label="Message Doctor"
+                    href="/messages/new"
+                  />
+                </>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Recent Messages */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="col-span-1 md:col-span-1 lg:col-span-2"
+          >
+            <div className="p-4 bg-card rounded-xl neumorph-flat">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Recent Messages</h2>
+                <Link
+                  href="/messages"
+                  className="text-primary text-sm hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
+
+              {loading ? (
+                <>
+                  <Skeleton className="h-16 w-full mb-3" />
+                  <Skeleton className="h-16 w-full" />
+                </>
+              ) : (
+                <div className="space-y-3">
+                  {userData.messages.map((message) => (
+                    <MessagePreview key={message.id} message={message} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Notifications & Billing Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="col-span-1"
+          >
+            <div className="p-4 bg-card rounded-xl neumorph-flat mb-4">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold">Notifications</h2>
+                <span className="text-xs py-1 px-2 bg-primary/10 text-primary rounded-full">
+                  {loading ? "..." : userData.notifications.length}
+                </span>
+              </div>
+
+              {loading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : (
+                <div className="space-y-2 max-h-[120px] overflow-y-auto">
+                  {userData.notifications.slice(0, 2).map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-card rounded-xl neumorph-flat">
+              <h2 className="text-lg font-semibold mb-3">Billing Summary</h2>
+
+              {loading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-2 rounded-lg bg-background/50">
+                    <span className="text-foreground/70">Outstanding</span>
+                    <span className="font-semibold">
+                      {userData.billing.outstanding}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 rounded-lg bg-background/50">
+                    <span className="text-foreground/70">Next Due</span>
+                    <span className="font-semibold">
+                      {userData.billing.nextDue}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/billing/invoice/${userData.billing.invoiceId}`}
+                    className="block w-full mt-3 text-center py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    View Invoice
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* AI Assistant Floating Button */}
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: 1.2,
+          }}
+          className="fixed right-5 bottom-5 z-30 w-14 h-14 bg-gradient-to-tr from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 2c1.7 0 3 1.3 3 3v9c0 1.7-1.3 3-3 3s-3-1.3-3-3V5c0-1.7 1.3-3 3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" x2="12" y1="19" y2="22" />
+          </svg>
+        </motion.button>
       </div>
-    </div>
+    </main>
   );
 }
