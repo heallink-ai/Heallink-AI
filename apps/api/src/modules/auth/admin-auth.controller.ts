@@ -30,6 +30,7 @@ import {
   AdminPasswordResetDto,
   UpdateAdminRoleDto,
   ValidateTokenDto,
+  InitialAdminSetupDto,
 } from './dto/admin-auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AdminRole } from '../users/entities/admin-user.entity';
@@ -105,6 +106,53 @@ export class AdminAuthController {
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   async login(@Body() loginDto: AdminLoginDto) {
     return this.adminAuthService.login(loginDto);
+  }
+
+  @Post('initial-setup')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Initial admin setup',
+    description: 'Create the first super admin user when no admins exist',
+  })
+  @ApiBody({ type: InitialAdminSetupDto })
+  @ApiCreatedResponse({
+    description: 'Initial admin user created successfully',
+    schema: {
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Initial admin account created successfully',
+        },
+        accessToken: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+        refreshToken: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+        user: {
+          type: 'object',
+          example: {
+            id: '5f8d0c12b9a7f64b3c8e1a82',
+            email: 'superadmin@heallink.com',
+            name: 'Super Admin',
+            role: 'admin',
+            adminRole: 'super_admin',
+            permissions: ['*'],
+            emailVerified: true,
+            isActive: true,
+          },
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid setup key' })
+  @ApiForbiddenResponse({
+    description: 'Initial admin setup already completed',
+  })
+  async initialSetup(@Body() setupDto: InitialAdminSetupDto) {
+    return this.adminAuthService.registerInitialAdmin(setupDto);
   }
 
   @Post('register')

@@ -111,15 +111,49 @@ export class AdminUser extends Document {
 
 export const AdminUserSchema = SchemaFactory.createForClass(AdminUser);
 
+// Attach instance methods to the schema
+AdminUserSchema.methods.comparePassword = async function (
+  candidatePassword: string,
+): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+AdminUserSchema.methods.hashPassword = async function (): Promise<void> {
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+};
+
+AdminUserSchema.methods.addRefreshToken = function (token: string): void {
+  // Keep only the most recent 5 tokens
+  if (this.refreshTokens.length >= 5) {
+    this.refreshTokens = this.refreshTokens.slice(-4);
+  }
+  this.refreshTokens.push(token);
+};
+
+AdminUserSchema.methods.removeRefreshToken = function (token: string): void {
+  this.refreshTokens = this.refreshTokens.filter((t: string) => t !== token);
+};
+
+AdminUserSchema.methods.hasPermission = function (permission: string): boolean {
+  // Super admins have all permissions
+  if (
+    this.adminRole === AdminRole.SUPER_ADMIN ||
+    this.permissions.includes('*')
+  ) {
+    return true;
+  }
+
+  return this.permissions.includes(permission);
+};
+
 // Middleware to hash password before saving
 AdminUserSchema.pre('save', async function (next) {
-  const user = this as AdminUser;
-
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
 
   try {
-    await user.hashPassword();
+    await this.hashPassword();
     next();
   } catch (error) {
     next(error as Error);

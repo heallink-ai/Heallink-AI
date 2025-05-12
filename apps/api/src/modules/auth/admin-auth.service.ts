@@ -6,6 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { randomBytes } from 'crypto';
@@ -22,6 +23,7 @@ import {
   AdminPasswordResetRequestDto,
   AdminPasswordResetDto,
   UpdateAdminRoleDto,
+  InitialAdminSetupDto,
 } from './dto/admin-auth.dto';
 import { ADMIN_PERMISSIONS } from './constants/admin-permissions.constant';
 
@@ -38,6 +40,7 @@ export class AdminAuthService {
   constructor(
     @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUser>,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -126,6 +129,65 @@ export class AdminAuthService {
     await newUser.save();
 
     return {
+      user: this.sanitizeUser(newUser),
+    };
+  }
+
+  /**
+   * Register the initial admin user when none exists in the system
+   */
+  async registerInitialAdmin(setupDto: InitialAdminSetupDto) {
+    const { email, password, name, setupKey } = setupDto;
+
+    // Verify setup key
+    const configuredSetupKey = this.configService.get<string>('admin.setupKey');
+    if (setupKey !== configuredSetupKey) {
+      throw new UnauthorizedException('Invalid setup key');
+    }
+
+    // Check if any admin users already exist
+    const existingAdminsCount = await this.adminUserModel.countDocuments();
+    if (existingAdminsCount > 0) {
+      throw new ForbiddenException(
+        'Initial admin setup has already been completed',
+      );
+    }
+
+    // Check if user with the email already exists
+    const existingUser = await this.adminUserModel.findOne({ email });
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
+    }
+
+    // Create the initial admin as SUPER_ADMIN
+    const rolePermissions = ADMIN_PERMISSIONS[AdminRole.SUPER_ADMIN] || ['*'];
+
+    // Create new admin user
+    const newUser = new this.adminUserModel({
+      email,
+      password,
+      name,
+      role: UserRole.ADMIN,
+      adminRole: AdminRole.SUPER_ADMIN, // Always create as super admin
+      permissions: rolePermissions,
+      emailVerified: true, // Auto-verify for initial setup
+      isActive: true,
+    });
+
+    // Save the user
+    await newUser.save();
+
+    // Generate tokens for immediate login
+    const tokens = await this.generateTokens(newUser);
+
+    // Store refresh token
+    newUser.addRefreshToken(tokens.refreshToken);
+    await newUser.save();
+
+    return {
+      message: 'Initial admin account created successfully',
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: this.sanitizeUser(newUser),
     };
   }

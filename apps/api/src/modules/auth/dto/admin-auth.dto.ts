@@ -166,3 +166,47 @@ export class UpdateAdminRoleDto {
   @IsString({ each: true })
   customPermissions?: string[];
 }
+
+/**
+ * DTO for initial admin setup
+ */
+export class InitialAdminSetupDto {
+  @ApiProperty({
+    description: 'Admin user email address',
+    example: 'superadmin@heallink.com',
+    format: 'email',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({
+    description:
+      'Admin user password - must be at least 8 characters long and contain uppercase, lowercase, and special characters',
+    example: 'StrongP@ssw0rd',
+    minLength: 8,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'Password is too weak',
+  })
+  password: string;
+
+  @ApiProperty({
+    description: 'Admin user full name',
+    example: 'Super Admin',
+  })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({
+    description: 'Setup secret key for added security',
+    example: 'YOUR_SECRET_SETUP_KEY',
+  })
+  @IsString()
+  @IsNotEmpty()
+  setupKey: string;
+}

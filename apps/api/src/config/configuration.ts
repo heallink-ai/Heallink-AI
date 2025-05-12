@@ -21,6 +21,7 @@ export interface EnvironmentVariables {
   EMAIL_SERVER_PASSWORD: string;
   EMAIL_FROM: string;
   RESEND_API_KEY: string;
+  ADMIN_SETUP_KEY: string;
 }
 
 export const validationSchema = Joi.object({
@@ -46,6 +47,7 @@ export const validationSchema = Joi.object({
   EMAIL_SERVER_PASSWORD: Joi.string().optional(),
   EMAIL_FROM: Joi.string().optional(),
   RESEND_API_KEY: Joi.string().optional(),
+  ADMIN_SETUP_KEY: Joi.string().default('heallink_setup_key'),
 });
 
 export default () => ({
@@ -84,5 +86,8 @@ export default () => ({
     password: process.env.EMAIL_SERVER_PASSWORD,
     from: process.env.EMAIL_FROM || 'noreply@heallink.com',
     resendApiKey: process.env.RESEND_API_KEY,
+  },
+  admin: {
+    setupKey: process.env.ADMIN_SETUP_KEY || 'heallink_setup_key',
   },
 });
