@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import { useTheme } from "@/app/theme/ThemeProvider";
 
 // Component imports
@@ -16,6 +15,9 @@ import NotificationItem from "@/app/components/dashboard/NotificationItem";
 import AiInsightCard from "@/app/components/dashboard/AiInsightCard";
 import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
 import BottomNavigation from "@/app/components/dashboard/BottomNavigation";
+import NotificationBell from "@/app/components/dashboard/NotificationBell";
+import QuickActions from "@/app/components/dashboard/QuickActions";
+import ProfileDropdown from "@/app/components/dashboard/ProfileDropdown";
 import Footer from "@/app/components/layout/Footer";
 
 // Type definitions
@@ -241,21 +243,26 @@ export default function Dashboard() {
               )}
             </button>
 
-            <button className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/10">
-              {loading ? (
+            {/* Quick Actions */}
+            {!loading && <QuickActions />}
+
+            {/* Notification Bell */}
+            {!loading && (
+              <NotificationBell notifications={userData.notifications} />
+            )}
+
+            {/* Profile Dropdown */}
+            {loading ? (
+              <div className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/10">
                 <Skeleton className="w-full h-full" />
-              ) : (
-                <Image
-                  src={userData.avatar}
-                  alt="User Avatar"
-                  width={40}
-                  height={40}
-                  className="rounded-full object-cover"
-                  unoptimized
-                />
-              )}
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border border-background rounded-full"></span>
-            </button>
+              </div>
+            ) : (
+              <ProfileDropdown
+                userName={userData.name}
+                avatarUrl={userData.avatar}
+                isOnline={true}
+              />
+            )}
           </div>
         </div>
       </header>
