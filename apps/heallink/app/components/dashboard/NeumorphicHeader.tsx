@@ -39,6 +39,8 @@ export default function NeumorphicHeader({
   const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
 
+  console.log({ session });
+
   // Debug session data for profile image issue
   useEffect(() => {
     if (session?.user) {

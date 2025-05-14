@@ -62,13 +62,14 @@ export const authConfig: NextAuthConfig = {
 
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       // Initial sign in
       if (account && user) {
         authLog("JWT Callback - Initial Sign In:", {
           provider: account.provider,
           tokenType: account.token_type,
           user: user,
+          profile: profile,
         });
 
         // Store the API access and refresh tokens from custom providers
@@ -85,6 +86,7 @@ export const authConfig: NextAuthConfig = {
             // For Google OAuth, ensure we preserve the profile picture
             if (user.image) {
               token.picture = user.image;
+              token.image = user.image; // Set both for compatibility
             }
 
             const { data, error } = await socialLogin(
@@ -103,14 +105,23 @@ export const authConfig: NextAuthConfig = {
             token.role = data.user.role;
             token.sub = data.user.id;
 
-            // Preserve profile image from oauth if one wasn't returned from our API
-            if (!data.user.image && token.picture) {
+            // Preserve image URLs - prioritize API response but fall back to OAuth
+            if (data.user.image) {
+              token.image = data.user.image;
+            } else if (token.picture) {
               token.image = token.picture;
             }
 
-            authLog("Google authentication successful");
+            authLog("Google authentication successful, token:", {
+              image: token.image,
+              picture: token.picture,
+            });
           } catch (error) {
             authLog("Error in Google token processing:", error);
+            // Preserve the Google image even if social login fails
+            if (user.image) {
+              token.image = user.image;
+            }
           }
         }
 

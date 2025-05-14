@@ -22,6 +22,7 @@ export default function ProfileDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [cachedImageUrl, setCachedImageUrl] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const router = useRouter();
@@ -29,10 +30,62 @@ export default function ProfileDropdown({
 
   // Use session data if available
   const displayName = session?.user?.name || userName;
-  const displayAvatar = imgError
-    ? "/vercel.svg"
-    : session?.user?.image || avatarUrl;
+  const displayAvatar = cachedImageUrl || session?.user?.image || avatarUrl;
   const userRole = session?.user?.role || "Patient";
+
+  // Try to load cached image from localStorage when component mounts
+  useEffect(() => {
+    const originalImageUrl = session?.user?.image || avatarUrl;
+    if (originalImageUrl) {
+      // Create a cache key based on the image URL
+      const cacheKey = `image_cache_${btoa(originalImageUrl).substring(0, 32)}`;
+
+      // Try to get the cached image from localStorage
+      const cachedImage = localStorage.getItem(cacheKey);
+      if (cachedImage) {
+        setCachedImageUrl(cachedImage);
+        console.log("Using cached image from localStorage");
+      } else if (originalImageUrl.includes("lh3.googleusercontent.com")) {
+        // For Google images, preload and cache
+        // Modified to use data URL approach
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () {
+          try {
+            // Create a canvas to convert the image to a data URL
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL("image/jpeg", 0.5); // Reduce quality for storage
+
+              // Save to localStorage
+              localStorage.setItem(cacheKey, dataUrl);
+              setCachedImageUrl(dataUrl);
+              console.log("Image cached successfully");
+            }
+          } catch (error) {
+            console.error("Failed to cache image:", error);
+          }
+        };
+
+        img.onerror = function () {
+          console.log("Failed to preload image for caching");
+        };
+
+        // Start loading the optimized version
+        const optimizedUrl = getOptimizedGoogleImageUrl(originalImageUrl);
+        img.src = optimizedUrl;
+      }
+    }
+  }, [session?.user?.image, avatarUrl]);
+
+  // Reset image error state when avatar URL changes
+  useEffect(() => {
+    setImgError(false);
+  }, [displayAvatar]);
 
   // Debug user profile data
   useEffect(() => {
@@ -44,6 +97,20 @@ export default function ProfileDropdown({
       });
     }
   }, [session, avatarUrl]);
+
+  // Handle image error
+  const handleImageError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
+    console.log({ e });
+    console.log("Image failed to load:", {
+      url: displayAvatar,
+      optimizedUrl: optimizedAvatarUrl,
+      target: e.currentTarget,
+      path: e.currentTarget.src,
+    });
+    setImgError(true);
+  };
 
   // Generate initials for fallback avatar
   const getInitials = (name: string) => {
@@ -57,11 +124,6 @@ export default function ProfileDropdown({
   };
 
   const userInitials = getInitials(displayName);
-
-  // Handle image error
-  const handleImageError = () => {
-    setImgError(true);
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -193,6 +255,39 @@ export default function ProfileDropdown({
     },
   ];
 
+  // Check if URL is external (for deciding whether to use Next Image or standard img)
+  const isExternalImage = (url: string) => {
+    if (!url) return false;
+    return url.startsWith("http") || url.startsWith("https");
+  };
+
+  // Get a CORS-friendly version of Google profile image URL
+  const getOptimizedGoogleImageUrl = (url: string) => {
+    if (!url) return url;
+
+    // Check if it's a Google profile image
+    if (url.includes("lh3.googleusercontent.com")) {
+      // Remove size constraints from Google image URL to get higher quality
+      // Convert from =s96-c format to =s400-c format for better quality
+      return url.replace(/=s\d+-c$/, "=s400-c");
+    }
+
+    return url;
+  };
+
+  const optimizedAvatarUrl = getOptimizedGoogleImageUrl(displayAvatar);
+
+  console.log({
+    imgError,
+    displayAvatar,
+    cachedImageUrl,
+    optimizedAvatarUrl,
+    isExternal: isExternalImage(displayAvatar),
+  });
+
+  // Determine if we should use data URL or regular image
+  const isDataUrl = displayAvatar && displayAvatar.startsWith("data:image");
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -204,6 +299,21 @@ export default function ProfileDropdown({
           <div className="w-full h-full flex items-center justify-center bg-primary text-white font-medium">
             {userInitials}
           </div>
+        ) : isDataUrl ? (
+          <img
+            src={displayAvatar}
+            alt={`${displayName}'s avatar`}
+            className="w-full h-full rounded-full object-cover"
+            onError={handleImageError}
+          />
+        ) : isExternalImage(displayAvatar) ? (
+          <img
+            src={optimizedAvatarUrl}
+            alt={`${displayName}'s avatar`}
+            className="w-full h-full rounded-full object-cover"
+            crossOrigin="anonymous"
+            onError={handleImageError}
+          />
         ) : (
           <Image
             src={displayAvatar}
@@ -260,6 +370,21 @@ export default function ProfileDropdown({
                           <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center bg-primary text-white font-medium">
                             {userInitials}
                           </div>
+                        ) : isDataUrl ? (
+                          <img
+                            src={displayAvatar}
+                            alt={`${displayName}'s avatar`}
+                            className="w-[60px] h-[60px] rounded-full object-cover"
+                            onError={handleImageError}
+                          />
+                        ) : isExternalImage(displayAvatar) ? (
+                          <img
+                            src={optimizedAvatarUrl}
+                            alt={`${displayName}'s avatar`}
+                            className="w-[60px] h-[60px] rounded-full object-cover"
+                            crossOrigin="anonymous"
+                            onError={handleImageError}
+                          />
                         ) : (
                           <Image
                             src={displayAvatar}

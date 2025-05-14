@@ -4,11 +4,31 @@ const nextConfig = {
     ignoreDuringBuilds: true, // Disables ESLint during builds
   },
   images: {
-    domains: ["images.unsplash.com"],
+    domains: [
+      "images.unsplash.com",
+      "lh3.googleusercontent.com",
+      "plus.unsplash.com",
+      "platform-lookaside.fbsbx.com",
+    ],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "platform-lookaside.fbsbx.com",
         pathname: "**",
       },
     ],
