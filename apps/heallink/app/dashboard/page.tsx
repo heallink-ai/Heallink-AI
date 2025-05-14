@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "@/app/theme/ThemeProvider";
 
 // Component imports
 import MobileSidebar from "@/app/components/dashboard/MobileSidebar";
@@ -15,10 +14,8 @@ import NotificationItem from "@/app/components/dashboard/NotificationItem";
 import AiInsightCard from "@/app/components/dashboard/AiInsightCard";
 import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
 import BottomNavigation from "@/app/components/dashboard/BottomNavigation";
-import NotificationBell from "@/app/components/dashboard/NotificationBell";
-import QuickActions from "@/app/components/dashboard/QuickActions";
-import ProfileDropdown from "@/app/components/dashboard/ProfileDropdown";
 import Footer from "@/app/components/layout/Footer";
+import NeumorphicHeader from "@/app/components/dashboard/NeumorphicHeader";
 
 // Type definitions
 type NotificationType = "appointment" | "message" | "payment";
@@ -31,9 +28,6 @@ interface Notification {
 }
 
 export default function Dashboard() {
-  // Theme state
-  const { theme, setTheme } = useTheme();
-
   // State for sidebar toggle on mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -80,11 +74,6 @@ export default function Dashboard() {
       }
     }
   }, [floatingBtnPosition]);
-
-  // Toggle theme function
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
 
   // Mock data - in production would come from API
   const userData = {
@@ -171,101 +160,12 @@ export default function Dashboard() {
     <main className="min-h-screen bg-background text-foreground pb-0 relative">
       <BackgroundGradient />
 
-      {/* Mobile Header */}
-      <header className="w-full z-20 fixed top-0 bg-background/80 backdrop-blur-md border-b border-primary/10 px-4 py-3">
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-primary/10"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="4" x2="20" y1="12" y2="12" />
-              <line x1="4" x2="20" y1="6" y2="6" />
-              <line x1="4" x2="20" y1="18" y2="18" />
-            </svg>
-          </button>
-
-          <span className="text-xl font-medium gradient-text">HealLink</span>
-
-          <div className="flex items-center gap-2">
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-primary/10"
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
-              {theme === "dark" ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="M4.93 4.93l1.41 1.41" />
-                  <path d="M17.66 17.66l1.41 1.41" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="M6.34 17.66l-1.41 1.41" />
-                  <path d="M19.07 4.93l-1.41 1.41" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-              )}
-            </button>
-
-            {/* Quick Actions */}
-            {!loading && <QuickActions />}
-
-            {/* Notification Bell */}
-            {!loading && (
-              <NotificationBell notifications={userData.notifications} />
-            )}
-
-            {/* Profile Dropdown */}
-            {loading ? (
-              <div className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/10">
-                <Skeleton className="w-full h-full" />
-              </div>
-            ) : (
-              <ProfileDropdown
-                userName={userData.name}
-                avatarUrl={userData.avatar}
-                isOnline={true}
-              />
-            )}
-          </div>
-        </div>
-      </header>
+      {/* New Neumorphic Header */}
+      <NeumorphicHeader
+        userData={userData}
+        onMenuToggle={() => setSidebarOpen(true)}
+        loading={loading}
+      />
 
       {/* Mobile Sidebar */}
       <AnimatePresence>
@@ -273,7 +173,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Main content */}
-      <div className="pt-20 pb-24 md:pb-0 px-4 max-w-7xl mx-auto relative z-10">
+      <div className="pt-24 pb-24 md:pb-0 px-4 max-w-7xl mx-auto relative z-10">
         {/* Greeting */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

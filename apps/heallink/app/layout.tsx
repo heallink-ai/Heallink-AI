@@ -1,7 +1,8 @@
 // src/app/layout.tsx
-import Providers from "@/app/providers";
-import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./components/dashboard/neumorphic-effects.css";
+import Providers from "./providers";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "HealLink | AI-Driven Healthcare Routing and Assistance",
