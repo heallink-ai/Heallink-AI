@@ -19,7 +19,7 @@ export default function SigninContainer() {
           // Handle email sign in
           const result = await signIn("credentials", {
             email: credentials.email,
-            password: credentials.otp, // In the email case, we're using the password
+            password: credentials.password, // Use the password field for email login
             redirect: false,
             callbackUrl,
           });
@@ -73,6 +73,7 @@ export default function SigninContainer() {
 
   // Handle form submission
   const handleSubmit = (credentials: SigninCredentials) => {
+    console.log("Submitting credentials:", credentials);
     mutate(credentials);
   };
 

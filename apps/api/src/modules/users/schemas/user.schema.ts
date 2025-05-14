@@ -15,7 +15,10 @@ export enum AuthProvider {
   APPLE = 'apple',
 }
 
-export type UserDocument = User & Document;
+export type UserDocument = User &
+  Document & {
+    comparePassword(candidatePassword: string): Promise<boolean>;
+  };
 
 @Schema({
   timestamps: true,
@@ -96,20 +99,36 @@ export class User {
     default: {},
   })
   meta: Record<string, any>;
-
-  async comparePassword(password: string): Promise<boolean> {
-    return this.password ? bcrypt.compare(password, this.password) : false;
-  }
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
 // Pre-save hook to hash password
-UserSchema.pre('save', async function (next) {
-  const user = this as any;
-  if (user.isModified('password') && user.password) {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+UserSchema.pre('save', function (next) {
+  // Using type assertion with Document & User to access properties with proper typing
+  const user = this as Document & User;
+
+  // Check if password is modified and exists
+  if (user.isModified && user.isModified('password') && user.password) {
+    bcrypt
+      .genSalt(10)
+      .then((salt) => bcrypt.hash(user.password as string, salt))
+      .then((hash) => {
+        user.password = hash;
+        next();
+      })
+      .catch((err) => next(err));
+  } else {
+    next();
   }
-  next();
 });
+
+// Add comparePassword method to the schema with proper typing
+UserSchema.methods.comparePassword = function (
+  candidatePassword: string,
+): Promise<boolean> {
+  const user = this as Document & User;
+  return user.password
+    ? bcrypt.compare(candidatePassword, user.password)
+    : Promise.resolve(false);
+};

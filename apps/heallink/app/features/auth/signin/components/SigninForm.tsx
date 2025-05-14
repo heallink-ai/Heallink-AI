@@ -18,6 +18,7 @@ export type SigninCredentials = {
   email: string;
   phone: string;
   otp: string;
+  password: string;
 };
 
 export default function SigninForm({
@@ -26,6 +27,7 @@ export default function SigninForm({
   error,
 }: SigninFormProps) {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [authMethod, setAuthMethod] = useState<"email" | "phone" | "social">(
@@ -68,7 +70,17 @@ export default function SigninForm({
       return;
     }
 
-    onSubmit({ email, phone: "", otp: "" });
+    if (!password) {
+      setValidationError("Password is required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setValidationError("Password must be at least 8 characters");
+      return;
+    }
+
+    onSubmit({ email, phone: "", otp: "", password });
   };
 
   const handlePhoneSignIn = (e: React.FormEvent) => {
@@ -85,7 +97,7 @@ export default function SigninForm({
       return;
     }
 
-    onSubmit({ email: "", phone, otp });
+    onSubmit({ email: "", phone, otp, password: "" });
   };
 
   // Display either validation errors or API errors
@@ -164,6 +176,33 @@ export default function SigninForm({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                />
+              </svg>
+            }
+          />
+
+          <InputField
+            id="password"
+            type="password"
+            label="Password"
+            placeholder="Enter your password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
                 />
               </svg>
             }
