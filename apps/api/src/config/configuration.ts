@@ -22,6 +22,13 @@ export interface EnvironmentVariables {
   EMAIL_FROM: string;
   RESEND_API_KEY: string;
   ADMIN_SETUP_KEY: string;
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+  AWS_REGION: string;
+  AWS_ENDPOINT: string;
+  USE_LOCALSTACK: string;
+  S3_BUCKET_NAME: string;
+  DYNAMODB_AUDIT_TABLE: string;
 }
 
 export const validationSchema = Joi.object({
@@ -48,6 +55,14 @@ export const validationSchema = Joi.object({
   EMAIL_FROM: Joi.string().optional(),
   RESEND_API_KEY: Joi.string().optional(),
   ADMIN_SETUP_KEY: Joi.string().default('heallink_setup_key'),
+  // AWS Configuration
+  AWS_ACCESS_KEY_ID: Joi.string().optional(),
+  AWS_SECRET_ACCESS_KEY: Joi.string().optional(),
+  AWS_REGION: Joi.string().default('us-east-1'),
+  AWS_ENDPOINT: Joi.string().optional(),
+  USE_LOCALSTACK: Joi.string().valid('true', 'false').default('false'),
+  S3_BUCKET_NAME: Joi.string().default('heallink-storage'),
+  DYNAMODB_AUDIT_TABLE: Joi.string().default('heallink-audit-logs'),
 });
 
 export default () => ({
@@ -89,5 +104,18 @@ export default () => ({
   },
   admin: {
     setupKey: process.env.ADMIN_SETUP_KEY || 'heallink_setup_key',
+  },
+  aws: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION || 'us-east-1',
+    endpoint: process.env.AWS_ENDPOINT,
+    useLocalstack: process.env.USE_LOCALSTACK === 'true',
+    s3: {
+      bucketName: process.env.S3_BUCKET_NAME || 'heallink-storage',
+    },
+    dynamodb: {
+      auditTable: process.env.DYNAMODB_AUDIT_TABLE || 'heallink-audit-logs',
+    },
   },
 });

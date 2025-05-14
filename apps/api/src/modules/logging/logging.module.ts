@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import { LoggingService } from './logging.service';
-import { LoggingInterceptor } from './logging.interceptor';
 import { configureWinston } from './winston.config';
+import { LoggingMiddleware } from './logging.middleware';
 
 @Module({
   imports: [
@@ -15,7 +15,13 @@ import { configureWinston } from './winston.config';
         configureWinston(configService),
     }),
   ],
-  providers: [LoggingService, LoggingInterceptor],
-  exports: [LoggingService, LoggingInterceptor],
+  providers: [LoggingService],
+  exports: [LoggingService],
 })
-export class LoggingModule {}
+export class LoggingModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggingMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

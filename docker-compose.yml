@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   heallink:
     build:
@@ -89,15 +87,9 @@ services:
       - ./logs:/app/logs
     env_file:
       - ./apps/api/.env
-    environment:
-      - NODE_ENV=development
-      - PORT=3003
-      - DATABASE_URL=mongodb://root:example@mongodb:27017/heallink?authSource=admin
-      - LOG_DIR=/app/logs
-      - ENABLE_FILE_LOGGING=true
-      - CORS_ORIGIN=*
     depends_on:
       - mongodb
+      - localstack
     networks:
       - heallink-network
     restart: unless-stopped
@@ -124,6 +116,35 @@ services:
       retries: 5
       start_period: 10s
 
+  localstack:
+    image: localstack/localstack:latest
+    container_name: heallink-localstack
+    ports:
+      - "4566:4566" # LocalStack Gateway
+      - "4510-4559:4510-4559" # external services port range
+    environment:
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=s3,secretsmanager,dynamodb,cloudwatch,logs,iam,sts
+      - DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
+      - DATA_DIR=/var/lib/localstack/data
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts/localstack:/docker-entrypoint-initaws.d
+    networks:
+      - heallink-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 networks:
   heallink-network:
     driver: bridge
@@ -133,3 +154,4 @@ volumes:
   heallink-admin-node-modules:
   heallink-providers-node-modules:
   api-node-modules:
+  localstack-data:
