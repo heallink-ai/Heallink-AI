@@ -41,6 +41,12 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const isProtected = nextUrl.pathname.startsWith("/dashboard");
       const isHomepage = nextUrl.pathname === "/";
+      const isAuthPage = nextUrl.pathname.startsWith("/auth/");
+
+      // Redirect logged-in users away from auth pages to dashboard
+      if (isLoggedIn && isAuthPage) {
+        return Response.redirect(new URL("/dashboard", nextUrl.origin));
+      }
 
       // Redirect logged-in users from homepage to dashboard
       if (isLoggedIn && isHomepage) {
@@ -62,6 +68,7 @@ export const authConfig: NextAuthConfig = {
         authLog("JWT Callback - Initial Sign In:", {
           provider: account.provider,
           tokenType: account.token_type,
+          user: user,
         });
 
         // Store the API access and refresh tokens from custom providers
@@ -74,6 +81,12 @@ export const authConfig: NextAuthConfig = {
         if (account.provider === "google" && account.id_token) {
           try {
             authLog("Handling Google token");
+
+            // For Google OAuth, ensure we preserve the profile picture
+            if (user.image) {
+              token.picture = user.image;
+            }
+
             const { data, error } = await socialLogin(
               AuthProvider.GOOGLE,
               account.id_token
@@ -89,6 +102,11 @@ export const authConfig: NextAuthConfig = {
             token.refreshToken = data.refreshToken;
             token.role = data.user.role;
             token.sub = data.user.id;
+
+            // Preserve profile image from oauth if one wasn't returned from our API
+            if (!data.user.image && token.picture) {
+              token.image = token.picture;
+            }
 
             authLog("Google authentication successful");
           } catch (error) {
@@ -111,6 +129,11 @@ export const authConfig: NextAuthConfig = {
       if (token && session.user) {
         session.user.id = token.sub as string;
         session.user.provider = token.provider as string;
+
+        // Ensure profile image is included
+        if (token.image || token.picture) {
+          session.user.image = (token.image || token.picture) as string;
+        }
 
         // Ensure the role is of type UserRole
         if (token.role) {

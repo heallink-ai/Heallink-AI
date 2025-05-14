@@ -39,10 +39,21 @@ export default function NeumorphicHeader({
   const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
 
+  // Debug session data for profile image issue
+  useEffect(() => {
+    if (session?.user) {
+      console.log("Session user data:", {
+        name: session.user.name,
+        image: session.user.image,
+        provider: session.user.provider,
+      });
+    }
+  }, [session]);
+
   // Use session data if available
   const userProfile = {
     name: session?.user?.name || userData.name,
-    avatar: session?.user?.image || userData.avatar,
+    avatar: session?.user?.image || userData.avatar || "/vercel.svg",
     notifications: userData.notifications,
   };
 

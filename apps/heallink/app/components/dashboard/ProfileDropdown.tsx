@@ -21,6 +21,7 @@ export default function ProfileDropdown({
 }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const router = useRouter();
@@ -28,8 +29,39 @@ export default function ProfileDropdown({
 
   // Use session data if available
   const displayName = session?.user?.name || userName;
-  const displayAvatar = session?.user?.image || avatarUrl;
+  const displayAvatar = imgError
+    ? "/vercel.svg"
+    : session?.user?.image || avatarUrl;
   const userRole = session?.user?.role || "Patient";
+
+  // Debug user profile data
+  useEffect(() => {
+    if (session?.user) {
+      console.log("ProfileDropdown - Session data:", {
+        name: session.user.name,
+        image: session.user.image,
+        avatarUrl,
+      });
+    }
+  }, [session, avatarUrl]);
+
+  // Generate initials for fallback avatar
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const userInitials = getInitials(displayName);
+
+  // Handle image error
+  const handleImageError = () => {
+    setImgError(true);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -168,14 +200,22 @@ export default function ProfileDropdown({
         className="relative w-10 h-10 rounded-full overflow-hidden transition-all duration-300 hover:shadow-md active:scale-95"
         aria-label="Open profile menu"
       >
-        <Image
-          src={displayAvatar}
-          alt={`${displayName}'s avatar`}
-          width={40}
-          height={40}
-          className="rounded-full object-cover"
-          unoptimized
-        />
+        {imgError ? (
+          <div className="w-full h-full flex items-center justify-center bg-primary text-white font-medium">
+            {userInitials}
+          </div>
+        ) : (
+          <Image
+            src={displayAvatar}
+            alt={`${displayName}'s avatar`}
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+            onError={handleImageError}
+            priority
+            unoptimized
+          />
+        )}
         {isOnline && (
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border border-background rounded-full"></span>
         )}
@@ -216,14 +256,22 @@ export default function ProfileDropdown({
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <Image
-                          src={displayAvatar}
-                          alt={`${displayName}'s avatar`}
-                          width={60}
-                          height={60}
-                          className="rounded-full object-cover"
-                          unoptimized
-                        />
+                        {imgError ? (
+                          <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center bg-primary text-white font-medium">
+                            {userInitials}
+                          </div>
+                        ) : (
+                          <Image
+                            src={displayAvatar}
+                            alt={`${displayName}'s avatar`}
+                            width={60}
+                            height={60}
+                            className="rounded-full object-cover"
+                            onError={handleImageError}
+                            priority
+                            unoptimized
+                          />
+                        )}
                         {isOnline && (
                           <span className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 border-2 border-background dark:border-gray-900 rounded-full"></span>
                         )}
