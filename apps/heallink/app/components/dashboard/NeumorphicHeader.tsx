@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/app/theme/ThemeProvider";
+import { useSession } from "next-auth/react";
 
 // Component imports
 import NotificationBell from "./NotificationBell";
@@ -36,6 +37,14 @@ export default function NeumorphicHeader({
 }: NeumorphicHeaderProps) {
   const { theme, setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
+  const { data: session } = useSession();
+
+  // Use session data if available
+  const userProfile = {
+    name: session?.user?.name || userData.name,
+    avatar: session?.user?.image || userData.avatar,
+    notifications: userData.notifications,
+  };
 
   // Handle scroll effect
   useEffect(() => {
@@ -220,7 +229,7 @@ export default function NeumorphicHeader({
               <div
                 className={`${scrolled ? "scale-95" : "scale-100"} transition-all duration-300`}
               >
-                <NotificationBell notifications={userData.notifications} />
+                <NotificationBell notifications={userProfile.notifications} />
               </div>
             )}
 
@@ -238,8 +247,8 @@ export default function NeumorphicHeader({
                 className={`${scrolled ? "scale-95" : "scale-100"} transition-all duration-300`}
               >
                 <ProfileDropdown
-                  userName={userData.name}
-                  avatarUrl={userData.avatar}
+                  userName={userProfile.name}
+                  avatarUrl={userProfile.avatar}
                   isOnline={true}
                 />
               </div>

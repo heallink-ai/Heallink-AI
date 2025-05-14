@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/app/theme/ThemeProvider";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface ProfileDropdownProps {
   userName: string;
@@ -18,8 +20,16 @@ export default function ProfileDropdown({
   isOnline = true,
 }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  // Use session data if available
+  const displayName = session?.user?.name || userName;
+  const displayAvatar = session?.user?.image || avatarUrl;
+  const userRole = session?.user?.role || "Patient";
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -37,6 +47,20 @@ export default function ProfileDropdown({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Handle logout
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLoggingOut(true);
+
+    try {
+      await signOut({ redirect: false });
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setIsLoggingOut(false);
+    }
+  };
 
   const menuItems = [
     {
@@ -129,9 +153,11 @@ export default function ProfileDropdown({
           <line x1="21" x2="9" y1="12" y2="12" />
         </svg>
       ),
-      label: "Logout",
-      href: "/auth/logout",
+      label: isLoggingOut ? "Logging out..." : "Logout",
+      href: "#",
       color: "from-red-400 to-red-600 dark:from-red-500 dark:to-red-700",
+      onClick: handleLogout,
+      disabled: isLoggingOut,
     },
   ];
 
@@ -143,8 +169,8 @@ export default function ProfileDropdown({
         aria-label="Open profile menu"
       >
         <Image
-          src={avatarUrl}
-          alt={`${userName}'s avatar`}
+          src={displayAvatar}
+          alt={`${displayName}'s avatar`}
           width={40}
           height={40}
           className="rounded-full object-cover"
@@ -191,8 +217,8 @@ export default function ProfileDropdown({
                         transition={{ duration: 0.2 }}
                       >
                         <Image
-                          src={avatarUrl}
-                          alt={`${userName}'s avatar`}
+                          src={displayAvatar}
+                          alt={`${displayName}'s avatar`}
                           width={60}
                           height={60}
                           className="rounded-full object-cover"
@@ -205,7 +231,7 @@ export default function ProfileDropdown({
 
                       <div>
                         <h3 className="font-semibold text-lg">
-                          <span className="gradient-text">{userName}</span>
+                          <span className="gradient-text">{displayName}</span>
                         </h3>
                         <div className="flex items-center mt-1 text-sm text-foreground/70">
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary">
@@ -220,7 +246,9 @@ export default function ProfileDropdown({
                                 clipRule="evenodd"
                               ></path>
                             </svg>
-                            Premium Patient
+                            {typeof userRole === "string"
+                              ? userRole
+                              : "Patient"}
                           </span>
                         </div>
                       </div>
@@ -271,34 +299,38 @@ export default function ProfileDropdown({
                 </div>
 
                 {/* Menu Items */}
-                <div className="p-3 grid grid-cols-2 gap-2">
+                <div className="p-2">
                   {menuItems.map((item, index) => (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.03, translateY: -2 }}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <Link
-                        href={item.href}
-                        className="neumorph-button h-full block rounded-xl overflow-hidden transition-all duration-200"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <div className="relative p-3 flex flex-col items-center text-center">
+                    <div key={index} className="mb-1 last:mb-0">
+                      {item.onClick ? (
+                        <button
+                          onClick={item.onClick}
+                          disabled={item.disabled}
+                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 hover:bg-foreground/5 ${
+                            item.disabled ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
+                        >
                           <div
-                            className={`absolute inset-0 opacity-10 bg-gradient-to-br ${item.color}`}
-                          ></div>
-                          <div
-                            className={`w-8 h-8 mb-2 flex items-center justify-center rounded-full bg-gradient-to-br ${item.color} text-white`}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center bg-gradient-to-br ${item.color} text-white`}
                           >
                             {item.icon}
                           </div>
-                          <span className="text-sm font-medium">
-                            {item.label}
-                          </span>
-                        </div>
-                      </Link>
-                    </motion.div>
+                          <span>{item.label}</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 hover:bg-foreground/5"
+                        >
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center bg-gradient-to-br ${item.color} text-white`}
+                          >
+                            {item.icon}
+                          </div>
+                          <span>{item.label}</span>
+                        </Link>
+                      )}
+                    </div>
                   ))}
                 </div>
 
