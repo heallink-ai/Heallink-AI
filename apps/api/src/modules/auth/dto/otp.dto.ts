@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsPhoneNumber,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -34,6 +35,7 @@ export class VerifyOtpDto {
     format: 'email',
   })
   @IsEmail()
+  @ValidateIf((o: VerifyOtpDto) => !o.phone)
   @IsOptional()
   email?: string;
 
@@ -43,6 +45,7 @@ export class VerifyOtpDto {
     format: 'phone',
   })
   @IsPhoneNumber()
+  @ValidateIf((o: VerifyOtpDto) => !o.email)
   @IsOptional()
   phone?: string;
 

@@ -26,6 +26,8 @@ export type UserDocument = User & Document;
       delete ret.resetTokenExpiry;
       delete ret.passwordResetToken;
       delete ret.passwordResetRequestedAt;
+      delete ret.verificationToken;
+      delete ret.verificationTokenExpiry;
       delete ret.__v;
       return ret;
     },
@@ -82,6 +84,12 @@ export class User {
 
   @Prop({ type: Date })
   passwordResetRequestedAt?: Date;
+
+  @Prop()
+  verificationToken?: string;
+
+  @Prop({ type: Date })
+  verificationTokenExpiry?: Date;
 
   @Prop({
     type: MongooseSchema.Types.Mixed,

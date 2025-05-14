@@ -6,6 +6,8 @@ import {
   Post,
   Request,
   UseGuards,
+  Get,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -17,6 +19,7 @@ import {
   ApiCreatedResponse,
   ApiExtraModels,
   ApiProperty,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -95,12 +98,24 @@ class VerifyOtpResponse {
   tokens?: AuthTokenResponse;
 }
 
+class VerifyEmailResponse {
+  @ApiProperty({ description: 'Email verification status', example: true })
+  success: boolean;
+
+  @ApiProperty({
+    description: 'Response message',
+    example: 'Email verified successfully',
+  })
+  message: string;
+}
+
 @ApiTags('auth')
 @ApiExtraModels(
   AuthTokenResponse,
   MessageResponse,
   OtpResponse,
   VerifyOtpResponse,
+  VerifyEmailResponse,
 )
 @Controller('auth')
 export class AuthController {
@@ -120,6 +135,25 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Registration failed' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify user email',
+    description: 'Verify user email with token from email',
+  })
+  @ApiQuery({
+    name: 'token',
+    description: 'Email verification token',
+    type: String,
+  })
+  @ApiOkResponse({
+    description: 'Email verified successfully',
+    type: VerifyEmailResponse,
+  })
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 
   @Post('login')
@@ -213,7 +247,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Verify OTP',
-    description: 'Verify a one-time password and authenticate the user',
+    description:
+      'Verify a one-time password and authenticate the user via phone or email',
   })
   @ApiBody({ type: VerifyOtpDto })
   @ApiOkResponse({

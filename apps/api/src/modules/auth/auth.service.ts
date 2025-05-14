@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -29,6 +31,8 @@ interface UserPayload {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -101,6 +105,22 @@ export class AuthService {
         registerDto.email,
         registerDto.name || 'Heallink User',
       );
+
+      // Generate and send email verification token
+      try {
+        const verificationToken =
+          await this.usersService.createEmailVerificationToken(user._id);
+        await this.emailService.sendVerificationEmail(
+          registerDto.email,
+          registerDto.name || 'Heallink User',
+          verificationToken,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to send verification email: ${error.message}`,
+        );
+        // Continue even if verification email fails - user is already created
+      }
     }
 
     // Return sanitized user object without sensitive fields
@@ -111,6 +131,28 @@ export class AuthService {
       ...result
     } = userObj;
     return result;
+  }
+
+  /**
+   * Verify a user's email with the verification token
+   */
+  async verifyEmail(
+    token: string,
+  ): Promise<{ success: boolean; message: string }> {
+    if (!token) {
+      throw new BadRequestException('Verification token is required');
+    }
+
+    const user = await this.usersService.verifyEmail(token);
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+
+    return {
+      success: true,
+      message: 'Email verified successfully',
+    };
   }
 
   async login(
@@ -145,6 +187,7 @@ export class AuthService {
         phone: user.phone,
         name: user.name,
         role: user.role,
+        emailVerified: user.emailVerified,
       },
     };
   }
@@ -248,142 +291,92 @@ export class AuthService {
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<any> {
-    // In a real app, you'd verify the OTP against what was sent
-    // For demonstration, we'll assume OTP is valid if it's 123456
+    // In a real app, you'd verify the OTP here
+    // For demonstration, we'll just return success and mock a user login
 
-    if (verifyOtpDto.code !== '123456') {
-      throw new UnauthorizedException('Invalid OTP');
+    // Make sure phone is defined
+    if (!verifyOtpDto.phone) {
+      throw new BadRequestException(
+        'Phone number is required for OTP verification',
+      );
     }
 
-    // Find or create user with the given phone number
-    if (!verifyOtpDto.phone && !verifyOtpDto.email) {
-      throw new BadRequestException('Either phone or email is required');
-    }
-
-    let user;
-
-    if (verifyOtpDto.phone) {
-      user = await this.usersService.findByPhone(verifyOtpDto.phone);
-    } else if (verifyOtpDto.email) {
-      user = await this.usersService.findByEmail(verifyOtpDto.email);
-    }
+    // Find user by phone number
+    const user = await this.usersService.findByPhone(verifyOtpDto.phone);
 
     if (!user) {
-      // Create a new user with this phone number or email
-      const createUserDto: CreateUserDto = {
-        phone: verifyOtpDto.phone,
-        email: verifyOtpDto.email,
-        providers: [AuthProvider.LOCAL],
-      };
-
-      if (verifyOtpDto.phone) {
-        createUserDto.phoneVerified = true;
-      } else {
-        createUserDto.emailVerified = true;
-      }
-
-      user = await this.usersService.create(createUserDto);
-    } else {
-      // Update verification status
-      const updateData: any = {};
-
-      if (verifyOtpDto.phone) {
-        updateData.phoneVerified = true;
-      } else if (verifyOtpDto.email) {
-        updateData.emailVerified = true;
-      }
-
-      user = await this.usersService.update(user._id.toString(), updateData);
+      throw new UnauthorizedException('User not found');
     }
 
-    // Generate tokens and return
-    return this.login(user);
+    // Return authentication tokens
+    return {
+      verified: true,
+      message: 'OTP verified successfully',
+      tokens: await this.login(user),
+    };
   }
 
-  /**
-   * Request password reset for a user
-   */
   async requestPasswordReset(email: string): Promise<{ message: string }> {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      // Don't reveal if user exists for security
+      // For security, we don't want to reveal if the email exists or not
       return {
         message:
-          'If an account with this email exists, a password reset link will be sent',
+          'If an account with that email exists, a reset link has been sent.',
       };
     }
 
-    // Generate token
-    const token = randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(token, 10);
+    // Generate a reset token
+    const resetToken = randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date();
+    resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1); // Token expires in 1 hour
 
-    // Store token and request timestamp
-    user.passwordResetToken = hashedToken;
-    user.passwordResetRequestedAt = new Date();
-    await user.save();
+    // Update user with reset token
+    await this.usersService.update(user._id, {
+      resetToken,
+      resetTokenExpiry,
+    } as any);
 
-    // Send email with reset link
-    await this.emailService.sendPasswordResetEmail(
-      email,
-      token,
-      user.name || 'Heallink User',
-    );
+    // Send password reset email
+    try {
+      await this.emailService.sendPasswordResetEmail(
+        email,
+        resetToken,
+        user.name || 'User',
+      );
+    } catch (error) {
+      // Log error but still return success to avoid revealing email existence
+      console.error('Error sending password reset email:', error);
+    }
 
     return {
       message:
-        'If an account with this email exists, a password reset link will be sent',
+        'If an account with that email exists, a reset link has been sent.',
     };
   }
 
-  /**
-   * Reset password with token
-   */
   async resetPassword(
     token: string,
     newPassword: string,
   ): Promise<{ message: string }> {
-    // Find user with reset token
-    const users = await this.usersService.findUsersWithResetToken();
+    const user = await this.usersService.findByResetToken(token);
 
-    // Find user with matching token
-    let matchedUser: UserDocument | null = null;
-    for (const user of users) {
-      if (user.passwordResetToken) {
-        const isMatch = await bcrypt.compare(token, user.passwordResetToken);
-        if (isMatch) {
-          matchedUser = user;
-          break;
-        }
-      }
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
     }
 
-    if (!matchedUser) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
+    // Hash new password and reset the token
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.update(user._id, {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    } as any);
 
-    // Check if token is expired (1 hour validity)
-    if (matchedUser.passwordResetRequestedAt) {
-      const tokenAge =
-        Date.now() - matchedUser.passwordResetRequestedAt.getTime();
-      if (tokenAge > 3600000) {
-        // 1 hour in milliseconds
-        // Clear the reset token
-        matchedUser.passwordResetToken = undefined;
-        matchedUser.passwordResetRequestedAt = undefined;
-        await matchedUser.save();
-
-        throw new UnauthorizedException('Token has expired');
-      }
-    }
-
-    // Update password
-    matchedUser.password = newPassword;
-    matchedUser.passwordResetToken = undefined;
-    matchedUser.passwordResetRequestedAt = undefined;
-    matchedUser.refreshToken = undefined;
-    await matchedUser.save();
-
-    return { message: 'Password has been reset successfully' };
+    return {
+      message:
+        'Password reset successful. You can now log in with your new password.',
+    };
   }
 }

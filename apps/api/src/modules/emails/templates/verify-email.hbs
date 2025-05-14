@@ -1,0 +1,194 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Verify Your Email - Heallink</title>
+    <style>
+      /* Base styles */
+      body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f7f9fc;
+        color: #333;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Container for email content */
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Header section */
+      .header {
+        background: linear-gradient(135deg, #5b4df2, #2e87fb);
+        padding: 30px;
+        text-align: center;
+      }
+
+      .logo {
+        max-width: 180px;
+        height: auto;
+      }
+
+      /* Main content section */
+      .content {
+        padding: 40px 30px;
+        line-height: 1.6;
+      }
+
+      h1 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-top: 0;
+        margin-bottom: 24px;
+        font-size: 28px;
+      }
+
+      p {
+        margin: 0 0 16px;
+        color: #4a5568;
+      }
+
+      /* Button styling */
+      .button-container {
+        text-align: center;
+        margin: 35px 0;
+      }
+
+      .button {
+        display: inline-block;
+        background: linear-gradient(to right, #5a2dcf, #2066e4);
+        color: white;
+        text-decoration: none;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        box-shadow: 0 4px 6px rgba(90, 45, 207, 0.2);
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 14px rgba(90, 45, 207, 0.25);
+      }
+
+      /* Code styling */
+      .verification-code {
+        font-family: monospace;
+        font-size: 24px;
+        letter-spacing: 4px;
+        color: #5a2dcf;
+        background-color: #f0f4f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      /* Footer styling */
+      .footer {
+        background-color: #f9fafb;
+        padding: 30px;
+        text-align: center;
+        font-size: 14px;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .social {
+        margin: 20px 0;
+      }
+
+      .social a {
+        display: inline-block;
+        margin: 0 8px;
+        color: #6b7280;
+        text-decoration: none;
+      }
+
+      .social a:hover {
+        color: #3b82f6;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        .container {
+          border-radius: 0;
+        }
+
+        .content {
+          padding: 30px 20px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='header'>
+        <img
+          src='https://heallink.com/logo-white.png'
+          alt='Heallink Logo'
+          class='logo'
+        />
+      </div>
+
+      <div class='content'>
+        <h1>Verify Your Email Address</h1>
+
+        <p>Hi {{name}},</p>
+
+        <p>Thank you for signing up with Heallink! To complete your registration
+          and access all features, please verify your email address by clicking
+          the button below:</p>
+
+        <div class='button-container'>
+          <a href='{{verificationLink}}' class='button'>Verify My Email</a>
+        </div>
+
+        <p>If the button above doesn't work, you can also copy and paste the
+          following link into your browser:</p>
+
+        <p style='word-break: break-all; font-size: 14px; color: #5a2dcf;'>
+          {{verificationLink}}
+        </p>
+
+        <p>This verification link will expire in 24 hours.</p>
+
+        <p>If you didn't create an account with us, please ignore this email or
+          contact our support team.</p>
+
+        <p>Best regards,<br />The Heallink Team</p>
+      </div>
+
+      <div class='footer'>
+        <p>© {{currentYear}} Heallink. All rights reserved.</p>
+        <p>2 Tower of David, Accra - Ghana</p>
+
+        <div class='social'>
+          <a href='https://facebook.com/heallink'>Facebook</a>
+          |
+          <a href='https://twitter.com/heallink'>Twitter</a>
+          |
+          <a href='https://instagram.com/heallink'>Instagram</a>
+        </div>
+
+        <p>You're receiving this email because you recently created a new
+          Heallink account.</p>
+      </div>
+    </div>
+  </body>
+</html>

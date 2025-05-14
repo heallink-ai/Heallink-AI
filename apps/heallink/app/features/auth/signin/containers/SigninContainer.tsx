@@ -9,41 +9,58 @@ export default function SigninContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const isRegistered = searchParams.get("registered") === "true";
 
   // Login mutation with React Query
   const { mutate, isPending, error } = useMutation({
     mutationFn: async (credentials: SigninCredentials) => {
-      if (credentials.email) {
-        // Handle email sign in
-        const result = await signIn("credentials", {
-          email: credentials.email,
-          password: credentials.otp, // In the email case, we're using the password
-          redirect: false,
-          callbackUrl,
-        });
+      try {
+        if (credentials.email) {
+          // Handle email sign in
+          const result = await signIn("credentials", {
+            email: credentials.email,
+            password: credentials.otp, // In the email case, we're using the password
+            redirect: false,
+            callbackUrl,
+          });
 
-        if (result?.error) {
-          throw new Error("Invalid email or password");
+          if (result?.error) {
+            throw new Error("Invalid email or password");
+          }
+
+          return result;
+        } else if (credentials.phone) {
+          // Handle phone sign in with OTP
+          const result = await signIn("phone", {
+            phone: credentials.phone,
+            otp: credentials.otp,
+            redirect: false,
+            callbackUrl,
+          });
+
+          if (result?.error) {
+            throw new Error("Invalid verification code");
+          }
+
+          return result;
         }
 
-        return result;
-      } else if (credentials.phone) {
-        // Handle phone sign in with OTP
-        const result = await signIn("phone", {
-          phone: credentials.phone,
-          otp: credentials.otp,
-          redirect: false,
-          callbackUrl,
-        });
-
-        if (result?.error) {
-          throw new Error("Invalid verification code");
+        throw new Error("Either email or phone is required");
+      } catch (error) {
+        // Check for connection refused error
+        if (
+          error instanceof Error &&
+          error.cause &&
+          typeof error.cause === "object" &&
+          "code" in error.cause &&
+          error.cause.code === "ECONNREFUSED"
+        ) {
+          throw new Error(
+            "Cannot connect to the authentication server. Please check your connection and try again."
+          );
         }
-
-        return result;
+        throw error;
       }
-
-      throw new Error("Either email or phone is required");
     },
     onSuccess: () => {
       // On successful login, redirect to callback URL or dashboard
@@ -60,7 +77,12 @@ export default function SigninContainer() {
   };
 
   // Format error message for display
-  const errorMessage = error instanceof Error ? error.message : null;
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : isRegistered
+        ? null // Don't show error if they just registered
+        : null;
 
   return (
     <SigninForm

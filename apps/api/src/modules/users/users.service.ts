@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { User, AuthProvider, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -67,6 +68,9 @@ export class UsersService {
   }
 
   async findByPhone(phone: string): Promise<UserDocument | null> {
+    if (!phone) {
+      return null; // Return null if phone is undefined or empty
+    }
     return this.userModel.findOne({ phone }).exec();
   }
 
@@ -113,6 +117,62 @@ export class UsersService {
     refreshToken: string | null,
   ): Promise<void> {
     await this.userModel.updateOne({ _id: userId }, { refreshToken }).exec();
+  }
+
+  /**
+   * Create a verification token for a user and set expiry date
+   * @param userId The ID of the user to create a token for
+   * @returns The generated verification token
+   */
+  async createEmailVerificationToken(userId: string): Promise<string> {
+    // Generate a random verification token
+    const token = randomBytes(32).toString('hex');
+
+    // Set expiry to 24 hours from now
+    const expiryDate = new Date();
+    expiryDate.setHours(expiryDate.getHours() + 24);
+
+    // Update the user with the verification token
+    await this.userModel
+      .updateOne(
+        { _id: userId },
+        {
+          verificationToken: token,
+          verificationTokenExpiry: expiryDate,
+        },
+      )
+      .exec();
+
+    return token;
+  }
+
+  /**
+   * Verify a user's email using the verification token
+   * @param token The verification token to validate
+   * @returns The verified user document or null if token is invalid
+   */
+  async verifyEmail(token: string): Promise<UserDocument | null> {
+    // Find the user with this token and make sure it's not expired
+    const user = await this.userModel
+      .findOne({
+        verificationToken: token,
+        verificationTokenExpiry: { $gt: new Date() },
+      })
+      .exec();
+
+    if (!user) {
+      return null;
+    }
+
+    // Update user as verified and clear the token
+    user.emailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
+
+    // Save the updated user
+    await user.save();
+
+    return user;
   }
 
   async validateUserExistenceByEmailOrPhone(
@@ -228,6 +288,18 @@ export class UsersService {
       .find({
         passwordResetToken: { $exists: true, $ne: null },
         passwordResetRequestedAt: { $exists: true, $ne: null },
+      })
+      .exec();
+  }
+
+  /**
+   * Find a user by verification token
+   */
+  async findByVerificationToken(token: string): Promise<UserDocument | null> {
+    return this.userModel
+      .findOne({
+        verificationToken: token,
+        verificationTokenExpiry: { $gt: new Date() },
       })
       .exec();
   }

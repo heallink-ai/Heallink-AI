@@ -24,9 +24,11 @@ interface ApiError {
   statusCode: number;
 }
 
-// API URL from env
+// Get the correct API URL based on whether we're on server or client
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003/api/v1";
+  typeof window === "undefined"
+    ? process.env.API_URL || "http://api:3003/api/v1" // Server-side (in Docker network)
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003/api/v1"; // Client-side (browser)
 
 /**
  * Custom hook for registering a new user

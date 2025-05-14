@@ -24,10 +24,27 @@ export class EmailService {
     this.resend = new Resend(resendApiKey);
     this.fromEmail =
       this.configService.get<string>('email.from') || 'noreply@heallink.com';
-    this.templatesDir = path.join(__dirname, 'templates');
+
+    // Try multiple possible template directory locations to handle both development and production
+    const possibleTemplateDirs = [
+      path.join(__dirname, 'templates'), // Standard location
+      path.join(__dirname, '..', 'emails', 'templates'), // For compiled output
+      path.join(process.cwd(), 'src', 'modules', 'emails', 'templates'), // Absolute path
+      path.join(process.cwd(), 'dist', 'modules', 'emails', 'templates'), // Compiled absolute path
+    ];
+
+    // Find first directory that exists
+    this.templatesDir =
+      possibleTemplateDirs.find((dir) => fs.existsSync(dir)) ||
+      possibleTemplateDirs[0];
+
+    this.logger.log(`Using templates directory: ${this.templatesDir}`);
 
     // Create templates directory if it doesn't exist
     if (!fs.existsSync(this.templatesDir)) {
+      this.logger.warn(
+        `Templates directory not found, creating: ${this.templatesDir}`,
+      );
       fs.mkdirSync(this.templatesDir, { recursive: true });
     }
   }
@@ -43,7 +60,9 @@ export class EmailService {
       const templatePath = path.join(this.templatesDir, `${templateName}.hbs`);
 
       if (!fs.existsSync(templatePath)) {
-        this.logger.error(`Template not found: ${templatePath}`);
+        this.logger.error(
+          `Template not found: ${templateName} at ${templatePath}`,
+        );
         throw new Error(`Template not found: ${templateName}`);
       }
 
@@ -106,6 +125,28 @@ export class EmailService {
       name,
       dashboardUrl,
     });
+  }
+
+  /**
+   * Send email verification link to a new user
+   */
+  async sendVerificationEmail(
+    to: string,
+    name: string,
+    verificationToken: string,
+  ): Promise<boolean> {
+    const frontendUrl = this.configService.get<string>('app.frontendUrl');
+    const verificationLink = `${frontendUrl}/auth/verify-email?token=${verificationToken}`;
+
+    return this.sendTemplatedEmail(
+      to,
+      'Verify Your Email Address - Heallink',
+      'verify-email',
+      {
+        name,
+        verificationLink,
+      },
+    );
   }
 
   /**

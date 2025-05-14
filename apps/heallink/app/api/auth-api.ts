@@ -28,8 +28,11 @@ interface ApiResponse<T> {
   statusCode?: number;
 }
 
+// Get the correct API URL based on whether we're on server or client
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003/api/v1";
+  typeof window === "undefined"
+    ? process.env.API_URL || "http://api:3003/api/v1" // Server-side (in Docker network)
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003/api/v1"; // Client-side (browser)
 
 /**
  * Register a new user with email/phone and password
@@ -120,6 +123,22 @@ export async function loginUser(credentials: {
     return { data };
   } catch (error) {
     console.error("Login network error:", error);
+
+    // Check for connection refused error specifically
+    const isConnectionRefused =
+      error instanceof Error &&
+      error.cause &&
+      typeof error.cause === "object" &&
+      "code" in error.cause &&
+      error.cause.code === "ECONNREFUSED";
+
+    if (isConnectionRefused) {
+      return {
+        error:
+          "Cannot connect to the API server. If running in Docker, make sure NEXT_PUBLIC_API_URL is set correctly (e.g., http://api:3003/api/v1).",
+      };
+    }
+
     return {
       error: "Network error. Please check your connection and try again.",
     };
