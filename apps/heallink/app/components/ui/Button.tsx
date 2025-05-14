@@ -31,35 +31,49 @@ export default function Button({
   const baseClasses =
     "relative rounded-xl font-medium transition-all duration-200 focus:outline-none flex items-center justify-center";
 
-  // Size classes
   const sizeClasses = {
     sm: "py-2 px-4 text-sm",
     md: "py-3 px-6 text-base",
     lg: "py-4 px-8 text-lg",
   }[size];
 
-  // Improved variant classes with better contrast for light mode
-  const variantClasses = {
-    primary: `bg-gradient-to-r from-purple-heart to-royal-blue text-white ${
-      isPressed ? "neumorph-pressed" : "neumorph-flat"
-    }`,
-    secondary: `bg-gradient-to-r from-royal-blue-500 to-royal-blue-800 text-white ${
-      isPressed ? "neumorph-pressed" : "neumorph-flat"
-    }`,
-    outline: `border-2 border-purple-heart dark:text-white light:text-[color:var(--button-outline-text)] bg-transparent ${
-      isPressed ? "neumorph-pressed" : "neumorph-flat"
-    }`,
-    ghost: `bg-transparent ${
-      isPressed ? "bg-purple-heart/10" : "hover:bg-purple-heart/5"
-    } dark:text-white light:text-[color:var(--button-outline-text)]`,
-  }[variant];
+  const getVariantClasses = () => {
+    const isDark = theme === "dark";
 
-  // Combined classes
-  const classes = `${baseClasses} ${sizeClasses} ${variantClasses} ${className} ${
+    switch (variant) {
+      case "primary":
+        return `${
+          isDark
+            ? "bg-gradient-to-r from-purple-heart to-royal-blue"
+            : "bg-gradient-to-r from-purple-600 to-blue-700"
+        } text-white ${isPressed ? "shadow-inner" : "shadow-md"}`;
+
+      case "secondary":
+        return `${
+          isDark
+            ? "bg-gradient-to-r from-royal-blue-500 to-royal-blue-800"
+            : "bg-gradient-to-r from-blue-600 to-blue-800"
+        } text-white ${isPressed ? "shadow-inner" : "shadow-md"}`;
+
+      case "outline":
+        return `border-2 border-purple-heart ${
+          isDark ? "text-white" : "text-purple-800"
+        } bg-transparent ${isPressed ? "shadow-inner" : "shadow-sm"}`;
+
+      case "ghost":
+        return `bg-transparent ${
+          isPressed ? "bg-purple-600/10" : "hover:bg-purple-600/5"
+        } ${isDark ? "text-white" : "text-purple-800"}`;
+
+      default:
+        return "";
+    }
+  };
+
+  const classes = `${baseClasses} ${sizeClasses} ${getVariantClasses()} ${className} ${
     disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
   }`;
 
-  // Handle press effect
   const handleMouseDown = () => {
     if (!disabled) setIsPressed(true);
   };
@@ -68,7 +82,10 @@ export default function Button({
     if (!disabled) setIsPressed(false);
   };
 
-  // Render as anchor if href is provided
+  const handleMouseLeave = () => {
+    setIsPressed(false);
+  };
+
   if (href) {
     return (
       <a
@@ -76,14 +93,13 @@ export default function Button({
         className={classes}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        onMouseLeave={() => setIsPressed(false)}
+        onMouseLeave={handleMouseLeave}
       >
         {children}
       </a>
     );
   }
 
-  // Render as button otherwise
   return (
     <button
       type={type}
@@ -92,7 +108,7 @@ export default function Button({
       disabled={disabled}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
-      onMouseLeave={() => setIsPressed(false)}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
     </button>
