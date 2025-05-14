@@ -180,7 +180,7 @@ export default function NotificationBell({
             }`}
           >
             {/* Header Section */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-400 flex justify-between items-center">
               <h3 className="font-semibold text-foreground">Notifications</h3>
               {unreadCount > 0 && (
                 <button
@@ -248,7 +248,7 @@ export default function NotificationBell({
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-200 dark:border-gray-800 text-center">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-400 text-center">
               <Link
                 href="/notifications"
                 className="text-sm text-primary hover:underline"

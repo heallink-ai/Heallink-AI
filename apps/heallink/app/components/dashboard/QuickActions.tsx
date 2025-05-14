@@ -201,7 +201,7 @@ export default function QuickActions() {
             }`}
           >
             {/* Header Section */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-400">
               <h3 className="font-semibold text-foreground">Quick Actions</h3>
               <p className="text-xs text-foreground/60 mt-1">
                 Access common tasks and actions
@@ -224,7 +224,7 @@ export default function QuickActions() {
                       {item.icon}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-foreground/80 dark:text-foreground/90">
                         {item.label}
                       </p>
                       <span className="text-xs text-foreground/60">
