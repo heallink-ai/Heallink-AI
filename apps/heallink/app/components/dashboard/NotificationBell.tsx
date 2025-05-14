@@ -124,7 +124,11 @@ export default function NotificationBell({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`relative w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300 hover:bg-primary/10 active:scale-95 ${
-          isOpen ? "border-primary bg-primary/10" : "border-primary/10"
+          isOpen
+            ? "border-primary bg-primary/10"
+            : theme === "dark"
+              ? "border-gray-700"
+              : "border-gray-200"
         }`}
         aria-label="View notifications"
       >
@@ -155,7 +159,7 @@ export default function NotificationBell({
               stiffness: 500,
               damping: 30,
             }}
-            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs text-white bg-primary rounded-full"
+            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs text-white bg-green-500 rounded-full"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </motion.span>

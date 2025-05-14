@@ -156,7 +156,11 @@ export default function QuickActions() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`relative w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300 hover:bg-primary/10 active:scale-95 ${
-          isOpen ? "border-primary bg-primary/10" : "border-primary/10"
+          isOpen
+            ? "border-primary bg-primary/10"
+            : theme === "dark"
+              ? "border-gray-700"
+              : "border-gray-200"
         }`}
         aria-label="Quick actions"
       >

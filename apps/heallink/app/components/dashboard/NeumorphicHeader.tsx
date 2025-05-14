@@ -62,6 +62,9 @@ export default function NeumorphicHeader({
     ></span>
   );
 
+  // Light gray border color for buttons
+  const borderColor = theme === "dark" ? "border-gray-700" : "border-gray-200";
+
   return (
     <header
       className={`w-full z-20 fixed top-0 backdrop-blur-lg transition-all duration-300 ${
@@ -81,7 +84,9 @@ export default function NeumorphicHeader({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-2.5 rounded-xl transition-all duration-300 ${
-                scrolled ? "neumorph-button" : "hover:bg-primary/10"
+                scrolled
+                  ? "neumorph-button"
+                  : `hover:bg-primary/10 border ${borderColor}`
               }`}
               aria-label="Toggle menu"
             >
@@ -156,7 +161,7 @@ export default function NeumorphicHeader({
               className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 scrolled
                   ? "neumorph-button neumorph-accent-primary"
-                  : "hover:bg-primary/10 border border-primary/10"
+                  : `hover:bg-primary/10 border ${borderColor}`
               }`}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
@@ -222,7 +227,7 @@ export default function NeumorphicHeader({
             {/* Profile Dropdown */}
             {loading ? (
               <div
-                className={`relative w-10 h-10 rounded-xl overflow-hidden border border-primary/10 ${
+                className={`relative w-10 h-10 rounded-xl overflow-hidden ${
                   scrolled ? "neumorph-flat" : ""
                 }`}
               >

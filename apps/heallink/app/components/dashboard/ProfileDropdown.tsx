@@ -176,10 +176,7 @@ export default function ProfileDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-10 h-10 rounded-full overflow-hidden border transition-all duration-300 hover:shadow-md active:scale-95"
-        style={{
-          borderColor: isOpen ? `var(--primary)` : `rgba(var(--primary), 0.1)`,
-        }}
+        className="relative w-10 h-10 rounded-full overflow-hidden transition-all duration-300 hover:shadow-md active:scale-95"
         aria-label="Open profile menu"
       >
         <Image
