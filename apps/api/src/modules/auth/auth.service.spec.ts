@@ -8,6 +8,8 @@ import { EmailService } from '../emails/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { AuthProvider, UserRole } from '../users/schemas/user.schema';
 import mongoose from 'mongoose';
+import { SocialLoginDto, SocialProvider } from './dto/social-login.dto';
+import { UserDocument } from '../users/schemas/user.schema';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -29,6 +31,7 @@ describe('AuthService', () => {
     findBySocialId: jest.fn(),
     connectSocialAccount: jest.fn(),
     upsertSocialUser: jest.fn(),
+    findByIdOrCreate: jest.fn(),
   };
 
   const mockJwtService = {
@@ -313,6 +316,75 @@ describe('AuthService', () => {
           emailVerified: user.emailVerified,
         },
       });
+    });
+  });
+
+  describe('validateSocialLogin', () => {
+    it('should validate Google social login', async () => {
+      // Mock data
+      const socialLoginDto: SocialLoginDto = {
+        provider: SocialProvider.GOOGLE,
+        token: 'google-token',
+        email: 'test@gmail.com',
+        name: 'Test User',
+      };
+
+      const mockUser = { id: 'google-user-id' } as UserDocument;
+
+      // Mocking findByIdOrCreate
+      mockUsersService.findByIdOrCreate.mockResolvedValue(mockUser);
+
+      // Call the service method
+      const result = await service.validateSocialLogin(socialLoginDto);
+
+      // Assertions
+      expect(result).toEqual(mockUser);
+      expect(mockUsersService.findByIdOrCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: AuthProvider.GOOGLE,
+        }),
+      );
+    });
+
+    it('should validate Facebook social login', async () => {
+      // Mock data
+      const socialLoginDto: SocialLoginDto = {
+        provider: SocialProvider.FACEBOOK,
+        token: 'facebook-token',
+        email: 'test@facebook.com',
+        name: 'Test User',
+      };
+
+      const mockUser = { id: 'facebook-user-id' } as UserDocument;
+
+      // Mocking findByIdOrCreate
+      mockUsersService.findByIdOrCreate.mockResolvedValue(mockUser);
+
+      // Call the service method
+      const result = await service.validateSocialLogin(socialLoginDto);
+
+      // Assertions
+      expect(result).toEqual(mockUser);
+      expect(mockUsersService.findByIdOrCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: AuthProvider.FACEBOOK,
+        }),
+      );
+    });
+
+    it('should throw error for unsupported provider', async () => {
+      // Mock data with an invalid provider
+      const socialLoginDto: SocialLoginDto = {
+        provider: 'invalid-provider' as SocialProvider,
+        token: 'invalid-token',
+        email: 'test@icloud.com',
+        name: 'Test User',
+      };
+
+      // Expect it to throw exception
+      await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

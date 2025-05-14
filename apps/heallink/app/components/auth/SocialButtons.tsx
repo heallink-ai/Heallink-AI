@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useSocialLogin } from "@/app/hooks/auth/use-auth";
+import { AuthProvider } from "@/app/types/auth-types";
 
 interface SocialButtonsProps {
   className?: string;
@@ -11,6 +13,7 @@ interface SocialButtonsProps {
 export default function SocialButtons({ className = "" }: SocialButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const router = useRouter();
+  const socialLogin = useSocialLogin();
 
   const handleSocialLogin = async (provider: string) => {
     try {

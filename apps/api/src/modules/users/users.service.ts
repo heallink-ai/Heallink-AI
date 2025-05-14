@@ -10,6 +10,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { randomBytes } from 'crypto';
 
+// Interface defined outside the class to avoid scoping issues
+export interface UserWithFlags extends UserDocument {
+  isNewUser?: boolean;
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -207,7 +212,9 @@ export class UsersService {
     email?: string;
     name?: string;
     phone?: string;
-  }): Promise<UserDocument> {
+  }): Promise<UserWithFlags> {
+    let isNewUser = false;
+
     // First try to find user by provider and providerId
     let user = await this.findByProvider(
       providerData.provider,
@@ -251,7 +258,11 @@ export class UsersService {
           .exec();
       }
 
-      return this.findOne(user._id);
+      const updatedUser = await this.findOne(user._id);
+      return updatedUser as UserWithFlags;
+    } else {
+      // If user doesn't exist, we'll create a new one
+      isNewUser = true;
     }
 
     // If user doesn't exist, create a new one
@@ -266,9 +277,17 @@ export class UsersService {
           providerId: providerData.providerId,
         },
       ],
+      // Mark email as verified for social logins since they are pre-verified by the provider
+      emailVerified: providerData.email ? true : false,
     };
 
-    return this.create(createUserDto);
+    const newUser = await this.create(createUserDto);
+
+    // Add the isNewUser flag to the returned user
+    const userWithFlag = newUser as UserWithFlags;
+    userWithFlag.isNewUser = isNewUser;
+
+    return userWithFlag;
   }
 
   async findByResetToken(resetToken: string): Promise<UserDocument | null> {

@@ -103,6 +103,8 @@ describe('Auth DTOs', () => {
       const dto = plainToClass(SocialLoginDto, {
         provider: SocialProvider.GOOGLE,
         token: 'google-auth-token',
+        email: 'test@gmail.com',
+        name: 'Test User',
       });
 
       const errors = await validate(dto);
@@ -113,6 +115,32 @@ describe('Auth DTOs', () => {
       const dto = plainToClass(SocialLoginDto, {
         provider: 'invalid-provider',
         token: 'some-token',
+        email: 'test@gmail.com',
+        name: 'Test User',
+      });
+
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('should fail validation if email is missing', async () => {
+      const dto = plainToClass(SocialLoginDto, {
+        provider: SocialProvider.GOOGLE,
+        token: 'google-auth-token',
+        // email is missing
+        name: 'Test User',
+      });
+
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('should fail validation if name is missing', async () => {
+      const dto = plainToClass(SocialLoginDto, {
+        provider: SocialProvider.GOOGLE,
+        token: 'google-auth-token',
+        email: 'test@gmail.com',
+        // name is missing
       });
 
       const errors = await validate(dto);

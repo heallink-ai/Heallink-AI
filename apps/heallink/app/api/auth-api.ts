@@ -150,7 +150,9 @@ export async function loginUser(credentials: {
  */
 export async function socialLogin(
   provider: AuthProvider,
-  token: string
+  token: string,
+  email?: string,
+  name?: string
 ): Promise<ApiResponse<AuthResponse>> {
   try {
     const response = await fetch(`${API_URL}/auth/social-login`, {
@@ -158,7 +160,7 @@ export async function socialLogin(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ provider, token }),
+      body: JSON.stringify({ provider, token, email, name }),
     });
 
     const data = await response.json();

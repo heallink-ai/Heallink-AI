@@ -91,7 +91,9 @@ export const authConfig: NextAuthConfig = {
 
             const { data, error } = await socialLogin(
               AuthProvider.GOOGLE,
-              account.id_token
+              account.id_token,
+              user.email,
+              user.name
             );
 
             if (error || !data) {
@@ -122,6 +124,80 @@ export const authConfig: NextAuthConfig = {
             if (user.image) {
               token.image = user.image;
             }
+          }
+        }
+
+        // Handle Facebook OAuth token
+        if (account.provider === "facebook" && account.access_token) {
+          try {
+            authLog("Handling Facebook token");
+
+            if (user.image) {
+              token.picture = user.image;
+              token.image = user.image;
+            }
+
+            const { data, error } = await socialLogin(
+              AuthProvider.FACEBOOK,
+              account.access_token,
+              user.email,
+              user.name
+            );
+
+            if (error || !data) {
+              authLog("Error in Facebook social login:", error);
+              throw new Error(error || "Failed to authenticate with Facebook");
+            }
+
+            // Add API tokens to session
+            token.accessToken = data.accessToken;
+            token.refreshToken = data.refreshToken;
+            token.role = data.user.role;
+            token.sub = data.user.id;
+
+            // Preserve image
+            if (data.user.image) {
+              token.image = data.user.image;
+            } else if (token.picture) {
+              token.image = token.picture;
+            }
+          } catch (error) {
+            authLog("Error in Facebook token processing:", error);
+            if (user.image) {
+              token.image = user.image;
+            }
+          }
+        }
+
+        // Handle Apple OAuth token
+        if (account.provider === "apple" && account.id_token) {
+          try {
+            authLog("Handling Apple token");
+
+            const { data, error } = await socialLogin(
+              AuthProvider.APPLE,
+              account.id_token,
+              user.email,
+              user.name || "Apple User" // Apple doesn't always provide name
+            );
+
+            if (error || !data) {
+              authLog("Error in Apple social login:", error);
+              throw new Error(error || "Failed to authenticate with Apple");
+            }
+
+            // Add API tokens to session
+            token.accessToken = data.accessToken;
+            token.refreshToken = data.refreshToken;
+            token.role = data.user.role;
+            token.sub = data.user.id;
+
+            // Preserve image if available
+            if (data.user.image) {
+              token.image = data.user.image;
+            }
+          } catch (error) {
+            authLog("Error in Apple token processing:", error);
           }
         }
 

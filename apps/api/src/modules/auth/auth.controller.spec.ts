@@ -163,7 +163,9 @@ describe('AuthController', () => {
     it('should handle social login', async () => {
       const socialLoginDto: SocialLoginDto = {
         provider: SocialProvider.GOOGLE,
-        token: 'google-auth-token',
+        token: 'valid-token',
+        email: 'test@gmail.com',
+        name: 'Test User',
       };
 
       const mockUser = {

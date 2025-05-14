@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsEmail,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum SocialProvider {
@@ -33,4 +39,20 @@ export class SocialLoginDto {
   @IsString()
   @IsOptional()
   redirectUrl?: string;
+
+  @ApiProperty({
+    description: 'Email address associated with the social account',
+    example: 'user@example.com',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({
+    description: 'User name from social provider',
+    example: 'John Doe',
+  })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 }

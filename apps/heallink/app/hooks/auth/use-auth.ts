@@ -102,15 +102,15 @@ export function useSocialLogin() {
   return useMutation<
     AuthResponse,
     ApiError,
-    { provider: AuthProvider; token: string }
+    { provider: AuthProvider; token: string; email: string; name: string }
   >({
-    mutationFn: async ({ provider, token }) => {
+    mutationFn: async ({ provider, token, email, name }) => {
       const response = await fetch(`${API_URL}/auth/social-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ provider, token }),
+        body: JSON.stringify({ provider, token, email, name }),
       });
 
       const data = await response.json();
