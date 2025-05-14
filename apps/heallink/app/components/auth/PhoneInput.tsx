@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import countries from "./countries";
 
 interface PhoneInputProps {
@@ -18,36 +18,83 @@ export default function PhoneInput({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [focused, setFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const internalUpdateRef = useRef(false);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
-  // Update the combined value whenever country code or phone number changes
+  // Get valid country codes for validation
+  const validCountryCodes = countries.map((country) => country.dial_code);
+
+  // Handle direct input changes to the phone number field
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    // Allow only numbers and some special characters
+    const cleaned = input.replace(/[^\d\s\-\(\)]/g, "");
+    setPhoneNumber(cleaned);
+
+    // Immediately update the combined value to ensure the parent component sees the change
+    onChange(countryCode + cleaned);
+  };
+
+  // Update parent value when country code changes
   useEffect(() => {
-    const combinedValue = countryCode + phoneNumber;
-    if (combinedValue !== value) {
-      onChange(combinedValue);
+    if (countryCode) {
+      onChange(countryCode + phoneNumber);
     }
-  }, [countryCode, phoneNumber]);
+  }, [countryCode]);
 
-  // If value is provided externally, parse it into country code and phone number
+  // Handle external value changes
   useEffect(() => {
-    if (value) {
-      // Find the country code from our value (any + followed by numbers)
-      const codeMatch = value.match(/^\+\d+/);
-      if (codeMatch) {
-        const code = codeMatch[0];
-        const number = value.slice(code.length);
+    // Only process if the value is different from our current state
+    if (!value || value === countryCode + phoneNumber) return;
 
-        if (code !== countryCode) {
+    // Set parsing flag to avoid triggering onChange again
+    internalUpdateRef.current = true;
+
+    if (value.startsWith("+")) {
+      // Try to find a valid country code
+      let foundValidCode = false;
+
+      // Sort country codes by length (longest first) to avoid partial matches
+      const sortedCodes = [...validCountryCodes].sort(
+        (a, b) => b.length - a.length
+      );
+
+      for (const code of sortedCodes) {
+        if (value.startsWith(code)) {
+          // Found a valid country code
           setCountryCode(code);
+          setPhoneNumber(value.substring(code.length));
+          foundValidCode = true;
+          break;
         }
-        if (number !== phoneNumber) {
-          setPhoneNumber(number);
-        }
-      } else {
-        // If no country code found, assume the whole value is the phone number
-        setPhoneNumber(value);
       }
+
+      // If no valid country code found but starts with +, use + as code
+      if (!foundValidCode) {
+        setCountryCode("+");
+        setPhoneNumber(value.substring(1));
+      }
+    } else {
+      // No + prefix, just set as phone number
+      setPhoneNumber(value);
     }
-  }, [value]);
+
+    // Clear the flag
+    setTimeout(() => {
+      internalUpdateRef.current = false;
+    }, 0);
+  }, [value, validCountryCodes]);
+
+  // Focus the phone input field when clicked on the container
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Don't focus if clicking on the country code dropdown
+    if (
+      e.target instanceof HTMLElement &&
+      !e.target.closest(".country-dropdown")
+    ) {
+      phoneInputRef.current?.focus();
+    }
+  };
 
   // Filter countries based on search
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,14 +105,6 @@ export default function PhoneInput({
           country.code.includes(searchTerm)
       )
     : countries;
-
-  // Handle phone number input, allowing only numbers
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    // Allow only numbers and some special characters
-    const cleaned = input.replace(/[^\d\s\-\(\)]/g, "");
-    setPhoneNumber(cleaned);
-  };
 
   return (
     <div className="mb-4">
@@ -80,22 +119,26 @@ export default function PhoneInput({
         className={`relative flex rounded-xl transition-all duration-300 ${
           focused ? "neumorph-pressed" : "neumorph-flat hover:shadow-md"
         }`}
+        onClick={handleContainerClick}
       >
         {/* Country code dropdown */}
-        <div className="relative">
+        <div className="country-dropdown relative">
           <button
             type="button"
-            className="flex items-center justify-between w-28 px-3 py-3.5 rounded-l-xl border-r border-border focus:outline-none"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center justify-between min-w-[80px] max-w-[100px] px-3 py-3.5 rounded-l-xl border-r border-border focus:outline-none"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDropdownOpen(!dropdownOpen);
+            }}
           >
-            <span>{countryCode}</span>
+            <span className="truncate">{countryCode}</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className={`w-4 h-4 ml-2 transition-transform duration-200 ${
+              className={`w-4 h-4 ml-2 flex-shrink-0 transition-transform duration-200 ${
                 dropdownOpen ? "transform rotate-180" : ""
               }`}
             >
@@ -175,6 +218,7 @@ export default function PhoneInput({
 
         {/* Phone number input */}
         <input
+          ref={phoneInputRef}
           id="phone"
           type="tel"
           className="flex-grow px-4 py-3.5 bg-transparent rounded-r-xl focus:outline-none"
