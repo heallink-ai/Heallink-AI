@@ -1,28 +1,100 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import {
+  parsePhoneNumberFromString,
+  isValidPhoneNumber,
+  CountryCode,
+} from "libphonenumber-js";
 import countries from "./countries";
 
 interface PhoneInputProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 export default function PhoneInput({
   value,
   onChange,
   error,
+  onValidationChange,
 }: PhoneInputProps) {
   const [countryCode, setCountryCode] = useState("+1");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [focused, setFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const internalUpdateRef = useRef(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
+  // Get country code to ISO map for validation
+  const countryCodeToISO = {} as Record<string, CountryCode>;
+  countries.forEach((country) => {
+    countryCodeToISO[country.dial_code] = country.code as CountryCode;
+  });
+
   // Get valid country codes for validation
   const validCountryCodes = countries.map((country) => country.dial_code);
+
+  // Validate phone number based on country
+  const validatePhoneNumber = (fullNumber: string) => {
+    if (!fullNumber || fullNumber.length < 5) {
+      setValidationError("Phone number is too short");
+      onValidationChange?.(false);
+      return false;
+    }
+
+    try {
+      // Extract country code for validation
+      let countryISO: CountryCode | undefined;
+
+      // Find matching country code
+      for (const code of Object.keys(countryCodeToISO).sort(
+        (a, b) => b.length - a.length
+      )) {
+        if (fullNumber.startsWith(code)) {
+          countryISO = countryCodeToISO[code];
+          break;
+        }
+      }
+
+      if (!countryISO) {
+        setValidationError("Invalid country code");
+        onValidationChange?.(false);
+        return false;
+      }
+
+      const isValid = isValidPhoneNumber(fullNumber, countryISO);
+
+      if (!isValid) {
+        // Try to provide more specific error
+        const parsedNumber = parsePhoneNumberFromString(fullNumber, countryISO);
+
+        if (!parsedNumber) {
+          setValidationError("Invalid phone number format");
+        } else if (!parsedNumber.isPossible()) {
+          setValidationError("Phone number too short or too long");
+        } else {
+          setValidationError("Invalid phone number for this country");
+        }
+
+        onValidationChange?.(false);
+        return false;
+      }
+
+      // Valid phone number
+      setValidationError(null);
+      onValidationChange?.(true);
+      return true;
+    } catch (e) {
+      console.error("Phone validation error:", e);
+      setValidationError("Could not validate phone number");
+      onValidationChange?.(false);
+      return false;
+    }
+  };
 
   // Handle direct input changes to the phone number field
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,13 +104,28 @@ export default function PhoneInput({
     setPhoneNumber(cleaned);
 
     // Immediately update the combined value to ensure the parent component sees the change
-    onChange(countryCode + cleaned);
+    const fullNumber = countryCode + cleaned;
+    onChange(fullNumber);
+
+    // Validate after a short delay to avoid validating while typing
+    if (focused) {
+      setTimeout(() => {
+        validatePhoneNumber(fullNumber);
+      }, 500);
+    }
   };
 
   // Update parent value when country code changes
   useEffect(() => {
     if (countryCode) {
-      onChange(countryCode + phoneNumber);
+      const fullNumber = countryCode + phoneNumber;
+      onChange(fullNumber);
+
+      if (phoneNumber.length > 0) {
+        validatePhoneNumber(fullNumber);
+      } else {
+        setValidationError(null);
+      }
     }
   }, [countryCode]);
 
@@ -83,6 +170,11 @@ export default function PhoneInput({
     setTimeout(() => {
       internalUpdateRef.current = false;
     }, 0);
+
+    // Also validate the phone number when set externally and not empty
+    if (value.length > 4) {
+      validatePhoneNumber(value);
+    }
   }, [value, validCountryCodes]);
 
   // Focus the phone input field when clicked on the container
@@ -96,6 +188,17 @@ export default function PhoneInput({
     }
   };
 
+  // Validate on blur to give immediate feedback
+  const handleBlur = () => {
+    setFocused(false);
+    setDropdownOpen(false);
+
+    // Don't show validation errors for empty input
+    if (phoneNumber.length > 0) {
+      validatePhoneNumber(countryCode + phoneNumber);
+    }
+  };
+
   // Filter countries based on search
   const [searchTerm, setSearchTerm] = useState("");
   const filteredCountries = searchTerm
@@ -105,6 +208,10 @@ export default function PhoneInput({
           country.code.includes(searchTerm)
       )
     : countries;
+
+  // Determine error message to show (prop error takes precedence)
+  const displayError = error || validationError;
+  const hasError = !!displayError && !focused;
 
   return (
     <div className="mb-4">
@@ -118,7 +225,7 @@ export default function PhoneInput({
       <div
         className={`relative flex rounded-xl transition-all duration-300 ${
           focused ? "neumorph-pressed" : "neumorph-flat hover:shadow-md"
-        }`}
+        } ${hasError ? "border border-red-500" : ""}`}
         onClick={handleContainerClick}
       >
         {/* Country code dropdown */}
@@ -221,19 +328,19 @@ export default function PhoneInput({
           ref={phoneInputRef}
           id="phone"
           type="tel"
-          className="flex-grow px-4 py-3.5 bg-transparent rounded-r-xl focus:outline-none"
+          className={`flex-grow px-4 py-3.5 bg-transparent rounded-r-xl focus:outline-none ${hasError ? "text-red-500" : ""}`}
           placeholder="(555) 123-4567"
           value={phoneNumber}
           onChange={handlePhoneNumberChange}
           onFocus={() => setFocused(true)}
-          onBlur={() => {
-            setFocused(false);
-            setDropdownOpen(false);
-          }}
+          onBlur={handleBlur}
+          aria-invalid={hasError}
         />
       </div>
 
-      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+      {displayError && !focused && (
+        <p className="text-sm text-red-500 mt-1">{displayError}</p>
+      )}
     </div>
   );
 }
