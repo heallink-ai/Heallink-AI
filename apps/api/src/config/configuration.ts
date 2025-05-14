@@ -29,6 +29,8 @@ export interface EnvironmentVariables {
   USE_LOCALSTACK: string;
   S3_BUCKET_NAME: string;
   DYNAMODB_AUDIT_TABLE: string;
+  FRONTEND_URL: string;
+  ADMIN_FRONTEND_URL: string;
 }
 
 export const validationSchema = Joi.object({
@@ -63,6 +65,9 @@ export const validationSchema = Joi.object({
   USE_LOCALSTACK: Joi.string().valid('true', 'false').default('false'),
   S3_BUCKET_NAME: Joi.string().default('heallink-storage'),
   DYNAMODB_AUDIT_TABLE: Joi.string().default('heallink-audit-logs'),
+  // Frontend URLs
+  FRONTEND_URL: Joi.string().default('http://localhost:3000'),
+  ADMIN_FRONTEND_URL: Joi.string().default('http://localhost:3002'),
 });
 
 export default () => ({
@@ -104,6 +109,10 @@ export default () => ({
   },
   admin: {
     setupKey: process.env.ADMIN_SETUP_KEY || 'heallink_setup_key',
+  },
+  app: {
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+    adminUrl: process.env.ADMIN_FRONTEND_URL || 'http://localhost:3002',
   },
   aws: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,

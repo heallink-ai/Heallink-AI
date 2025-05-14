@@ -55,7 +55,7 @@
         color: #4a5568;
       }
 
-      /* Button styling */
+      /* Button styling with improved contrast */
       .button-container {
         text-align: center;
         margin: 35px 0;
@@ -63,14 +63,14 @@
 
       .button {
         display: inline-block;
-        background: linear-gradient(to right, #5a2dcf, #2066e4);
-        color: white;
+        background: #4421af; /* Darker, more accessible color */
+        color: white !important; /* Ensure white text with good contrast */
         text-decoration: none;
         padding: 14px 32px;
         border-radius: 8px;
         font-weight: 600;
         font-size: 16px;
-        box-shadow: 0 4px 6px rgba(90, 45, 207, 0.2);
+        box-shadow: 0 4px 6px rgba(68, 33, 175, 0.2);
         transition:
           transform 0.2s ease,
           box-shadow 0.2s ease;
@@ -78,7 +78,7 @@
 
       .button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 7px 14px rgba(90, 45, 207, 0.25);
+        box-shadow: 0 7px 14px rgba(68, 33, 175, 0.25);
       }
 
       /* Code styling */
@@ -86,13 +86,24 @@
         font-family: monospace;
         font-size: 24px;
         letter-spacing: 4px;
-        color: #5a2dcf;
+        color: #4421af; /* Consistent color with better contrast */
         background-color: #f0f4f9;
         padding: 15px;
         border-radius: 8px;
         margin: 20px 0;
         text-align: center;
         font-weight: bold;
+      }
+
+      /* Link styling with better contrast */
+      .highlight-link {
+        word-break: break-all;
+        font-size: 14px;
+        color: #4421af; /* Darker purple for better contrast */
+        background-color: #f3f4f6;
+        padding: 8px;
+        border-radius: 4px;
+        display: inline-block;
       }
 
       /* Footer styling */
@@ -112,7 +123,7 @@
       .social a {
         display: inline-block;
         margin: 0 8px;
-        color: #6b7280;
+        color: #4421af; /* Consistent color with better contrast */
         text-decoration: none;
       }
 
@@ -162,7 +173,7 @@
         <p>If the button above doesn't work, you can also copy and paste the
           following link into your browser:</p>
 
-        <p style='word-break: break-all; font-size: 14px; color: #5a2dcf;'>
+        <p class='highlight-link'>
           {{verificationLink}}
         </p>
 
