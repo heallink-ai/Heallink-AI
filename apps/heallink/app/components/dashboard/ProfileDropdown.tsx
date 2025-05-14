@@ -58,6 +58,7 @@ export default function ProfileDropdown({
       ),
       label: "My Profile",
       href: "/profile",
+      color: "from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-700",
     },
     {
       icon: (
@@ -86,46 +87,8 @@ export default function ProfileDropdown({
       ),
       label: "Health Records",
       href: "/health",
-    },
-    {
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-        </svg>
-      ),
-      label: "Update Details",
-      href: "/profile/edit",
-    },
-    {
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-      label: "Family Members",
-      href: "/family",
+      color:
+        "from-green-400 to-green-600 dark:from-green-500 dark:to-green-700",
     },
     {
       icon: (
@@ -146,6 +109,7 @@ export default function ProfileDropdown({
       ),
       label: "Settings",
       href: "/settings",
+      color: "from-sky-400 to-sky-600 dark:from-sky-500 dark:to-sky-700",
     },
     {
       icon: (
@@ -159,7 +123,6 @@ export default function ProfileDropdown({
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-red-500"
         >
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
           <polyline points="16 17 21 12 16 7" />
@@ -168,7 +131,7 @@ export default function ProfileDropdown({
       ),
       label: "Logout",
       href: "/auth/logout",
-      className: "text-red-500",
+      color: "from-red-400 to-red-600 dark:from-red-500 dark:to-red-700",
     },
   ];
 
@@ -194,83 +157,177 @@ export default function ProfileDropdown({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className={`absolute right-0 mt-2 w-72 rounded-xl overflow-hidden shadow-xl border ${
-              theme === "dark"
-                ? "bg-card border-gray-800"
-                : "bg-white border-gray-200"
-            }`}
-          >
-            {/* Header Section */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-              <div className="flex items-center">
-                <div className="relative w-12 h-12 mr-3">
-                  <Image
-                    src={avatarUrl}
-                    alt={`${userName}'s avatar`}
-                    width={48}
-                    height={48}
-                    className="rounded-full object-cover"
-                    unoptimized
-                  />
-                  {isOnline && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{userName}</h3>
-                  <p className="text-xs text-foreground/60">Patient</p>
-                </div>
-              </div>
+          <>
+            {/* Solid background div that fills the entire dropdown */}
+            <div
+              className="absolute right-0 mt-3 w-80 rounded-xl z-40 overflow-hidden"
+              style={{
+                backgroundColor: theme === "dark" ? "#121212" : "#ffffff",
+                boxShadow:
+                  "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                border:
+                  theme === "dark" ? "1px solid #333" : "1px solid #e5e7eb",
+              }}
+            >
+              {/* Content container */}
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="relative z-50 overflow-hidden"
+              >
+                {/* Header Section with Avatar and User Info */}
+                <div className="relative overflow-hidden">
+                  {/* Background Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent"></div>
 
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                <Link
-                  href="/profile/stats"
-                  className="p-2 rounded-lg hover:bg-primary/5 transition-colors"
-                >
-                  <div className="font-semibold text-foreground">12</div>
-                  <div className="text-foreground/60">Appointments</div>
-                </Link>
-                <Link
-                  href="/profile/stats"
-                  className="p-2 rounded-lg hover:bg-primary/5 transition-colors"
-                >
-                  <div className="font-semibold text-foreground">3</div>
-                  <div className="text-foreground/60">Doctors</div>
-                </Link>
-                <Link
-                  href="/health/records"
-                  className="p-2 rounded-lg hover:bg-primary/5 transition-colors"
-                >
-                  <div className="font-semibold text-foreground">87%</div>
-                  <div className="text-foreground/60">Health Score</div>
-                </Link>
-              </div>
-            </div>
+                  <div className="relative z-10 p-5">
+                    <div className="flex items-center gap-4">
+                      {/* Avatar with neumorph effect */}
+                      <motion.div
+                        className="relative neumorph-flat rounded-full p-1"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Image
+                          src={avatarUrl}
+                          alt={`${userName}'s avatar`}
+                          width={60}
+                          height={60}
+                          className="rounded-full object-cover"
+                          unoptimized
+                        />
+                        {isOnline && (
+                          <span className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 border-2 border-background dark:border-gray-900 rounded-full"></span>
+                        )}
+                      </motion.div>
 
-            {/* Menu Items */}
-            <div className="py-2">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className={`flex items-center px-4 py-2.5 hover:bg-primary/5 transition-colors ${
-                    item.className || "text-foreground"
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <span className="w-8 h-8 mr-3 flex items-center justify-center rounded-full bg-primary/10">
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          <span className="gradient-text">{userName}</span>
+                        </h3>
+                        <div className="flex items-center mt-1 text-sm text-foreground/70">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary">
+                            <svg
+                              className="w-3 h-3 mr-1"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clipRule="evenodd"
+                              ></path>
+                            </svg>
+                            Premium Patient
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Health Stats - Neumorphic Cards */}
+                <div className="px-4 py-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <motion.div
+                      className="neumorph-flat p-3 rounded-xl flex flex-col items-center justify-center"
+                      whileHover={{ translateY: -3 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="text-xs text-foreground/60 mb-1">
+                        Appointments
+                      </span>
+                      <span className="text-xl font-semibold gradient-text">
+                        12
+                      </span>
+                    </motion.div>
+                    <motion.div
+                      className="neumorph-flat p-3 rounded-xl flex flex-col items-center justify-center"
+                      whileHover={{ translateY: -3 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="text-xs text-foreground/60 mb-1">
+                        Doctors
+                      </span>
+                      <span className="text-xl font-semibold gradient-text">
+                        3
+                      </span>
+                    </motion.div>
+                    <motion.div
+                      className="neumorph-flat p-3 rounded-xl flex flex-col items-center justify-center"
+                      whileHover={{ translateY: -3 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="text-xs text-foreground/60 mb-1">
+                        Health Score
+                      </span>
+                      <span className="text-xl font-semibold gradient-text">
+                        87%
+                      </span>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Menu Items */}
+                <div className="p-3 grid grid-cols-2 gap-2">
+                  {menuItems.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      whileHover={{ scale: 1.03, translateY: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Link
+                        href={item.href}
+                        className="neumorph-button h-full block rounded-xl overflow-hidden transition-all duration-200"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <div className="relative p-3 flex flex-col items-center text-center">
+                          <div
+                            className={`absolute inset-0 opacity-10 bg-gradient-to-br ${item.color}`}
+                          ></div>
+                          <div
+                            className={`w-8 h-8 mb-2 flex items-center justify-center rounded-full bg-gradient-to-br ${item.color} text-white`}
+                          >
+                            {item.icon}
+                          </div>
+                          <span className="text-sm font-medium">
+                            {item.label}
+                          </span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Footer Section */}
+                <div className="p-3 border-t border-primary/10">
+                  <div className="flex justify-between items-center">
+                    <Link
+                      href="/profile/preferences"
+                      className="text-xs text-foreground/60 hover:text-primary transition-colors"
+                    >
+                      Preferences
+                    </Link>
+                    <Link
+                      href="/help"
+                      className="text-xs text-foreground/60 hover:text-primary transition-colors"
+                    >
+                      Help Center
+                    </Link>
+                    <Link
+                      href="/privacy"
+                      className="text-xs text-foreground/60 hover:text-primary transition-colors"
+                    >
+                      Privacy
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
