@@ -2,98 +2,71 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, UserPlus, Download, Upload, Users } from "lucide-react";
+import { Search, Filter, UserPlus, Download, Upload, Shield, ShieldCheck } from "lucide-react";
 import UserTable from "../../components/users/UserTable";
 
-// Mock user data - in a real app, this would come from an API
-const MOCK_USERS = [
+// Mock admin data - in a real app, this would come from an API
+const MOCK_ADMINS = [
   {
-    id: "u1",
-    name: "James Wilson",
-    email: "james.w@heallink.com",
-    role: "Patient",
-    status: "Active",
-    lastLogin: "2025-05-14T10:45:00",
-    created: "2024-12-15T11:20:00",
-  },
-  {
-    id: "u2",
-    name: "Sophia Garcia",
-    email: "s.garcia@gmail.com",
-    role: "Patient",
+    id: "a1",
+    name: "John Smith",
+    email: "john.smith@heallink.com",
+    role: "System Admin",
     status: "Active",
     lastLogin: "2025-05-10T14:30:00",
     created: "2024-11-05T09:00:00",
   },
   {
-    id: "u3",
-    name: "Michael Chen",
-    email: "m.chen@example.com",
-    role: "Provider Staff",
-    status: "Inactive",
-    lastLogin: "2025-04-30T16:15:00",
-    created: "2025-01-07T14:10:00",
-  },
-  {
-    id: "u4",
-    name: "Aisha Patel",
-    email: "aisha.p@example.com",
-    role: "Patient",
-    status: "Active",
-    lastLogin: "2025-05-13T09:10:00",
-    created: "2025-02-18T08:30:00",
-  },
-  {
-    id: "u5",
-    name: "Robert Kim",
-    email: "r.kim@example.com",
-    role: "Provider Staff",
-    status: "Pending",
-    lastLogin: null,
-    created: "2025-05-05T11:45:00",
-  },
-  {
-    id: "u6",
-    name: "Emma Thompson",
-    email: "emma.t@example.com",
-    role: "Patient",
+    id: "a2",
+    name: "Elena Rodriguez",
+    email: "e.rodriguez@heallink.com",
+    role: "Super Admin",
     status: "Active",
     lastLogin: "2025-05-15T08:20:00",
     created: "2025-03-12T16:40:00",
   },
   {
-    id: "u7",
-    name: "David Rodriguez",
-    email: "david.r@example.com",
-    role: "Patient",
-    status: "Inactive",
-    lastLogin: "2025-03-20T14:15:00",
-    created: "2025-01-10T13:25:00",
+    id: "a3",
+    name: "David Wilson",
+    email: "d.wilson@heallink.com",
+    role: "IT Admin",
+    status: "Active",
+    lastLogin: "2025-05-12T11:45:00",
+    created: "2024-10-20T13:30:00",
   },
   {
-    id: "u8",
-    name: "Sarah Miller",
-    email: "sarah.m@hospitalgroup.org",
-    role: "Provider Staff",
-    status: "Active",
-    lastLogin: "2025-05-12T09:30:00",
-    created: "2024-10-22T08:45:00",
+    id: "a4",
+    name: "Lisa Chen",
+    email: "l.chen@heallink.com",
+    role: "Security Admin",
+    status: "Inactive",
+    lastLogin: "2025-04-05T09:20:00",
+    created: "2025-01-15T10:00:00",
+  },
+  {
+    id: "a5",
+    name: "Marcus Johnson",
+    email: "m.johnson@heallink.com",
+    role: "Support Admin",
+    status: "Pending",
+    lastLogin: null,
+    created: "2025-05-01T08:45:00",
   }
 ];
 
-export default function UsersPage() {
+export default function AdminsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  // Filter users based on current state
-  const filteredUsers = MOCK_USERS.filter((user) => {
+  // Filter admins based on current state
+  const filteredAdmins = MOCK_ADMINS.filter((admin) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "All" || user.role === roleFilter;
+      admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === "All" || admin.role.includes(roleFilter);
     const matchesStatus =
-      statusFilter === "All" || user.status === statusFilter;
+      statusFilter === "All" || admin.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -101,15 +74,15 @@ export default function UsersPage() {
     <div className="bg-[color:var(--background)]">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
-          <Users size={24} className="mr-2 text-[color:var(--primary)]" />
-          <h1 className="text-2xl font-semibold">User Management</h1>
+          <ShieldCheck size={24} className="mr-2 text-[color:var(--primary)]" />
+          <h1 className="text-2xl font-semibold">Admin Management</h1>
         </div>
         <Link
-          href="/dashboard/users/add"
+          href="/dashboard/admins/invite"
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--primary)] text-white hover:bg-[color:var(--primary-dark)] transition-colors"
         >
           <UserPlus size={16} />
-          <span>Add New User</span>
+          <span>Invite Admin</span>
         </Link>
       </div>
 
@@ -127,7 +100,7 @@ export default function UsersPage() {
             <input
               type="text"
               className="pl-10 pr-4 py-2 w-full rounded-lg bg-[color:var(--input)] border border-[color:var(--border)] focus:outline-none focus:ring-1 focus:ring-[color:var(--ring)] text-sm"
-              placeholder="Search users by name or email"
+              placeholder="Search administrators by name or email"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -149,9 +122,11 @@ export default function UsersPage() {
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
                 <option value="All">All Roles</option>
-                <option value="Patient">Patient</option>
-                <option value="Provider Staff">Provider Staff</option>
-                <option value="Family Member">Family Member</option>
+                <option value="System">System Admin</option>
+                <option value="Super">Super Admin</option>
+                <option value="IT">IT Admin</option>
+                <option value="Security">Security Admin</option>
+                <option value="Support">Support Admin</option>
               </select>
             </div>
             <div className="flex items-center ml-0 md:ml-2">
@@ -175,7 +150,7 @@ export default function UsersPage() {
         {/* Action buttons */}
         <div className="flex flex-wrap justify-between items-center">
           <div className="text-sm text-[color:var(--muted-foreground)]">
-            Showing {filteredUsers.length} users
+            Showing {filteredAdmins.length} administrators
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-1.5 rounded-lg bg-[color:var(--secondary-background)] border border-[color:var(--border)] hover:bg-[color:var(--accent)] text-sm flex items-center gap-1.5">
@@ -190,8 +165,8 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Users table */}
-      <UserTable users={filteredUsers} />
+      {/* Admins table */}
+      <UserTable users={filteredAdmins} />
     </div>
   );
 }

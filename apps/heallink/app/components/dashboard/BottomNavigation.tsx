@@ -124,7 +124,7 @@ export default function BottomNavigation({
           <path d="M20 21a8 8 0 1 0-16 0" />
         </svg>
       ),
-      href: "/profile",
+      href: "/dashboard/profile",
       badge: 0,
     },
   ];

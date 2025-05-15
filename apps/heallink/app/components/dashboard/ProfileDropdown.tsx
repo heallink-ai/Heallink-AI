@@ -175,7 +175,7 @@ export default function ProfileDropdown({
         </svg>
       ),
       label: "My Profile",
-      href: "/profile",
+      href: "/dashboard/profile",
       color: "from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-700",
     },
     {

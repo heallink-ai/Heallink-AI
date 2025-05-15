@@ -22,8 +22,11 @@ export class EmailService {
     }
 
     this.resend = new Resend(resendApiKey);
+
+    // Get the email from configuration, which should be set from EMAIL_FROM env variable
     this.fromEmail =
-      this.configService.get<string>('email.from') || 'noreply@heallink.com';
+      this.configService.get<string>('email.from') || 'noreply@heallink.io';
+    this.logger.log(`Email configuration - from address: ${this.fromEmail}`);
 
     // Try multiple possible template directory locations to handle both development and production
     const possibleTemplateDirs = [

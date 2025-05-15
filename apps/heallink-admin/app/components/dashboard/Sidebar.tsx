@@ -59,22 +59,48 @@ export default function Sidebar({
       current: pathname === "/dashboard",
     },
     {
+      name: "Admin Management",
+      href: "/dashboard/admins",
+      icon: <ShieldCheck size={18} />,
+      current: pathname === "/dashboard/admins" || pathname.startsWith("/dashboard/admins/"),
+      submenu: [
+        {
+          name: "Admin List",
+          href: "/dashboard/admins",
+          icon: <Users size={16} />,
+          current: pathname === "/dashboard/admins",
+        },
+        {
+          name: "Invite Admin",
+          href: "/dashboard/admins/invite",
+          icon: <UserPlus size={16} />,
+          current: pathname === "/dashboard/admins/invite",
+        },
+      ],
+    },
+    {
       name: "User Management",
       href: "/dashboard/users",
       icon: <Users size={18} />,
-      current: pathname === "/dashboard/users",
+      current: pathname === "/dashboard/users" || pathname.startsWith("/dashboard/users/"),
       submenu: [
         {
-          name: "User List & Search",
+          name: "All Users",
           href: "/dashboard/users",
           icon: <Users size={16} />,
           current: pathname === "/dashboard/users",
         },
         {
-          name: "Invite New User",
-          href: "/dashboard/users/invite",
+          name: "Add New User",
+          href: "/dashboard/users/add",
           icon: <UserPlus size={16} />,
-          current: pathname === "/dashboard/users/invite",
+          current: pathname === "/dashboard/users/add",
+        },
+        {
+          name: "User Groups",
+          href: "/dashboard/users/groups",
+          icon: <Users size={16} />,
+          current: pathname === "/dashboard/users/groups",
         },
       ],
     },

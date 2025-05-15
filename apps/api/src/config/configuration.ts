@@ -115,7 +115,7 @@ export default () => ({
     port: parseInt(process.env.EMAIL_SERVER_PORT || '587', 10),
     user: process.env.EMAIL_SERVER_USER,
     password: process.env.EMAIL_SERVER_PASSWORD,
-    from: process.env.EMAIL_FROM || 'noreply@heallink.com',
+    from: process.env.EMAIL_FROM || 'noreply@heallink.io',
     resendApiKey: process.env.RESEND_API_KEY,
   },
   admin: {
