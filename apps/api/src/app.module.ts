@@ -62,6 +62,7 @@ import * as Joi from 'joi';
           },
           frontend: {
             url: process.env.FRONTEND_URL,
+            adminUrl: process.env.ADMIN_FRONTEND_URL,
           },
           google: {
             clientId: process.env.GOOGLE_CLIENT_ID,

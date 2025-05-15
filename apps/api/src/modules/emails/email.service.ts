@@ -122,7 +122,7 @@ export class EmailService {
    * Send welcome email to new user
    */
   async sendWelcomeEmail(to: string, name: string): Promise<boolean> {
-    const dashboardUrl = `${this.configService.get('app.frontendUrl')}/dashboard`;
+    const dashboardUrl = `${this.configService.get('frontend.url')}/dashboard`;
 
     return this.sendTemplatedEmail(to, 'Welcome to Heallink', 'welcome-email', {
       name,
@@ -138,7 +138,7 @@ export class EmailService {
     name: string,
     verificationToken: string,
   ): Promise<boolean> {
-    const frontendUrl = this.configService.get<string>('app.frontendUrl');
+    const frontendUrl = this.configService.get<string>('frontend.url');
     const verificationLink = `${frontendUrl}/auth/verify-email?token=${verificationToken}`;
 
     return this.sendTemplatedEmail(
@@ -160,7 +160,15 @@ export class EmailService {
     resetToken: string,
     username: string,
   ): Promise<boolean> {
-    const resetLink = `${this.configService.get('app.frontendUrl')}/auth/reset-password?token=${resetToken}`;
+    const frontendUrl = this.configService.get<string>('frontend.url');
+
+    if (!frontendUrl) {
+      this.logger.error(
+        'Frontend URL not configured properly for password reset email',
+      );
+    }
+
+    const resetLink = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
 
     return this.sendTemplatedEmail(
       to,
@@ -178,7 +186,7 @@ export class EmailService {
     name: string,
     tempPassword: string,
   ): Promise<boolean> {
-    const loginLink = `${this.configService.get('app.adminUrl')}/login`;
+    const loginLink = `${this.configService.get('frontend.adminUrl')}/login`;
 
     return this.sendTemplatedEmail(
       to,
