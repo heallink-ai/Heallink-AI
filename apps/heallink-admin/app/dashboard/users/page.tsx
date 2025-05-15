@@ -2,7 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, UserPlus, Download, Upload, Users } from "lucide-react";
+import {
+  Search,
+  Filter,
+  UserPlus,
+  Download,
+  Upload,
+  Users,
+} from "lucide-react";
 import UserTable from "../../components/users/UserTable";
 
 // Mock user data - in a real app, this would come from an API
@@ -78,7 +85,7 @@ const MOCK_USERS = [
     status: "Active",
     lastLogin: "2025-05-12T09:30:00",
     created: "2024-10-22T08:45:00",
-  }
+  },
 ];
 
 export default function UsersPage() {

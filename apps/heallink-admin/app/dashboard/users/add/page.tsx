@@ -30,10 +30,12 @@ export default function AddUserPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
-    
+
     // Handle nested address fields
     if (name.startsWith("address.")) {
       const addressField = name.split(".")[1];
@@ -155,7 +157,8 @@ export default function AddUserPage() {
             </h2>
             <p className="text-[color:var(--muted-foreground)] text-center max-w-md mb-6">
               The user has been added to the system.
-              {formState.sendWelcomeEmail && " A welcome email has been sent to the user."}
+              {formState.sendWelcomeEmail &&
+                " A welcome email has been sent to the user."}
             </p>
             <div className="flex gap-4">
               <Link
@@ -467,8 +470,8 @@ export default function AddUserPage() {
               {formState.sendWelcomeEmail && (
                 <div className="pl-6 border-l-2 border-[color:var(--border)] text-sm text-[color:var(--muted-foreground)]">
                   <p>
-                    A welcome email will be sent to the user with instructions to set up their
-                    account password and access the platform.
+                    A welcome email will be sent to the user with instructions
+                    to set up their account password and access the platform.
                   </p>
                 </div>
               )}

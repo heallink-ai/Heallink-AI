@@ -149,8 +149,8 @@ export default function InviteAdminPage() {
               Admin Invitation Sent Successfully
             </h2>
             <p className="text-[color:var(--muted-foreground)] text-center max-w-md mb-6">
-              An email has been sent to the administrator with instructions to join
-              the Heallink platform with administrative privileges.
+              An email has been sent to the administrator with instructions to
+              join the Heallink platform with administrative privileges.
             </p>
             <div className="flex gap-4">
               <Link
@@ -190,7 +190,9 @@ export default function InviteAdminPage() {
                   } focus:outline-none focus:ring-1 focus:ring-[color:var(--ring)]`}
                 />
                 {errors.firstName && (
-                  <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.firstName}
+                  </p>
                 )}
               </div>
               <div>
@@ -277,7 +279,7 @@ export default function InviteAdminPage() {
               <p className="text-sm text-[color:var(--muted-foreground)] mb-4">
                 Select the permissions for this administrator
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="flex items-center">
                   <input
@@ -437,8 +439,9 @@ export default function InviteAdminPage() {
               {formState.sendEmailInvite && (
                 <div className="pl-6 border-l-2 border-[color:var(--border)] text-sm text-[color:var(--muted-foreground)]">
                   <p>
-                    An email will be sent to the administrator with instructions to set up their
-                    account. They will have 7 days to accept the invitation before it expires.
+                    An email will be sent to the administrator with instructions
+                    to set up their account. They will have 7 days to accept the
+                    invitation before it expires.
                   </p>
                 </div>
               )}

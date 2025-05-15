@@ -2,7 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Plus, MoreHorizontal, Pencil, Trash, Users } from "lucide-react";
+import {
+  Search,
+  Plus,
+  MoreHorizontal,
+  Pencil,
+  Trash,
+  Users,
+} from "lucide-react";
 
 // Mock user groups data
 const MOCK_USER_GROUPS = [
@@ -47,16 +54,17 @@ export default function UserGroupsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  const filteredGroups = MOCK_USER_GROUPS.filter(group =>
-    group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    group.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredGroups = MOCK_USER_GROUPS.filter(
+    (group) =>
+      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
@@ -127,8 +135,8 @@ export default function UserGroupsPage() {
             <tbody className="divide-y divide-[color:var(--border)]">
               {filteredGroups.length > 0 ? (
                 filteredGroups.map((group) => (
-                  <tr 
-                    key={group.id} 
+                  <tr
+                    key={group.id}
                     className="hover:bg-[color:var(--accent)]/5 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -141,8 +149,13 @@ export default function UserGroupsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Users size={16} className="mr-2 text-[color:var(--muted-foreground)]" />
-                        <span className="text-sm">{group.membersCount.toLocaleString()}</span>
+                        <Users
+                          size={16}
+                          className="mr-2 text-[color:var(--muted-foreground)]"
+                        />
+                        <span className="text-sm">
+                          {group.membersCount.toLocaleString()}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[color:var(--foreground)]">
@@ -156,7 +169,7 @@ export default function UserGroupsPage() {
                       >
                         <MoreHorizontal size={16} />
                       </button>
-                      
+
                       {activeDropdown === group.id && (
                         <div className="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-[color:var(--card)] z-10 neumorph-flat border border-[color:var(--border)]">
                           <div className="py-1">
@@ -174,9 +187,7 @@ export default function UserGroupsPage() {
                               <Pencil size={14} />
                               <span>Edit Group</span>
                             </Link>
-                            <button
-                              className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2"
-                            >
+                            <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2">
                               <Trash size={14} />
                               <span>Delete Group</span>
                             </button>
@@ -188,7 +199,10 @@ export default function UserGroupsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-[color:var(--muted-foreground)]">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-4 text-center text-[color:var(--muted-foreground)]"
+                  >
                     No user groups found matching your search.
                   </td>
                 </tr>

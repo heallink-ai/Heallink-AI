@@ -62,7 +62,9 @@ export default function Sidebar({
       name: "Admin Management",
       href: "/dashboard/admins",
       icon: <ShieldCheck size={18} />,
-      current: pathname === "/dashboard/admins" || pathname.startsWith("/dashboard/admins/"),
+      current:
+        pathname === "/dashboard/admins" ||
+        pathname.startsWith("/dashboard/admins/"),
       submenu: [
         {
           name: "Admin List",
@@ -82,7 +84,9 @@ export default function Sidebar({
       name: "User Management",
       href: "/dashboard/users",
       icon: <Users size={18} />,
-      current: pathname === "/dashboard/users" || pathname.startsWith("/dashboard/users/"),
+      current:
+        pathname === "/dashboard/users" ||
+        pathname.startsWith("/dashboard/users/"),
       submenu: [
         {
           name: "All Users",

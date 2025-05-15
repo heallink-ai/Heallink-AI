@@ -2,7 +2,15 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, UserPlus, Download, Upload, Shield, ShieldCheck } from "lucide-react";
+import {
+  Search,
+  Filter,
+  UserPlus,
+  Download,
+  Upload,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
 import UserTable from "../../components/users/UserTable";
 
 // Mock admin data - in a real app, this would come from an API
@@ -51,7 +59,7 @@ const MOCK_ADMINS = [
     status: "Pending",
     lastLogin: null,
     created: "2025-05-01T08:45:00",
-  }
+  },
 ];
 
 export default function AdminsPage() {
