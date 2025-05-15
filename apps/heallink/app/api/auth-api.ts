@@ -4,6 +4,13 @@
  */
 
 import { AuthProvider, UserRole } from "@/app/types/auth-types";
+import {
+  ApiResponse,
+  AuthTokenResponse,
+  MessageResponse,
+  PasswordResetRequestPayload,
+  ResetPasswordPayload,
+} from "../api-types";
 
 // User type definition
 interface User {
@@ -20,12 +27,6 @@ interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
-}
-
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  statusCode?: number;
 }
 
 // Get the correct API URL based on whether we're on server or client
@@ -324,5 +325,236 @@ export async function logoutUser(
     console.error("Logout network error:", error);
     // Non-critical error for logout, so we return success anyway
     return { data: { message: "Logged out" } };
+  }
+}
+
+/**
+ * Sign in with email and password
+ */
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<ApiResponse<AuthTokenResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/signin`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Authentication failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Sign in error:", error);
+    return {
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Sign in with phone number and OTP
+ */
+export async function signInWithOtp(
+  phone: string,
+  otp: string
+): Promise<ApiResponse<AuthTokenResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/verify-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ phone, otp }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "OTP verification failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("OTP verification error:", error);
+    return {
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Sign up new user
+ */
+export async function signUp(userData: {
+  email?: string;
+  phone?: string;
+  password: string;
+  name: string;
+}): Promise<ApiResponse<MessageResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Registration failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Sign up error:", error);
+    return {
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Sign out (clear tokens)
+ */
+export async function signOut(): Promise<ApiResponse<MessageResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/signout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Sign out failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Sign out error:", error);
+    return {
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Verify email with token
+ */
+export async function verifyEmail(
+  token: string
+): Promise<ApiResponse<MessageResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/verify-email/${token}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Email verification failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Email verification error:", error);
+    return {
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Request a password reset
+ */
+export async function requestPasswordReset({
+  email,
+}: PasswordResetRequestPayload): Promise<ApiResponse<MessageResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/request-password-reset`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Failed to request password reset",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Reset password with token
+ */
+export async function resetPassword({
+  token,
+  newPassword,
+}: ResetPasswordPayload): Promise<ApiResponse<MessageResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Failed to reset password",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
 }

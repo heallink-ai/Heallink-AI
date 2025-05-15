@@ -2,6 +2,16 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { AuthProvider, UserRole } from "@/app/types/auth-types";
+import {
+  ApiError,
+  PasswordResetRequestPayload,
+  ResetPasswordPayload,
+} from "@/app/api-types";
+import {
+  requestPasswordReset as requestReset,
+  resetPassword as resetPasswordApi,
+  sendOtp as sendOtpApi,
+} from "@/app/api/auth-api";
 
 // Types
 interface User {
@@ -17,11 +27,6 @@ interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
-}
-
-interface ApiError {
-  message: string;
-  statusCode: number;
 }
 
 // Get the correct API URL based on whether we're on server or client
@@ -128,6 +133,50 @@ export function useSocialLogin() {
 }
 
 /**
+ * Custom hook for requesting password reset
+ */
+export function useForgotPassword() {
+  return useMutation<
+    { message: string },
+    ApiError,
+    PasswordResetRequestPayload
+  >({
+    mutationFn: async (data) => {
+      const response = await requestReset(data);
+
+      if (response.error) {
+        throw {
+          message: response.error,
+          statusCode: response.statusCode,
+        } as ApiError;
+      }
+
+      return response.data!;
+    },
+  });
+}
+
+/**
+ * Custom hook for resetting password with token
+ */
+export function useResetPassword() {
+  return useMutation<{ message: string }, ApiError, ResetPasswordPayload>({
+    mutationFn: async (data) => {
+      const response = await resetPasswordApi(data);
+
+      if (response.error) {
+        throw {
+          message: response.error,
+          statusCode: response.statusCode,
+        } as ApiError;
+      }
+
+      return response.data!;
+    },
+  });
+}
+
+/**
  * Custom hook for sending OTP
  */
 export function useSendOtp() {
@@ -137,24 +186,16 @@ export function useSendOtp() {
     { phone: string }
   >({
     mutationFn: async ({ phone }) => {
-      const response = await fetch(`${API_URL}/auth/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone }),
-      });
+      const response = await sendOtpApi(phone);
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (response.error) {
         throw {
-          message: data.message || "Failed to send OTP",
-          statusCode: response.status,
-        };
+          message: response.error || "Failed to send OTP",
+          statusCode: response.statusCode,
+        } as ApiError;
       }
 
-      return data;
+      return response.data!;
     },
   });
 }

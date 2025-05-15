@@ -32,6 +32,8 @@ describe('AuthService', () => {
     connectSocialAccount: jest.fn(),
     upsertSocialUser: jest.fn(),
     findByIdOrCreate: jest.fn(),
+    findByResetToken: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockJwtService = {
@@ -471,6 +473,125 @@ describe('AuthService', () => {
       await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
         'Name is required for social login',
       );
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('should generate token and send email when user exists', async () => {
+      const mockUser = {
+        _id: new mongoose.Types.ObjectId(),
+        email: 'test@example.com',
+        name: 'Test User',
+      };
+
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+
+      const result = await service.requestPasswordReset('test@example.com');
+
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(
+        'test@example.com',
+      );
+      expect(mockUsersService.update).toHaveBeenCalledWith(
+        mockUser._id,
+        expect.objectContaining({
+          resetToken: expect.any(String),
+          resetTokenExpiry: expect.any(Date),
+        }),
+      );
+      expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        expect.any(String),
+        'Test User',
+      );
+      expect(result).toEqual({
+        message:
+          'If an account with that email exists, a reset link has been sent.',
+      });
+    });
+
+    it('should return same message when user does not exist', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(null);
+
+      const result = await service.requestPasswordReset(
+        'nonexistent@example.com',
+      );
+
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(
+        'nonexistent@example.com',
+      );
+      expect(mockUsersService.update).not.toHaveBeenCalled();
+      expect(mockEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        message:
+          'If an account with that email exists, a reset link has been sent.',
+      });
+    });
+
+    it('should handle email sending errors gracefully', async () => {
+      const mockUser = {
+        _id: new mongoose.Types.ObjectId(),
+        email: 'test@example.com',
+        name: 'Test User',
+      };
+
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockEmailService.sendPasswordResetEmail.mockRejectedValue(
+        new Error('Email error'),
+      );
+
+      const result = await service.requestPasswordReset('test@example.com');
+
+      expect(mockUsersService.update).toHaveBeenCalled();
+      expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalled();
+      expect(result).toEqual({
+        message:
+          'If an account with that email exists, a reset link has been sent.',
+      });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should update password when token is valid', async () => {
+      const mockUser = {
+        _id: new mongoose.Types.ObjectId(),
+        email: 'test@example.com',
+      };
+
+      mockUsersService.findByResetToken.mockResolvedValue(mockUser);
+
+      const result = await service.resetPassword(
+        'valid-token',
+        'NewPassword123',
+      );
+
+      expect(mockUsersService.findByResetToken).toHaveBeenCalledWith(
+        'valid-token',
+      );
+      expect(mockUsersService.update).toHaveBeenCalledWith(
+        mockUser._id,
+        expect.objectContaining({
+          password: expect.any(String),
+          resetToken: null,
+          resetTokenExpiry: null,
+        }),
+      );
+      expect(result).toEqual({
+        message:
+          'Password reset successful. You can now log in with your new password.',
+      });
+    });
+
+    it('should throw BadRequestException when token is invalid', async () => {
+      mockUsersService.findByResetToken.mockResolvedValue(null);
+
+      await expect(
+        service.resetPassword('invalid-token', 'NewPassword123'),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockUsersService.findByResetToken).toHaveBeenCalledWith(
+        'invalid-token',
+      );
+      expect(mockUsersService.update).not.toHaveBeenCalled();
     });
   });
 

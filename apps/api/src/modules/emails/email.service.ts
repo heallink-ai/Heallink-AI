@@ -157,7 +157,7 @@ export class EmailService {
     resetToken: string,
     username: string,
   ): Promise<boolean> {
-    const resetLink = `${this.configService.get('app.frontendUrl')}/reset-password?token=${resetToken}`;
+    const resetLink = `${this.configService.get('app.frontendUrl')}/auth/reset-password?token=${resetToken}`;
 
     return this.sendTemplatedEmail(
       to,
