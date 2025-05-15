@@ -10,6 +10,7 @@ import Hero from "./components/sections/Hero";
 import HowItWorks from "./components/sections/HowItWorks";
 import Testimonials from "./components/sections/Testimonials";
 import ComingSoon from "./components/sections/ComingSoon";
+import AiConversation from "./components/sections/AiConversation";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
       <ForPatients />
       <ForProviders />
       <Features />
+      <AiConversation />
       <Testimonials />
       <FAQ />
       <ComingSoon />

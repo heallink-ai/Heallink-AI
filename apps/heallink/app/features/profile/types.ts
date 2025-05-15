@@ -9,6 +9,8 @@ export interface UserProfileData {
   role: string;
   dateOfBirth?: string;
   gender?: "male" | "female" | "other" | "prefer-not-to-say";
+  created: string;
+  lastActive?: string;
   address?: {
     streetAddress?: string;
     city?: string;
@@ -35,6 +37,9 @@ export interface UserProfileData {
     allergies?: string[];
     medications?: string[];
     chronicConditions?: string[];
+    insuranceProvider?: string;
+    insurancePolicyNumber?: string;
+    primaryCarePhysician?: string;
   };
   insurance?: {
     provider?: string;
@@ -55,7 +60,7 @@ export interface UserProfileFormData {
   email?: string;
   phone?: string;
   dateOfBirth?: string;
-  gender?: string;
+  gender?: "male" | "female" | "other" | "prefer-not-to-say";
   address?: {
     streetAddress?: string;
     city?: string;
@@ -82,6 +87,9 @@ export interface UserProfileFormData {
     allergies?: string[];
     medications?: string[];
     chronicConditions?: string[];
+    insuranceProvider?: string;
+    insurancePolicyNumber?: string;
+    primaryCarePhysician?: string;
   };
   insurance?: {
     provider?: string;

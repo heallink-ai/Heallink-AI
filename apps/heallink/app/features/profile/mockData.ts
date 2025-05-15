@@ -9,9 +9,11 @@ export const mockUserProfile: UserProfileData = {
   phoneVerified: false,
   avatarUrl:
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=256&auto=format&fit=crop",
-  role: "user",
+  role: "patient",
   dateOfBirth: "1992-05-15",
   gender: "female",
+  created: "2022-07-15T08:30:00",
+  lastActive: "2023-06-30T14:45:00",
   address: {
     streetAddress: "123 Health Street",
     city: "San Francisco",
@@ -26,14 +28,12 @@ export const mockUserProfile: UserProfileData = {
   },
   medicalInformation: {
     bloodType: "O+",
-    allergies: ["Penicillin", "Peanuts", "Latex"],
-    medications: [
-      "Lisinopril 10mg",
-      "Vitamin D3",
-      "Zyrtec 10mg",
-      "Multivitamin",
-    ],
-    chronicConditions: ["Asthma", "Seasonal Allergies", "Hypertension"],
+    allergies: ["Penicillin", "Peanuts", "Shellfish"],
+    medications: ["Lisinopril 10mg", "Vitamin D3", "Multivitamin"],
+    chronicConditions: ["Asthma", "Hypertension"],
+    insuranceProvider: "Blue Shield",
+    insurancePolicyNumber: "BSP-987654321",
+    primaryCarePhysician: "Dr. Robert Chen",
   },
   insurance: {
     provider: "Blue Cross Blue Shield",
