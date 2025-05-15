@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../animations/ScrollReveal";
+import dynamic from "next/dynamic";
+
+// Import Vapi with dynamic import to prevent SSR issues
+const VapiModule = dynamic(() => import("@vapi-ai/web"), {
+  ssr: false,
+});
 
 export default function AiConversation() {
   const [isActive, setIsActive] = useState(false);
@@ -13,23 +19,110 @@ export default function AiConversation() {
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [isInitialState, setIsInitialState] = useState(true);
   const [loadingResponse, setLoadingResponse] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
+  const vapiRef = useRef<any>(null); // Will hold our Vapi instance
 
-  // Simulate random audio levels
+  // Create a Vapi instance when the component mounts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("@vapi-ai/web")
+        .then(({ default: Vapi }) => {
+          // Replace 'your-public-key-here' with your actual Vapi public key
+          vapiRef.current = new Vapi("07199ba2-06b5-4216-9025-9919db8d8c24");
+
+          // Set up event listeners for Vapi
+          setupVapiEventListeners();
+        })
+        .catch((err) => {
+          console.error("Failed to load Vapi:", err);
+          setError("Failed to load voice assistant. Please try again later.");
+        });
+    }
+
+    return () => {
+      // Clean up Vapi when the component unmounts
+      if (vapiRef.current) {
+        try {
+          vapiRef.current.stop();
+        } catch (err) {
+          console.error("Error stopping Vapi:", err);
+        }
+      }
+    };
+  }, []);
+
+  // Setup Vapi event handlers
+  const setupVapiEventListeners = () => {
+    if (!vapiRef.current) return;
+
+    // When the AI starts speaking
+    vapiRef.current.on("speech-start", () => {
+      setIsAiSpeaking(true);
+    });
+
+    // When the AI stops speaking
+    vapiRef.current.on("speech-end", () => {
+      setIsAiSpeaking(false);
+    });
+
+    // Call start event
+    vapiRef.current.on("call-start", () => {
+      setIsListening(true);
+      console.log("Voice call started with Vapi");
+    });
+
+    // Call end event
+    vapiRef.current.on("call-end", () => {
+      setIsListening(false);
+      console.log("Voice call ended with Vapi");
+    });
+
+    // Real-time volume levels
+    vapiRef.current.on("volume-level", (volume: number) => {
+      setAudioLevel(volume);
+    });
+
+    // Messages from the assistant
+    vapiRef.current.on("message", (message: any) => {
+      if (message.type === "transcript") {
+        // Handle user transcript
+        setConversation((prev) => [
+          ...prev,
+          { type: "user", text: message.transcript },
+        ]);
+      } else if (message.type === "assistant_response") {
+        // Handle AI response
+        setConversation((prev) => [
+          ...prev,
+          { type: "ai", text: message.text || "" },
+        ]);
+      }
+    });
+
+    // Error handling
+    vapiRef.current.on("error", (err: Error) => {
+      console.error("Vapi error:", err);
+      setError("An error occurred with the voice assistant. Please try again.");
+      setIsListening(false);
+    });
+  };
+
+  // Simulate random audio levels when not using real Vapi data
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isListening) {
+    if (isListening && !vapiRef.current) {
       interval = setInterval(() => {
         // Simulate microphone audio levels (0.1 to 0.9)
         setAudioLevel(0.1 + Math.random() * 0.8);
       }, 100);
-    } else if (isAiSpeaking) {
+    } else if (isAiSpeaking && !vapiRef.current) {
       interval = setInterval(() => {
         // Different pattern for AI speaking
         setAudioLevel(0.2 + Math.random() * 0.5);
       }, 120);
-    } else {
+    } else if (!isListening && !isAiSpeaking) {
       setAudioLevel(0);
     }
 
@@ -49,34 +142,97 @@ export default function AiConversation() {
     setIsActive(true);
     setIsInitialState(false);
 
-    // Initial greeting
-    setTimeout(() => {
-      setConversation([
-        {
-          type: "ai",
-          text: "Hi, I'm Healbot, your personal healthcare assistant. How can I help you today?",
-        },
-      ]);
-      simulateAiSpeaking();
-    }, 500);
+    // Initial greeting - using simulation if Vapi isn't available yet
+    if (!vapiRef.current) {
+      setTimeout(() => {
+        setConversation([
+          {
+            type: "ai",
+            text: "Hi, I'm Healbot, your personal healthcare assistant. How can I help you today?",
+          },
+        ]);
+        simulateAiSpeaking();
+      }, 500);
+    }
   };
 
-  const startListening = () => {
-    setIsListening(true);
+  const startListening = async () => {
+    try {
+      if (vapiRef.current) {
+        // Clear any previous error
+        setError(null);
 
-    // Simulate listening for 3-5 seconds
-    const duration = 3000 + Math.random() * 2000;
+        // Start a conversation with Vapi
+        setLoadingResponse(true);
 
-    setTimeout(() => {
-      stopListening();
-    }, duration);
+        // Create a healthcare AI assistant configuration
+        await vapiRef.current.start({
+          model: {
+            provider: "openai",
+            model: "gpt-4",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are Healbot, a healthcare assistant designed to provide medical guidance and connect users with appropriate healthcare resources. Be informative, compassionate, and encourage users to seek professional medical help when necessary.",
+              },
+              {
+                role: "assistant",
+                content:
+                  "Hi, I'm Healbot, your personal healthcare assistant. How can I help you today?",
+              },
+            ],
+          },
+          voice: {
+            provider: "playht",
+            voiceId: "jennifer", // Using a professional, warm female voice
+          },
+          transcriber: {
+            provider: "deepgram",
+            model: "nova-2",
+            language: "en-US",
+          },
+          name: "Healbot Healthcare Assistant",
+        });
+
+        setLoadingResponse(false);
+      } else {
+        // Fallback to simulation if Vapi isn't available
+        setIsListening(true);
+
+        // Simulate listening for 3-5 seconds
+        const duration = 3000 + Math.random() * 2000;
+
+        setTimeout(() => {
+          stopListening();
+        }, duration);
+      }
+    } catch (err) {
+      console.error("Error starting Vapi:", err);
+      setError("Failed to connect to voice assistant. Please try again.");
+      setLoadingResponse(false);
+
+      // Fallback to simulation
+      setIsListening(true);
+      setTimeout(() => {
+        stopListening();
+      }, 2000);
+    }
   };
 
   const stopListening = () => {
-    setIsListening(false);
-
-    // Simulate user speech processing
-    processUserInput();
+    if (vapiRef.current) {
+      // Stop the Vapi call
+      try {
+        vapiRef.current.stop();
+      } catch (err) {
+        console.error("Error stopping Vapi:", err);
+      }
+    } else {
+      // Fallback simulation
+      setIsListening(false);
+      processUserInput(); // Simulate user speech processing
+    }
   };
 
   const processUserInput = () => {
@@ -381,7 +537,9 @@ export default function AiConversation() {
                           className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${
                             isListening
                               ? "bg-red-500 scale-110"
-                              : "bg-gradient-to-r from-purple-heart to-royal-blue hover:opacity-90"
+                              : error
+                                ? "bg-gray-400"
+                                : "bg-gradient-to-r from-purple-heart to-royal-blue hover:opacity-90"
                           } transition-all duration-300`}
                         >
                           <svg
@@ -401,11 +559,15 @@ export default function AiConversation() {
                         </button>
 
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-                          {isListening
-                            ? "I'm listening..."
-                            : loadingResponse
-                              ? "Processing your question..."
-                              : "Press to speak"}
+                          {error ? (
+                            <span className="text-red-500">{error}</span>
+                          ) : isListening ? (
+                            "I'm listening..."
+                          ) : loadingResponse ? (
+                            "Connecting to voice assistant..."
+                          ) : (
+                            "Press to speak"
+                          )}
                         </p>
                       </div>
                     </>
