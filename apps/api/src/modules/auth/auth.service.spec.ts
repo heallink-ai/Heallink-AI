@@ -10,6 +10,7 @@ import { AuthProvider, UserRole } from '../users/schemas/user.schema';
 import mongoose from 'mongoose';
 import { SocialLoginDto, SocialProvider } from './dto/social-login.dto';
 import { UserDocument } from '../users/schemas/user.schema';
+import { SmsService } from '../sms/sms.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -60,6 +61,11 @@ describe('AuthService', () => {
     sendPasswordResetEmail: jest.fn(),
   };
 
+  const mockSmsService = {
+    sendSms: jest.fn(),
+    sendOtp: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -70,6 +76,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: EmailService, useValue: mockEmailService },
+        { provide: SmsService, useValue: mockSmsService },
       ],
     }).compile();
 

@@ -12,8 +12,14 @@ import { Types } from 'mongoose';
 
 describe('AuthService OTP functionality', () => {
   let service: AuthService;
-  let usersService: jest.Mocked<Partial<UsersService>>;
-  let smsService: jest.Mocked<Partial<SmsService>>;
+  let usersService: {
+    findByPhone: jest.Mock;
+    findByEmail: jest.Mock;
+    update: jest.Mock;
+  };
+  let smsService: {
+    sendOtp: jest.Mock;
+  };
 
   beforeEach(async () => {
     // Create mock implementations
@@ -86,13 +92,13 @@ describe('AuthService OTP functionality', () => {
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
-      usersService.findByPhone.mockResolvedValue(mockUser as any);
+      usersService.findByPhone.mockResolvedValue(mockUser);
       smsService.sendOtp.mockResolvedValue({
         code: '123456',
         messageSid: 'test-sid',
         expiresAt,
       });
-      usersService.update.mockResolvedValue({} as any);
+      usersService.update.mockResolvedValue({});
 
       // Act
       const result = await service.sendOtp(sendOtpDto);
@@ -145,8 +151,8 @@ describe('AuthService OTP functionality', () => {
         }),
       };
 
-      usersService.findByPhone.mockResolvedValue(mockUser as any);
-      usersService.update.mockResolvedValue({} as any);
+      usersService.findByPhone.mockResolvedValue(mockUser);
+      usersService.update.mockResolvedValue({});
 
       // Mock the login method partially - this is a method of the service itself
       jest.spyOn(service, 'login').mockResolvedValue({
@@ -186,7 +192,7 @@ describe('AuthService OTP functionality', () => {
         otpExpiry: expiresAt,
       };
 
-      usersService.findByPhone.mockResolvedValue(mockUser as any);
+      usersService.findByPhone.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(service.verifyOtp(verifyOtpDto)).rejects.toThrow(
@@ -208,10 +214,10 @@ describe('AuthService OTP functionality', () => {
         _id: new Types.ObjectId(),
         phone: '+15005550010',
         otpCode: '123456',
-        otpExpiry: expiresAt,
+        otpExpiry: expiresAt, // Expired
       };
 
-      usersService.findByPhone.mockResolvedValue(mockUser as any);
+      usersService.findByPhone.mockResolvedValue(mockUser);
 
       // Act & Assert
       await expect(service.verifyOtp(verifyOtpDto)).rejects.toThrow(
