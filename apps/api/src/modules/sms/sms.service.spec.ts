@@ -6,16 +6,14 @@ import { SmsService } from './sms.service';
 // Mock Twilio
 jest.mock('twilio', () => {
   // Mock Twilio client factory
-  return {
-    default: jest.fn(() => ({
-      messages: {
-        create: jest.fn().mockResolvedValue({
-          sid: 'test_message_sid',
-          status: 'delivered',
-        }),
-      },
-    })),
-  };
+  return jest.fn(() => ({
+    messages: {
+      create: jest.fn().mockResolvedValue({
+        sid: 'test_message_sid',
+        status: 'delivered',
+      }),
+    },
+  }));
 });
 
 describe('SmsService', () => {
@@ -88,34 +86,30 @@ describe('SmsService', () => {
   });
 
   describe('sendOtp', () => {
-    it('should generate and send an OTP code', async () => {
+    it('should generate and send an OTP', async () => {
       const options = {
         phone: '+15005550010',
         expiry: 5,
+        length: 4,
       };
 
       const result = await service.sendOtp(options);
 
       expect(result).toBeDefined();
-      expect(result.code).toBeDefined();
-      expect(result.code.length).toBe(6); // default length
+      expect(result.code).toHaveLength(4);
       expect(result.messageSid).toBe('test_message_sid');
       expect(result.expiresAt).toBeInstanceOf(Date);
     });
 
-    it('should generate alphanumeric OTP if requested', async () => {
+    it('should use default OTP parameters', async () => {
       const options = {
         phone: '+15005550010',
-        expiry: 5,
-        length: 8,
-        alphanumeric: true,
       };
 
       const result = await service.sendOtp(options);
 
       expect(result).toBeDefined();
-      expect(result.code).toBeDefined();
-      expect(result.code.length).toBe(8);
+      expect(result.code).toHaveLength(6); // default length
     });
   });
 

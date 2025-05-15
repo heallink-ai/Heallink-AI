@@ -48,6 +48,7 @@ This document defines the architecture, technologies, libraries, conventions, an
 - **Datastore**: MongoDB primary DB; Redis for caching, sessions, and pub/sub
 - **Vector Database**: pgAI extension for vector embeddings, integrated via LangChain & LangGraph.
 - **Deployment**: Docker containers orchestrated by Kubernetes (EKS/GKE).
+- **Pharmacy Integration Service**: Dedicated microservice communicating with third-party pharmacy APIs to fetch nearest locations, pricing, and stock levels.
 
 ---
 
@@ -171,6 +172,22 @@ And the root `tsconfig.json` uses `references` to each package for fast, isolate
 ---
 
 ### 4.4 Infrastructure & DevOps
+
+### 4.5 Pharmacy Integration Service
+
+- **Framework**: NestJS (or FastAPI for supplement) microservice, TypeScript/Python
+- **Responsibilities**:
+  - Connect to pharmacy networks (e.g., SureScripts, 1mg, local chains) via REST/SOAP APIs
+  - Retrieve geolocation-based pharmacy data
+  - Aggregate and normalize medication price and availability
+  - Cache frequent queries in Redis, fallback to on-demand
+  - Authenticate with partner APIs and manage rate limits
+- **Database**: MongoDB or PostgreSQL for partner metadata; Redis for real-time cache
+- **Security**: OAuth2 or API Key management for each partner
+- **Testing**: Contract tests against sandbox APIs
+- **Monitoring**: Track API latency, error rates, partner SLA compliance
+
+---
 
 - **Containerization**: Docker, Docker Compose for local dev
 - **Orchestration**: Kubernetes (EKS/GKE) with Helm charts
@@ -378,19 +395,161 @@ Security & Compliance
 
 ### 8.2 User Portal
 
-- Registration & profile management
-- Appointment search & booking
-- Secure messaging with providers
-- Billing & payments integration (Stripe)
-- Medical records viewer (PDF render)
-- Notifications (email, SMS, push)
+To ensure a seamless patient experience, the User Portal is organized into the following Epics and associated User Stories & Tasks. Each Epic encapsulates a major area of functionality.
+
+#### Epic 8.2.1: User Onboarding & Profile Management
+
+- **Story 8.2.1.1**: As a new user, I want to register via email/phone or social login so I can access the portal.
+
+  - Task: Design registration form with fields for name, contact, password
+  - Task: Integrate NextAuth.js Email, Phone, Google, Facebook, Apple providers
+  - Task: Implement email/phone verification workflow
+
+- **Story 8.2.1.2**: As a user, I want to complete my profile (personal details, insurance) so providers have my information.
+
+  - Task: Create Profile component with form (React Hook Form + Zod)
+  - Task: Persist profile data to MongoDB via API
+  - Task: Add avatar upload (AWS S3 integration)
+
+- **Story 8.2.1.3**: As a user, I want to manage account settings (password reset, 2FA) so I can secure my account.
+
+  - Task: Build Settings page with sections for password, 2FA toggles
+  - Task: Integrate Auth service endpoints for password reset and 2FA
+  - Task: Add UI feedback and error handling
+
+#### Epic 8.2.2: Appointment Scheduling & Calendar
+
+- **Story 8.2.2.1**: As a user, I want to search for providers by specialty, location, and availability.
+
+  - Task: Design search filters component
+  - Task: Integrate search API with Elastic/MeiliSearch
+  - Task: Display provider list with pagination and map view
+
+- **Story 8.2.2.2**: As a user, I want to view provider calendars and select available slots.
+
+  - Task: Build interactive calendar component using React-Calendar or custom UI
+  - Task: Fetch and render availability from API
+  - Task: Implement slot selection and validation
+
+- **Story 8.2.2.3**: As a user, I want to confirm and reschedule appointments.
+
+  - Task: Create confirmation modal with details summary
+  - Task: Integrate appointment creation and update endpoints
+  - Task: Send email/SMS confirmation via Notifications service
+
+#### Epic 8.2.3: Medical Records & Documents
+
+- **Story 8.2.3.1**: As a user, I want to view my medical records (lab results, prescriptions).
+
+  - Task: Build Records dashboard with filtering and pagination
+  - Task: Render PDFs inline using `<object>` or PDF.js
+  - Task: Fetch records from Core API
+
+- **Story 8.2.3.2**: As a user, I want to download or share my records securely.
+
+  - Task: Add download buttons to each record
+  - Task: Generate signed S3 URLs
+  - Task: Audit access in logs
+
+#### Epic 8.2.4: Billing & Payments
+
+- **Story 8.2.4.1**: As a user, I want to view my invoices and payment history.
+
+  - Task: Design Invoices list UI
+  - Task: Integrate with Billing API (Stripe)
+  - Task: Display status, amount, date, download links
+
+- **Story 8.2.4.2**: As a user, I want to pay my bills using card or saved payment method.
+
+  - Task: Implement Stripe Checkout or Elements flow
+  - Task: Securely store payment methods (PCI compliance)
+  - Task: Handle success/failure callbacks
+
+#### Epic 8.2.5: Communication & Notifications
+
+- **Story 8.2.5.1**: As a user, I want to chat securely with my provider.
+
+  - Task: Build messaging UI (React Query + WebSocket)
+  - Task: Integrate with Notifications microservice for real-time updates
+  - Task: Persist chat history in MongoDB
+
+- **Story 8.2.5.2**: As a user, I want to receive email, SMS, or push notifications for appointments and messages.
+
+  - Task: Create Notification Preferences page
+  - Task: Integrate with Redis pub/sub and Notifications API
+  - Task: Implement push notifications via service worker
+
+#### Epic 8.2.6: Telehealth & Video Visits
+
+- **Story 8.2.6.1**: As a user, I want to start a video consultation with my provider.
+
+  - Task: Integrate Daily.co or WebRTC SDK
+  - Task: Build VideoCall component with mute/camera controls
+  - Task: Securely generate meeting tokens via API
+
+- **Story 8.2.6.2**: As a user, I want to view upcoming telehealth session details.
+
+  - Task: Add Telehealth tab in Appointments section
+  - Task: Show join links, instructions, pre-call checklist
+
+#### Epic 8.2.7: Health & Wellness Tracking
+
+- **Story 8.2.7.1**: As a user, I want to log vitals (blood pressure, glucose) daily.
+
+  - Task: Create Vitals Log form (Recharts for trends)
+  - Task: Store logs in vector DB via pgAI for analytics
+  - Task: Visualize trends in Dashboard widget
+
+- **Story 8.2.7.2**: As a user, I want AI-driven insights from my health data.
+
+  - Task: Implement LangChain pipeline to analyze vitals
+  - Task: Display suggestions in a chat-like interface
+  - Task: Enable follow-up actions (schedule appointment)
+
+#### Epic 8.2.8: Administer Emergency Access
+
+- **Story 8.2.8.1**: As a user, I want to designate emergency contacts.
+
+  - Task: Build Emergency Contacts UI
+  - Task: Manage contact permissions for record access
+
+- **Story 8.2.8.2**: As a user, I want to share my emergency key for urgent access.
+
+  - Task: Generate one-time access tokens
+  - Task: Audit token usage
 
 ### 8.3 Provider Portal
 
 - Schedule management calendar
 - Patient record updates & notes
-- Video consultations (WebRTC via Daily.co)
+- Video consultations (WebRTC via Daily-co)
 - Prescription & treatment plans
+- Invoices & payout dashboard
+
+### 8.4 Pharmacy Integration
+
+- **Pharmacy Discovery**: Users can search for and view nearest pharmacies based on GPS or entered address
+
+- **Price Comparison**: Real-time comparison of medication prices across partnered pharmacies
+
+- **Stock Availability**: Display current inventory status for prescribed medications
+
+- **Ordering & Fulfillment**: Initiate refill or new prescription orders; choose pickup or delivery
+
+- **Prescription Sync**: Automatic sync of new prescriptions from Provider App to Pharmacy Integration Service
+
+- **Notifications**: Notify users when orders are ready for pickup, out for delivery, or if substitutions are needed
+
+- **Admin Oversight**: In Admin Panel, manage pharmacy partnerships, view performance metrics, and SLA dashboards
+
+- Schedule management calendar
+
+- Patient record updates & notes
+
+- Video consultations (WebRTC via Daily.co)
+
+- Prescription & treatment plans
+
 - Invoices & payout dashboard
 
 ---

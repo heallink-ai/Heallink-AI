@@ -37,7 +37,7 @@ export class SmsService {
 
     // Initialize Twilio client if credentials are provided
     if (accountSid && authToken) {
-      this.twilioClient = twilio.default(accountSid, authToken);
+      this.twilioClient = twilio(accountSid, authToken);
       this.logger.log('Twilio client initialized');
     } else {
       this.logger.warn(
