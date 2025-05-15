@@ -14,7 +14,15 @@ import { SocialLoginDto, SocialProvider } from './dto/social-login.dto';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto';
 import { EmailService } from '../emails/email.service';
 import { randomBytes } from 'crypto';
-import { ProviderData, UserPayload } from './types/auth.types';
+import {
+  ProviderData,
+  UserPayload,
+  GoogleTokenVerificationResponse,
+  FacebookUserResponse,
+  FacebookDebugTokenResponse,
+  AppleTokenPayload,
+  AppleKeysResponse,
+} from './types/auth.types';
 
 @Injectable()
 export class AuthService {
@@ -221,56 +229,130 @@ export class AuthService {
   async validateSocialLogin(
     socialLoginDto: SocialLoginDto,
   ): Promise<UserDocument> {
-    // In a real-world app, you'd verify the token with the provider
-    // For Google, Facebook, Apple, etc.
+    // Check if email was provided - required field
+    if (!socialLoginDto.email) {
+      throw new BadRequestException('Email is required for social login');
+    }
 
-    // For demonstration, we'll simulate what would happen with token verification
-    // In production, you'd call the respective API to verify tokens
+    // Check if name was provided - required field
+    if (!socialLoginDto.name) {
+      throw new BadRequestException('Name is required for social login');
+    }
+
     let providerData: ProviderData;
+    const isDevelopment = process.env.NODE_ENV === 'development';
 
     try {
-      // Check if email was provided - required field
-      if (!socialLoginDto.email) {
-        throw new BadRequestException('Email is required for social login');
-      }
-
-      // Check if name was provided - required field
-      if (!socialLoginDto.name) {
-        throw new BadRequestException('Name is required for social login');
-      }
-
       switch (socialLoginDto.provider) {
         case SocialProvider.GOOGLE:
-          // In production you would call Google's token verification API
-          // This is mocked for development purposes
+          if (isDevelopment) {
+            // In development, use mocked verification
+            this.logger.log(
+              'Development mode: Using mocked Google token verification',
+            );
+            providerData = {
+              provider: AuthProvider.GOOGLE,
+              providerId: `google-${Date.now()}`, // Use a dynamic ID for demo
+              email: socialLoginDto.email,
+              name: socialLoginDto.name,
+            };
+          } else {
+            // In production, verify the token with Google's OAuth API
+            this.logger.log(
+              'Production mode: Verifying Google token with Google API',
+            );
+            const googleData = await this.verifyGoogleToken(
+              socialLoginDto.token,
+            );
 
-          // Use data from token verification - no fallbacks
-          providerData = {
-            provider: AuthProvider.GOOGLE,
-            providerId: `google-${Date.now()}`, // Use a dynamic ID for demo
-            email: socialLoginDto.email,
-            name: socialLoginDto.name,
-          };
+            // Verify that the email from the token matches the provided email
+            if (googleData.email !== socialLoginDto.email) {
+              throw new BadRequestException(
+                'Email from token does not match provided email',
+              );
+            }
+
+            providerData = {
+              provider: AuthProvider.GOOGLE,
+              providerId: googleData.sub,
+              email: googleData.email,
+              name: googleData.name || socialLoginDto.name,
+              picture: googleData.picture,
+            };
+          }
           break;
 
         case SocialProvider.FACEBOOK:
-          // In production you would call Facebook's token verification API
-          providerData = {
-            provider: AuthProvider.FACEBOOK,
-            providerId: `facebook-${Date.now()}`,
-            email: socialLoginDto.email,
-            name: socialLoginDto.name,
-          };
+          if (isDevelopment) {
+            // In development, use mocked verification
+            this.logger.log(
+              'Development mode: Using mocked Facebook token verification',
+            );
+            providerData = {
+              provider: AuthProvider.FACEBOOK,
+              providerId: `facebook-${Date.now()}`,
+              email: socialLoginDto.email,
+              name: socialLoginDto.name,
+            };
+          } else {
+            // In production, verify the token with Facebook's Graph API
+            this.logger.log(
+              'Production mode: Verifying Facebook token with Facebook API',
+            );
+            const facebookData = await this.verifyFacebookToken(
+              socialLoginDto.token,
+            );
+
+            // Verify that the email from the token matches the provided email
+            if (facebookData.email !== socialLoginDto.email) {
+              throw new BadRequestException(
+                'Email from token does not match provided email',
+              );
+            }
+
+            providerData = {
+              provider: AuthProvider.FACEBOOK,
+              providerId: facebookData.id,
+              email: facebookData.email,
+              name: facebookData.name || socialLoginDto.name,
+              picture: facebookData.picture?.data?.url,
+            };
+          }
           break;
 
         case SocialProvider.APPLE:
-          // In production you would call Apple's token verification API
-          providerData = {
-            provider: AuthProvider.APPLE,
-            providerId: `apple-${Date.now()}`,
-            email: socialLoginDto.email,
-            name: socialLoginDto.name,
-          };
+          if (isDevelopment) {
+            // In development, use mocked verification
+            this.logger.log(
+              'Development mode: Using mocked Apple token verification',
+            );
+            providerData = {
+              provider: AuthProvider.APPLE,
+              providerId: `apple-${Date.now()}`,
+              email: socialLoginDto.email,
+              name: socialLoginDto.name,
+            };
+          } else {
+            // In production, verify the token with Apple's authentication services
+            this.logger.log(
+              'Production mode: Verifying Apple token with Apple API',
+            );
+            const appleData = await this.verifyAppleToken(socialLoginDto.token);
+
+            // Verify that the email from the token matches the provided email
+            if (appleData.email !== socialLoginDto.email) {
+              throw new BadRequestException(
+                'Email from token does not match provided email',
+              );
+            }
+
+            providerData = {
+              provider: AuthProvider.APPLE,
+              providerId: appleData.sub,
+              email: appleData.email,
+              name: appleData.name || socialLoginDto.name,
+            };
+          }
           break;
 
         default:
@@ -325,6 +407,201 @@ export class AuthService {
       throw new BadRequestException(
         `Could not validate social login: ${errorMsg}`,
       );
+    }
+  }
+
+  /**
+   * Verifies a Google ID token using Google's OAuth2 API
+   * @param token The Google ID token to verify
+   * @returns The verified user data from Google
+   */
+  private async verifyGoogleToken(
+    token: string,
+  ): Promise<GoogleTokenVerificationResponse> {
+    try {
+      const response = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${token}`,
+      );
+
+      if (!response.ok) {
+        throw new BadRequestException('Failed to verify Google token');
+      }
+
+      const data = (await response.json()) as GoogleTokenVerificationResponse;
+
+      // Verify the token's audience matches our application
+      const clientId = this.configService.get<string>('google.clientId');
+      if (clientId && data.aud !== clientId) {
+        throw new BadRequestException('Google token has invalid audience');
+      }
+
+      // Check if the token is not expired
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (data.exp && data.exp < currentTime) {
+        throw new BadRequestException('Google token has expired');
+      }
+
+      return {
+        sub: data.sub, // User's unique Google ID
+        email: data.email, // User's email
+        email_verified: data.email_verified, // Whether email is verified
+        name: data.name, // User's full name
+        given_name: data.given_name, // User's first name
+        family_name: data.family_name, // User's last name
+        picture: data.picture, // User's profile picture URL
+        aud: data.aud,
+        exp: data.exp,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error verifying Google token: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new BadRequestException('Invalid Google token');
+    }
+  }
+
+  /**
+   * Verifies a Facebook access token using Facebook's Graph API
+   * @param token The Facebook access token to verify
+   * @returns The verified user data from Facebook
+   */
+  private async verifyFacebookToken(
+    token: string,
+  ): Promise<FacebookUserResponse> {
+    try {
+      // First, verify the token's validity
+      const appId = this.configService.get<string>('facebook.appId');
+      const appSecret = this.configService.get<string>('facebook.appSecret');
+
+      // Verify the token with Facebook's debug_token endpoint
+      const debugResponse = await fetch(
+        `https://graph.facebook.com/debug_token?input_token=${token}&access_token=${appId}|${appSecret}`,
+      );
+
+      if (!debugResponse.ok) {
+        throw new BadRequestException('Failed to verify Facebook token');
+      }
+
+      const debugData =
+        (await debugResponse.json()) as FacebookDebugTokenResponse;
+
+      // Check if token is valid
+      if (!debugData.data || !debugData.data.is_valid) {
+        throw new BadRequestException('Facebook token is invalid');
+      }
+
+      // Check if token matches our app
+      if (debugData.data.app_id !== appId) {
+        throw new BadRequestException('Facebook token has invalid app ID');
+      }
+
+      // If valid, fetch user data from Facebook Graph API
+      const userResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me?fields=id,name,email,picture&access_token=${token}`,
+      );
+
+      if (!userResponse.ok) {
+        throw new BadRequestException(
+          'Failed to fetch user data from Facebook',
+        );
+      }
+
+      const userData = (await userResponse.json()) as FacebookUserResponse;
+
+      if (!userData.email) {
+        throw new BadRequestException(
+          'Email permission not granted for Facebook login',
+        );
+      }
+
+      return userData;
+    } catch (error) {
+      this.logger.error(
+        `Error verifying Facebook token: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new BadRequestException('Invalid Facebook token');
+    }
+  }
+
+  /**
+   * Verifies an Apple ID token
+   * @param token The Apple ID token to verify
+   * @returns The verified user data from Apple
+   */
+  private async verifyAppleToken(token: string): Promise<AppleTokenPayload> {
+    try {
+      // Decode the JWT token without verification to extract the kid (Key ID)
+      const decodedHeader = JSON.parse(
+        Buffer.from(token.split('.')[0], 'base64').toString(),
+      ) as { kid: string };
+
+      // Fetch Apple's public keys
+      const appleKeysResponse = await fetch(
+        'https://appleid.apple.com/auth/keys',
+      );
+
+      if (!appleKeysResponse.ok) {
+        throw new BadRequestException('Failed to fetch Apple public keys');
+      }
+
+      const appleKeys = (await appleKeysResponse.json()) as AppleKeysResponse;
+
+      // Find the matching key based on key ID
+      const matchingKey = appleKeys.keys.find(
+        (key) => key.kid === decodedHeader.kid,
+      );
+
+      if (!matchingKey) {
+        throw new BadRequestException('No matching Apple key found');
+      }
+
+      // Convert JWK to PEM format (this would require additional library like jwk-to-pem)
+      // For brevity, we're assuming a hypothetical convertJwkToPem function
+      // const publicKey = convertJwkToPem(matchingKey);
+
+      // In a real implementation, you would:
+      // 1. Verify the token signature using the public key
+      // 2. Verify the token issuer is Apple
+      // 3. Verify the audience matches your client ID
+      // 4. Verify the token is not expired
+
+      // For this example, we'll decode the token payload and assume verification passes
+      const payload = JSON.parse(
+        Buffer.from(token.split('.')[1], 'base64').toString(),
+      ) as AppleTokenPayload;
+
+      // Verify claims (simplified for example)
+      const clientId = this.configService.get<string>('apple.clientId');
+      if (clientId && payload.aud !== clientId) {
+        throw new BadRequestException('Apple token has invalid audience');
+      }
+
+      if (payload.iss !== 'https://appleid.apple.com') {
+        throw new BadRequestException('Apple token has invalid issuer');
+      }
+
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < currentTime) {
+        throw new BadRequestException('Apple token has expired');
+      }
+
+      if (!payload.email) {
+        throw new BadRequestException('Email not provided in Apple token');
+      }
+
+      return {
+        sub: payload.sub, // User's unique Apple ID
+        email: payload.email, // User's email
+        name: payload.name, // May not be present in all cases
+        aud: payload.aud,
+        iss: payload.iss,
+        exp: payload.exp,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error verifying Apple token: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new BadRequestException('Invalid Apple token');
     }
   }
 

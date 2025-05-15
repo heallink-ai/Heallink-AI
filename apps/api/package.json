@@ -20,6 +20,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.350.0",
+    "@aws-sdk/client-dynamodb": "^3.350.0",
+    "@aws-sdk/client-s3": "^3.350.0",
+    "@aws-sdk/client-secrets-manager": "^3.350.0",
+    "@aws-sdk/lib-dynamodb": "^3.350.0",
+    "@aws-sdk/s3-request-presigner": "^3.350.0",
+    "@aws-sdk/types": "^3.350.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -46,15 +53,9 @@
     "resend": "^4.5.1",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
+    "twilio": "^5.6.1",
     "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0",
-    "@aws-sdk/client-s3": "^3.350.0",
-    "@aws-sdk/client-dynamodb": "^3.350.0",
-    "@aws-sdk/client-secrets-manager": "^3.350.0",
-    "@aws-sdk/client-cloudwatch-logs": "^3.350.0",
-    "@aws-sdk/lib-dynamodb": "^3.350.0",
-    "@aws-sdk/s3-request-presigner": "^3.350.0",
-    "@aws-sdk/types": "^3.350.0"
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

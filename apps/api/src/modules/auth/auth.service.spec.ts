@@ -320,6 +320,11 @@ describe('AuthService', () => {
   });
 
   describe('validateSocialLogin', () => {
+    beforeEach(() => {
+      // Store original NODE_ENV
+      process.env.NODE_ENV = 'development';
+    });
+
     it('should validate Google social login', async () => {
       // Mock data
       const socialLoginDto: SocialLoginDto = {
@@ -372,6 +377,51 @@ describe('AuthService', () => {
       );
     });
 
+    it('should verify tokens in production mode', async () => {
+      // Set to production mode
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      // Spy on the verification methods
+      const verifyGoogleSpy = jest
+        .spyOn(service as any, 'verifyGoogleToken')
+        .mockResolvedValue({
+          sub: 'google-12345',
+          email: 'test@gmail.com',
+          name: 'Test User',
+          email_verified: true,
+        });
+
+      // Mock data
+      const socialLoginDto: SocialLoginDto = {
+        provider: SocialProvider.GOOGLE,
+        token: 'google-token',
+        email: 'test@gmail.com',
+        name: 'Test User',
+      };
+
+      const mockUser = { id: 'google-user-id' } as UserDocument;
+
+      // Mocking findByIdOrCreate
+      mockUsersService.findByIdOrCreate.mockResolvedValue(mockUser);
+
+      // Call the service method
+      const result = await service.validateSocialLogin(socialLoginDto);
+
+      // Assertions
+      expect(verifyGoogleSpy).toHaveBeenCalledWith('google-token');
+      expect(result).toEqual(mockUser);
+      expect(mockUsersService.findByIdOrCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: AuthProvider.GOOGLE,
+          providerId: 'google-12345',
+        }),
+      );
+
+      // Restore environment
+      process.env.NODE_ENV = originalEnv;
+    });
+
     it('should throw error for unsupported provider', async () => {
       // Mock data with an invalid provider
       const socialLoginDto: SocialLoginDto = {
@@ -384,6 +434,42 @@ describe('AuthService', () => {
       // Expect it to throw exception
       await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
         BadRequestException,
+      );
+    });
+
+    it('should throw error when email is missing', async () => {
+      // Mock data missing email
+      const socialLoginDto: SocialLoginDto = {
+        provider: SocialProvider.GOOGLE,
+        token: 'google-token',
+        email: undefined as any, // Explicitly set to undefined
+        name: 'Test User',
+      };
+
+      // Expect it to throw exception
+      await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
+        'Email is required for social login',
+      );
+    });
+
+    it('should throw error when name is missing', async () => {
+      // Mock data missing name
+      const socialLoginDto: SocialLoginDto = {
+        provider: SocialProvider.GOOGLE,
+        token: 'google-token',
+        email: 'test@gmail.com',
+        name: undefined as any, // Explicitly set to undefined
+      };
+
+      // Expect it to throw exception
+      await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.validateSocialLogin(socialLoginDto)).rejects.toThrow(
+        'Name is required for social login',
       );
     });
   });

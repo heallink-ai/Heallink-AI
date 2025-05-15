@@ -31,6 +31,9 @@ export interface EnvironmentVariables {
   DYNAMODB_AUDIT_TABLE: string;
   FRONTEND_URL: string;
   ADMIN_FRONTEND_URL: string;
+  TWILIO_ACCOUNT_SID: string;
+  TWILIO_AUTH_TOKEN: string;
+  TWILIO_FROM_NUMBER: string;
 }
 
 export const validationSchema = Joi.object({
@@ -49,6 +52,9 @@ export const validationSchema = Joi.object({
   FACEBOOK_CLIENT_ID: Joi.string().optional(),
   FACEBOOK_CLIENT_SECRET: Joi.string().optional(),
   APPLE_ID: Joi.string().optional(),
+  TWILIO_ACCOUNT_SID: Joi.string().optional(),
+  TWILIO_AUTH_TOKEN: Joi.string().optional(),
+  TWILIO_FROM_NUMBER: Joi.string().optional(),
   APPLE_SECRET: Joi.string().optional(),
   EMAIL_SERVER_HOST: Joi.string().optional(),
   EMAIL_SERVER_PORT: Joi.number().optional(),
@@ -98,6 +104,11 @@ export default () => ({
       clientId: process.env.APPLE_ID,
       clientSecret: process.env.APPLE_SECRET,
     },
+  },
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken: process.env.TWILIO_AUTH_TOKEN,
+    fromNumber: process.env.TWILIO_FROM_NUMBER || '+15005550006', // Default Twilio test number
   },
   email: {
     host: process.env.EMAIL_SERVER_HOST,

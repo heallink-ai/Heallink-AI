@@ -13,6 +13,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { AdminRoleGuard } from './guards/admin-role.guard';
 import { LoggingModule } from '../logging/logging.module';
 import { EmailModule } from '../emails/email.module';
+import { SmsModule } from '../sms/sms.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EmailModule } from '../emails/email.module';
     PassportModule,
     LoggingModule,
     EmailModule,
+    SmsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
