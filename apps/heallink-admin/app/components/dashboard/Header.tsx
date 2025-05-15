@@ -255,10 +255,13 @@ export default function Header({
             {userMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[color:var(--card)] z-50 neumorph-flat border border-[color:var(--border)]">
                 <div className="py-1">
-                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2">
+                  <a
+                    href="/dashboard/profile"
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2"
+                  >
                     <User size={14} />
                     <span>Profile</span>
-                  </button>
+                  </a>
                   <button className="w-full text-left px-4 py-2 text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2">
                     <Settings size={14} />
                     <span>Settings</span>

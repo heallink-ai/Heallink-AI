@@ -5,6 +5,7 @@ import MetricCard from "../components/dashboard/MetricCard";
 import UserStatsChart from "../components/dashboard/UserStatsChart";
 import GeospatialMap from "../components/dashboard/GeospatialMap";
 import AlertsFeed from "../components/dashboard/AlertsFeed";
+import RecentUsersWidget from "../components/users/RecentUsersWidget";
 import {
   Users,
   Building2,
@@ -94,12 +95,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Map and Stats */}
+      {/* User Management and Map */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <RecentUsersWidget />
+        </div>
         <div className="lg:col-span-2">
           <GeospatialMap />
         </div>
+      </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <div className="bg-[color:var(--card)] rounded-xl p-5 h-full neumorph-flat">
             <div className="flex justify-between items-center mb-4">
