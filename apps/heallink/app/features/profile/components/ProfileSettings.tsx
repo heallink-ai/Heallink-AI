@@ -430,7 +430,7 @@ export default function ProfileSettings({
         <button
           onClick={handleSaveSettings}
           disabled={isSaving}
-          className="px-6 py-3 rounded-xl neumorph-button neumorph-accent-primary flex items-center gap-2 text-foreground font-medium hover:transform hover:-translate-y-1 transition-transform"
+          className="px-6 py-3 rounded-xl neumorph-button neumorph-accent-primary flex items-center gap-2 text-primary font-medium hover:transform hover:-translate-y-1 transition-transform dark:text-white"
           style={{
             boxShadow: `0 10px 25px ${shadowColor}`,
           }}

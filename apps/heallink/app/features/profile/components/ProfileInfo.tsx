@@ -170,7 +170,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-3 py-1.5 rounded-lg bg-primary text-white flex items-center gap-1 hover:bg-primary/90 transition-colors disabled:opacity-70"
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground flex items-center gap-1 hover:bg-primary/90 transition-colors disabled:opacity-70"
             >
               {isSaving ? (
                 <>

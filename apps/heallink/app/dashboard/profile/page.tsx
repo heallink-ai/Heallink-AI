@@ -181,7 +181,7 @@ export default function ProfilePage() {
                             onClick={() =>
                               setIsUploadMenuOpen(!isUploadMenuOpen)
                             }
-                            className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+                            className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
                           >
                             <Camera size={14} />
                           </button>
@@ -251,7 +251,7 @@ export default function ProfilePage() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-colors"
+                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-colors"
                     >
                       <FileEdit size={16} />
                       <span>Edit Profile</span>
