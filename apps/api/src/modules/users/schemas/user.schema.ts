@@ -31,6 +31,8 @@ export type UserDocument = User &
       delete ret.passwordResetRequestedAt;
       delete ret.verificationToken;
       delete ret.verificationTokenExpiry;
+      delete ret.otpCode;
+      delete ret.otpExpiry;
       delete ret.__v;
       return ret;
     },
@@ -94,6 +96,12 @@ export class User {
   @Prop({ type: Date })
   verificationTokenExpiry?: Date;
 
+  @Prop()
+  otpCode?: string;
+
+  @Prop({ type: Date })
+  otpExpiry?: Date;
+
   @Prop({
     type: MongooseSchema.Types.Mixed,
     default: {},
@@ -119,7 +127,7 @@ UserSchema.pre('save', function (next) {
       })
       .catch((err) => next(err));
   } else {
-    next();
+    next(undefined);
   }
 });
 

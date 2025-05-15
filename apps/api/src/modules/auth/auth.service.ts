@@ -23,6 +23,7 @@ import {
   AppleTokenPayload,
   AppleKeysResponse,
 } from './types/auth.types';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +34,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly smsService: SmsService,
   ) {}
 
   async validateUser(
@@ -605,28 +607,66 @@ export class AuthService {
     }
   }
 
-  async sendOtp(sendOtpDto: SendOtpDto): Promise<{ success: boolean }> {
-    // In a real app, you'd send an OTP via SMS here
-    // For demonstration, we'll just return success
+  async sendOtp(
+    sendOtpDto: SendOtpDto,
+  ): Promise<{ success: boolean; expiresAt?: Date }> {
+    // Ensure phone number is provided
+    if (!sendOtpDto.phone) {
+      throw new BadRequestException('Phone number is required for OTP');
+    }
 
-    // You could use Twilio, Nexmo, or similar service to send SMS
-    this.logger.log(`Sending OTP to ${sendOtpDto.phone}`);
+    try {
+      this.logger.log(`Generating and sending OTP to ${sendOtpDto.phone}`);
 
-    // Add a mock async operation to satisfy the linter
-    await new Promise((resolve) => setTimeout(resolve, 100));
+      // Use our SMS service to send OTP
+      const otpResult = await this.smsService.sendOtp({
+        phone: sendOtpDto.phone,
+        expiry: 10, // 10 minute expiry time
+        length: 6, // 6-digit code
+      });
 
-    return { success: true };
+      // Store the OTP in the user record or a separate OTP collection
+      // Here we'll update the user if they exist, or create a temporary record
+      const user = await this.usersService.findByPhone(sendOtpDto.phone);
+
+      if (user) {
+        // Update existing user with OTP
+        await this.usersService.update(user._id, {
+          otpCode: otpResult.code,
+          otpExpiry: otpResult.expiresAt,
+        } as any);
+      } else {
+        // Create a temporary user or OTP record
+        // This depends on your user schema and registration flow
+        // For this example, we'll assume the user must exist before OTP
+        this.logger.log(`No existing user found for phone ${sendOtpDto.phone}`);
+
+        // You might want to implement a registerWithPhone method
+        // or store OTPs in a separate collection
+      }
+
+      return {
+        success: true,
+        expiresAt: otpResult.expiresAt,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to send OTP: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new BadRequestException('Failed to send OTP');
+    }
   }
 
   async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<any> {
-    // In a real app, you'd verify the OTP here
-    // For demonstration, we'll just return success and mock a user login
-
-    // Make sure phone is defined
+    // Make sure phone and code are defined
     if (!verifyOtpDto.phone) {
       throw new BadRequestException(
         'Phone number is required for OTP verification',
       );
+    }
+
+    if (!verifyOtpDto.code) {
+      throw new BadRequestException('Verification code is required');
     }
 
     // Find user by phone number
@@ -636,10 +676,27 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    // Verify the OTP code and expiry time
+    const now = new Date();
+    if (!user.otpCode || user.otpCode !== verifyOtpDto.code) {
+      throw new UnauthorizedException('Invalid verification code');
+    }
+
+    if (!user.otpExpiry || user.otpExpiry < now) {
+      throw new UnauthorizedException('Verification code has expired');
+    }
+
+    // Clear the OTP after successful verification
+    await this.usersService.update(user._id, {
+      otpCode: null,
+      otpExpiry: null,
+      phoneVerified: true,
+    } as any);
+
     // Return authentication tokens
     return {
       verified: true,
-      message: 'OTP verified successfully',
+      message: 'Phone number verified successfully',
       tokens: await this.login(user),
     };
   }
