@@ -25,8 +25,15 @@ export default function AiConversation() {
     if (typeof window !== "undefined") {
       import("@vapi-ai/web")
         .then(({ default: Vapi }) => {
-          // Replace 'your-public-key-here' with your actual Vapi public key
-          vapiRef.current = new Vapi("07199ba2-06b5-4216-9025-9919db8d8c24");
+          // Use environment variable for the Vapi public key with fallback for TypeScript
+          const vapiKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "";
+          if (!vapiKey) {
+            console.error("Missing Vapi public key in environment variables");
+            setError("Configuration error. Please contact support.");
+            return;
+          }
+
+          vapiRef.current = new Vapi(vapiKey);
 
           // Set up event listeners for Vapi
           setupVapiEventListeners();
