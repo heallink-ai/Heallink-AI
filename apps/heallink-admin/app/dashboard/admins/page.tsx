@@ -8,75 +8,64 @@ import {
   UserPlus,
   Download,
   Upload,
-  Shield,
   ShieldCheck,
+  AlertCircle,
+  Loader,
 } from "lucide-react";
 import UserTable from "../../components/users/UserTable";
-
-// Mock admin data - in a real app, this would come from an API
-const MOCK_ADMINS = [
-  {
-    id: "a1",
-    name: "John Smith",
-    email: "john.smith@heallink.com",
-    role: "System Admin",
-    status: "Active",
-    lastLogin: "2025-05-10T14:30:00",
-    created: "2024-11-05T09:00:00",
-  },
-  {
-    id: "a2",
-    name: "Elena Rodriguez",
-    email: "e.rodriguez@heallink.com",
-    role: "Super Admin",
-    status: "Active",
-    lastLogin: "2025-05-15T08:20:00",
-    created: "2025-03-12T16:40:00",
-  },
-  {
-    id: "a3",
-    name: "David Wilson",
-    email: "d.wilson@heallink.com",
-    role: "IT Admin",
-    status: "Active",
-    lastLogin: "2025-05-12T11:45:00",
-    created: "2024-10-20T13:30:00",
-  },
-  {
-    id: "a4",
-    name: "Lisa Chen",
-    email: "l.chen@heallink.com",
-    role: "Security Admin",
-    status: "Inactive",
-    lastLogin: "2025-04-05T09:20:00",
-    created: "2025-01-15T10:00:00",
-  },
-  {
-    id: "a5",
-    name: "Marcus Johnson",
-    email: "m.johnson@heallink.com",
-    role: "Support Admin",
-    status: "Pending",
-    lastLogin: null,
-    created: "2025-05-01T08:45:00",
-  },
-];
+import ErrorDisplay from "../../components/common/ErrorDisplay";
+import { 
+  useAdmins, 
+  useDeactivateAdmin, 
+  useActivateAdmin 
+} from "../../hooks/useAdminHooks";
 
 export default function AdminsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
+  // Fetch admins using our custom hook
+  const { 
+    data: admins = [], 
+    isLoading, 
+    isError, 
+    error 
+  } = useAdmins();
+
+  // Mutation hooks for activating/deactivating admins
+  const { mutate: deactivateAdmin } = useDeactivateAdmin();
+  const { mutate: activateAdmin } = useActivateAdmin();
+
   // Filter admins based on current state
-  const filteredAdmins = MOCK_ADMINS.filter((admin) => {
+  const filteredAdmins = admins.filter((admin) => {
     const matchesSearch =
       admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       admin.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "All" || admin.role.includes(roleFilter);
+    
+    const matchesRole = 
+      roleFilter === "All" || 
+      admin.adminRole.includes(roleFilter.toLowerCase());
+    
     const matchesStatus =
-      statusFilter === "All" || admin.status === statusFilter;
+      statusFilter === "All" || 
+      admin.status.toLowerCase() === statusFilter.toLowerCase();
+    
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  // Transform admin data to match UserTable format
+  const transformedAdmins = filteredAdmins.map(admin => ({
+    id: admin.id,
+    name: admin.name,
+    email: admin.email,
+    role: admin.adminRole.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' '),
+    status: admin.status.charAt(0).toUpperCase() + admin.status.slice(1),
+    lastLogin: admin.lastLogin || null,
+    created: admin.createdAt
+  }));
 
   return (
     <div className="bg-[color:var(--background)]">
@@ -130,11 +119,14 @@ export default function AdminsPage() {
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
                 <option value="All">All Roles</option>
-                <option value="System">System Admin</option>
                 <option value="Super">Super Admin</option>
-                <option value="IT">IT Admin</option>
-                <option value="Security">Security Admin</option>
+                <option value="System">System Admin</option>
+                <option value="User">User Admin</option>
+                <option value="Provider">Provider Admin</option>
+                <option value="Content">Content Admin</option>
+                <option value="Billing">Billing Admin</option>
                 <option value="Support">Support Admin</option>
+                <option value="Readonly">Readonly Admin</option>
               </select>
             </div>
             <div className="flex items-center ml-0 md:ml-2">
@@ -150,6 +142,7 @@ export default function AdminsPage() {
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
                 <option value="Pending">Pending</option>
+                <option value="Locked">Locked</option>
               </select>
             </div>
           </div>
@@ -158,7 +151,19 @@ export default function AdminsPage() {
         {/* Action buttons */}
         <div className="flex flex-wrap justify-between items-center">
           <div className="text-sm text-[color:var(--muted-foreground)]">
-            Showing {filteredAdmins.length} administrators
+            {isLoading ? (
+              <span className="flex items-center">
+                <Loader size={14} className="animate-spin mr-2" /> 
+                Loading administrators...
+              </span>
+            ) : isError ? (
+              <span className="flex items-center text-red-500">
+                <AlertCircle size={14} className="mr-2" /> 
+                Error loading administrators: {error instanceof Error ? error.message : "Unknown error"}
+              </span>
+            ) : (
+              `Showing ${filteredAdmins.length} administrators`
+            )}
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-1.5 rounded-lg bg-[color:var(--secondary-background)] border border-[color:var(--border)] hover:bg-[color:var(--accent)] text-sm flex items-center gap-1.5">
@@ -174,7 +179,30 @@ export default function AdminsPage() {
       </div>
 
       {/* Admins table */}
-      <UserTable users={filteredAdmins} />
+      {isLoading ? (
+        <div className="bg-[color:var(--card)] rounded-xl p-8 flex justify-center items-center">
+          <Loader size={24} className="animate-spin mr-3 text-[color:var(--primary)]" />
+          <span>Loading administrators...</span>
+        </div>
+      ) : isError ? (
+        <div className="bg-[color:var(--card)] rounded-xl p-8">
+          <ErrorDisplay 
+            message="Failed to load administrators" 
+            details={error instanceof Error ? error.message : "An unknown error occurred"}
+          />
+        </div>
+      ) : (
+        <UserTable 
+          users={transformedAdmins} 
+          onStatusChange={(id: string, status: string) => {
+            if (status.toLowerCase() === 'active') {
+              deactivateAdmin(id);
+            } else {
+              activateAdmin(id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

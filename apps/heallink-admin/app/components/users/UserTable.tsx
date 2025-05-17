@@ -21,12 +21,14 @@ interface UserTableProps {
   users: UserData[];
   title?: string;
   showPagination?: boolean;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 export default function UserTable({
   users,
   title,
   showPagination = true,
+  onStatusChange,
 }: UserTableProps) {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -205,7 +207,11 @@ export default function UserTable({
                   </td>
                   <td className="p-4 text-sm">{formatDate(user.lastLogin)}</td>
                   <td className="p-4 text-center">
-                    <UserActionMenu userId={user.id} userStatus={user.status} />
+                    <UserActionMenu 
+                      userId={user.id} 
+                      userStatus={user.status} 
+                      onStatusChange={onStatusChange}
+                    />
                   </td>
                 </tr>
               ))

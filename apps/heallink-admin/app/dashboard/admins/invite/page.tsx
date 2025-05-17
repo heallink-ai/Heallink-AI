@@ -2,7 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Send, Plus, Minus, Check, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Send, Plus, Minus, Check, ShieldCheck, Loader, AlertCircle } from "lucide-react";
+import { useCreateAdmin } from "../../../hooks/useAdminHooks";
+import { AdminRole } from "../../../api/adminApi";
+import ErrorDisplay from "../../../components/common/ErrorDisplay";
 
 export default function InviteAdminPage() {
   const [formState, setFormState] = useState({
@@ -25,8 +29,18 @@ export default function InviteAdminPage() {
 
   // Validation state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  
+  const router = useRouter();
+  
+  // Use the createAdmin mutation hook
+  const { 
+    mutate: createAdmin, 
+    isPending: isSubmitting, 
+    isSuccess, 
+    isError,
+    error: submitError
+  } = useCreateAdmin();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -92,29 +106,37 @@ export default function InviteAdminPage() {
     e.preventDefault();
 
     if (validateForm()) {
-      setIsSubmitting(true);
-
-      // Simulate API call
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setSubmitSuccess(true);
-
-        // Reset form after successful submission
-        setTimeout(() => {
-          setSubmitSuccess(false);
-          setFormState({
-            firstName: "",
-            lastName: "",
-            email: "",
-            role: "",
-            sendEmailInvite: true,
-            accessRights: {
-              systemConfiguration: false,
-              userManagement: false,
-              adminManagement: false,
-              providerManagement: false,
-              billingManagement: false,
-              securitySettings: false,
+      // Get the admin role based on the form selection
+      const adminRoleMapping: Record<string, AdminRole> = {
+        'super_admin': AdminRole.SUPER_ADMIN,
+        'system_admin': AdminRole.SYSTEM_ADMIN,
+        'user_admin': AdminRole.USER_ADMIN,
+        'provider_admin': AdminRole.PROVIDER_ADMIN,
+        'content_admin': AdminRole.CONTENT_ADMIN,
+        'billing_admin': AdminRole.BILLING_ADMIN,
+        'support_admin': AdminRole.SUPPORT_ADMIN,
+        'readonly_admin': AdminRole.READONLY_ADMIN,
+      };
+      
+      const fullName = `${formState.firstName} ${formState.lastName}`.trim();
+      
+      // Call the mutation to create a new admin
+      createAdmin({
+        name: fullName,
+        email: formState.email,
+        adminRole: adminRoleMapping[formState.role] || AdminRole.SYSTEM_ADMIN,
+      }, {
+        onSuccess: () => {
+          setSubmitSuccess(true);
+          
+          // Reset form after successful submission
+          setTimeout(() => {
+            router.push('/dashboard/admins');
+          }, 2000);
+        },
+      });
+    }
+  };
               auditLogs: false,
               apiAccess: false,
             },
@@ -447,15 +469,31 @@ export default function InviteAdminPage() {
               )}
             </div>
 
+            {isError && (
+              <div className="mb-6">
+                <ErrorDisplay 
+                  message="Failed to send invitation" 
+                  details={submitError instanceof Error ? submitError.message : "An unknown error occurred"} 
+                />
+              </div>
+            )}
+
+            {submitSuccess && (
+              <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center text-green-800 dark:text-green-200">
+                <Check size={20} className="mr-2 text-green-500" />
+                <span>Admin invitation sent successfully! Redirecting to admin list...</span>
+              </div>
+            )}
+
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || submitSuccess}
                 className="px-4 py-2 rounded-lg bg-[color:var(--primary)] text-white hover:bg-[color:var(--primary-dark)] transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <Loader size={16} className="animate-spin" />
                     <span>Sending Invitation...</span>
                   </>
                 ) : (

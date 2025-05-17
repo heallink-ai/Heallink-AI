@@ -33,7 +33,7 @@ export function useUserProfile() {
 
     setLoading(true);
     setError(null);
-    
+
     // COMMENT THIS OUT FOR DEMO AND USE MOCK DATA INSTEAD
     // try {
     //   const response = await fetchUserProfile(userId);
@@ -49,7 +49,7 @@ export function useUserProfile() {
     // } finally {
     //   setLoading(false);
     // }
-    
+
     // Use mock data for demo
     setTimeout(() => {
       setProfile(mockUserProfile);
@@ -58,70 +58,78 @@ export function useUserProfile() {
   }, [userId]);
 
   // Update user profile
-  const updateProfile = useCallback(
-    async (formData: UserProfileFormData) => {
-      // Simulate profile update with mock data
-      setUpdateStatus("loading");
-      
-      // Simulate API call with delay
-      return new Promise<boolean>((resolve) => {
-        setTimeout(() => {
-          // Update the profile with the form data
-          setProfile(prev => {
-            if (!prev) return mockUserProfile;
-            return {
-              ...prev,
-              ...formData,
-              // Preserve nested objects by merging them
-              address: { ...prev.address, ...formData.address },
-              emergencyContact: { ...prev.emergencyContact, ...formData.emergencyContact },
-              insurance: { ...prev.insurance, ...formData.insurance },
-              communicationPreferences: { 
-                ...prev.communicationPreferences, 
-                ...formData.communicationPreferences 
-              },
-            };
-          });
-          
-          setUpdateStatus("success");
-          resolve(true);
-        }, 1500); // Simulate network delay
-      });
-    },
-    []
-  );
+  const updateProfile = useCallback(async (formData: UserProfileFormData) => {
+    // Simulate profile update with mock data
+    setUpdateStatus("loading");
+
+    // Simulate API call with delay
+    return new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        // Update the profile with the form data
+        setProfile((prev) => {
+          if (!prev) return mockUserProfile;
+
+          // Ensure proper typing for communicationPreferences
+          // by providing default values for all required boolean fields
+          const updatedProfile: UserProfileData = {
+            ...prev,
+            ...formData,
+            // Preserve nested objects by merging them
+            address: { ...prev.address, ...formData.address },
+            emergencyContact: {
+              ...prev.emergencyContact,
+              ...formData.emergencyContact,
+            },
+            insurance: { ...prev.insurance, ...formData.insurance },
+            communicationPreferences: {
+              // Default values ensure properties are never undefined
+              email: true,
+              sms: true,
+              push: true,
+              // Merge with existing preferences
+              ...(prev.communicationPreferences || {}),
+              // Override with form values if provided
+              ...(formData.communicationPreferences || {}),
+            },
+          };
+
+          return updatedProfile;
+        });
+
+        setUpdateStatus("success");
+        resolve(true);
+      }, 1500); // Simulate network delay
+    });
+  }, []);
 
   // Upload profile picture
-  const uploadAvatar = useCallback(
-    async (file: File) => {
-      setUploadStatus("loading");
+  const uploadAvatar = useCallback(async (file: File) => {
+    setUploadStatus("loading");
 
-      // Simulate file upload with delay
-      return new Promise<string | null>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const dataUrl = reader.result as string;
-          
-          // Simulate network delay
-          setTimeout(() => {
-            // Update profile with the new avatar URL (in this case, the Data URL)
-            setProfile((prev) => prev ? { ...prev, avatarUrl: dataUrl } : null);
-            setUploadStatus("success");
-            resolve(dataUrl);
-          }, 1500);
-        };
-        
-        reader.onerror = () => {
-          setUploadStatus("error");
-          setError("Failed to upload profile picture");
-          resolve(null);
-        };
-        
-        reader.readAsDataURL(file);
-      });
-    },
-    []
-  );
+    // Simulate file upload with delay
+    return new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+
+        // Simulate network delay
+        setTimeout(() => {
+          // Update profile with the new avatar URL (in this case, the Data URL)
+          setProfile((prev) => (prev ? { ...prev, avatarUrl: dataUrl } : null));
+          setUploadStatus("success");
+          resolve(dataUrl);
+        }, 1500);
+      };
+
+      reader.onerror = () => {
+        setUploadStatus("error");
+        setError("Failed to upload profile picture");
+        resolve(null);
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }, []);
 
   // Reset status states
   const resetStatus = useCallback(() => {

@@ -68,13 +68,53 @@ export function MedicalProfileView({
 
     if (name.includes(".")) {
       const [section, field] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [section]: {
-          ...prev[section as keyof typeof prev],
-          [field]: value,
-        },
-      }));
+
+      // Handle each section type explicitly to ensure proper typing
+      if (section === "medicalInformation") {
+        setFormData((prev) => ({
+          ...prev,
+          medicalInformation: {
+            ...(prev.medicalInformation || {}),
+            [field]: value,
+          },
+        }));
+      } else if (section === "insurance") {
+        setFormData((prev) => ({
+          ...prev,
+          insurance: {
+            ...(prev.insurance || {}),
+            [field]: value,
+          },
+        }));
+      } else if (section === "emergencyContact") {
+        setFormData((prev) => ({
+          ...prev,
+          emergencyContact: {
+            ...(prev.emergencyContact || {}),
+            [field]: value,
+          },
+        }));
+      } else if (section === "address") {
+        setFormData((prev) => ({
+          ...prev,
+          address: {
+            ...(prev.address || {}),
+            [field]: value,
+          },
+        }));
+      } else if (section === "communicationPreferences") {
+        setFormData((prev) => ({
+          ...prev,
+          communicationPreferences: {
+            ...(prev.communicationPreferences || {
+              email: false,
+              sms: false,
+              push: false,
+            }),
+            [field]: value === "true",
+          },
+        }));
+      }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }

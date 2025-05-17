@@ -10,7 +10,10 @@
     "build": "npm run build --workspaces",
     "dev": "npm run dev --workspaces --if-present",
     "lint": "npm run lint --workspaces",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "start": "docker compose up -d --build",
+    "stop": "docker compose down",
+    "clean": "docker compose down -v --rmi all --remove-orphans"
   },
   "engines": {
     "node": ">=16.0.0"

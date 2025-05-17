@@ -12,6 +12,59 @@ interface PersonalProfileViewProps {
   onUpdate: (data: UserProfileFormData) => Promise<boolean | undefined>;
 }
 
+interface BadgeFormItemProps {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+  required?: boolean;
+  description?: string;
+  badge?: string;
+  badgeColor?: "success" | "warning" | "error" | "info";
+}
+
+// Custom form item with badge support
+function BadgeFormItem({
+  label,
+  htmlFor,
+  children,
+  required = false,
+  description,
+  badge,
+  badgeColor = "info",
+}: BadgeFormItemProps) {
+  // Map color classes
+  const colorClasses = {
+    success: "bg-green-100 text-green-800",
+    warning: "bg-yellow-100 text-yellow-800",
+    error: "bg-red-100 text-red-800",
+    info: "bg-blue-100 text-blue-800",
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label htmlFor={htmlFor} className="text-sm font-medium">
+          {label}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </label>
+        {badge && (
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full ${colorClasses[badgeColor]}`}
+          >
+            {badge}
+          </span>
+        )}
+      </div>
+
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
+
+      {children}
+    </div>
+  );
+}
+
 export function PersonalProfileView({
   profile,
   isUpdating,
@@ -22,7 +75,7 @@ export function PersonalProfileView({
     email: "",
     phone: "",
     dateOfBirth: "",
-    gender: "",
+    gender: undefined,
     address: {
       streetAddress: "",
       city: "",
@@ -50,7 +103,7 @@ export function PersonalProfileView({
         email: profile.email || "",
         phone: profile.phone || "",
         dateOfBirth: profile.dateOfBirth || "",
-        gender: profile.gender || "",
+        gender: profile.gender || undefined,
         address: profile.address || {
           streetAddress: "",
           city: "",
@@ -79,13 +132,36 @@ export function PersonalProfileView({
 
     if (name.includes(".")) {
       const [section, field] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [section]: {
-          ...prev[section as keyof typeof prev],
-          [field]: value,
-        },
-      }));
+
+      if (section === "address") {
+        setFormData((prev) => ({
+          ...prev,
+          address: {
+            ...(prev.address || {}),
+            [field]: value,
+          },
+        }));
+      } else if (section === "emergencyContact") {
+        setFormData((prev) => ({
+          ...prev,
+          emergencyContact: {
+            ...(prev.emergencyContact || {}),
+            [field]: value,
+          },
+        }));
+      } else if (section === "communicationPreferences") {
+        setFormData((prev) => ({
+          ...prev,
+          communicationPreferences: {
+            ...(prev.communicationPreferences || {
+              email: true,
+              sms: true,
+              push: true,
+            }),
+            [field]: value === "true",
+          },
+        }));
+      }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -104,7 +180,7 @@ export function PersonalProfileView({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await onUpdate(formData);
-    
+
     if (success) {
       toast.success("Personal information updated successfully");
     }
@@ -186,11 +262,7 @@ export function PersonalProfileView({
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <FormItem
-            label="Full Name"
-            htmlFor="name"
-            required
-          >
+          <FormItem label="Full Name" htmlFor="name" required>
             <input
               id="name"
               name="name"
@@ -203,10 +275,7 @@ export function PersonalProfileView({
             />
           </FormItem>
 
-          <FormItem
-            label="Date of Birth"
-            htmlFor="dateOfBirth"
-          >
+          <FormItem label="Date of Birth" htmlFor="dateOfBirth">
             <input
               id="dateOfBirth"
               name="dateOfBirth"
@@ -217,7 +286,7 @@ export function PersonalProfileView({
             />
           </FormItem>
 
-          <FormItem
+          <BadgeFormItem
             label="Email Address"
             htmlFor="email"
             badge={profile?.emailVerified ? "Verified" : "Not Verified"}
@@ -227,15 +296,14 @@ export function PersonalProfileView({
               id="email"
               name="email"
               type="email"
-              value={formData.email || ""}
+              value={formData.email}
               onChange={handleInputChange}
-              placeholder="your.email@example.com"
+              placeholder="your@email.com"
               className="w-full rounded-lg border border-border bg-background px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              readOnly={!!profile?.email}
             />
-          </FormItem>
+          </BadgeFormItem>
 
-          <FormItem
+          <BadgeFormItem
             label="Phone Number"
             htmlFor="phone"
             badge={profile?.phoneVerified ? "Verified" : "Not Verified"}
@@ -245,18 +313,14 @@ export function PersonalProfileView({
               id="phone"
               name="phone"
               type="tel"
-              value={formData.phone || ""}
+              value={formData.phone}
               onChange={handleInputChange}
-              placeholder="(123) 456-7890"
+              placeholder="+1 (123) 456-7890"
               className="w-full rounded-lg border border-border bg-background px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              readOnly={!!profile?.phone}
             />
-          </FormItem>
+          </BadgeFormItem>
 
-          <FormItem
-            label="Gender"
-            htmlFor="gender"
-          >
+          <FormItem label="Gender" htmlFor="gender">
             <select
               id="gender"
               name="gender"
@@ -297,10 +361,7 @@ export function PersonalProfileView({
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="md:col-span-2">
-            <FormItem
-              label="Street Address"
-              htmlFor="address.streetAddress"
-            >
+            <FormItem label="Street Address" htmlFor="address.streetAddress">
               <input
                 id="address.streetAddress"
                 name="address.streetAddress"
@@ -313,10 +374,7 @@ export function PersonalProfileView({
             </FormItem>
           </div>
 
-          <FormItem
-            label="City"
-            htmlFor="address.city"
-          >
+          <FormItem label="City" htmlFor="address.city">
             <input
               id="address.city"
               name="address.city"
@@ -328,10 +386,7 @@ export function PersonalProfileView({
             />
           </FormItem>
 
-          <FormItem
-            label="State/Province"
-            htmlFor="address.state"
-          >
+          <FormItem label="State/Province" htmlFor="address.state">
             <input
               id="address.state"
               name="address.state"
@@ -343,10 +398,7 @@ export function PersonalProfileView({
             />
           </FormItem>
 
-          <FormItem
-            label="ZIP/Postal Code"
-            htmlFor="address.zipCode"
-          >
+          <FormItem label="ZIP/Postal Code" htmlFor="address.zipCode">
             <input
               id="address.zipCode"
               name="address.zipCode"
@@ -358,10 +410,7 @@ export function PersonalProfileView({
             />
           </FormItem>
 
-          <FormItem
-            label="Country"
-            htmlFor="address.country"
-          >
+          <FormItem label="Country" htmlFor="address.country">
             <select
               id="address.country"
               name="address.country"
@@ -402,10 +451,7 @@ export function PersonalProfileView({
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <FormItem
-            label="Contact Name"
-            htmlFor="emergencyContact.name"
-          >
+          <FormItem label="Contact Name" htmlFor="emergencyContact.name">
             <input
               id="emergencyContact.name"
               name="emergencyContact.name"
@@ -436,10 +482,7 @@ export function PersonalProfileView({
             </select>
           </FormItem>
 
-          <FormItem
-            label="Contact Phone"
-            htmlFor="emergencyContact.phone"
-          >
+          <FormItem label="Contact Phone" htmlFor="emergencyContact.phone">
             <input
               id="emergencyContact.phone"
               name="emergencyContact.phone"
@@ -517,10 +560,7 @@ export function PersonalProfileView({
       </motion.div>
 
       {/* Submit Button */}
-      <motion.div
-        variants={sectionAnimation}
-        className="flex justify-end pt-4"
-      >
+      <motion.div variants={sectionAnimation} className="flex justify-end pt-4">
         <button
           type="submit"
           disabled={isUpdating}

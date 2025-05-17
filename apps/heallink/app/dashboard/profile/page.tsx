@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/app/theme/ThemeProvider";
-import Link from "next/link";
-import Image from "next/image";
+import { toast } from "react-hot-toast";
 
 // Component imports
 import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
@@ -18,66 +17,65 @@ import ProfileMedical from "@/app/features/profile/components/ProfileMedical";
 import ProfileSecurity from "@/app/features/profile/components/ProfileSecurity";
 
 // Icons
-import {
-  User,
-  Settings,
-  Shield,
-  HeartPulse,
-  Calendar,
-  History,
-  Bell,
-  FileEdit,
-  Lock,
-  Camera,
-  Upload,
-  ChevronUp,
-  ChevronDown,
-  Trash,
-} from "lucide-react";
+import { User, Settings, Shield, HeartPulse } from "lucide-react";
 
-// Mock data
+// API & Types
+import { UserProfileData } from "@/app/features/profile/types";
+import {
+  useCurrentUserProfile,
+  useUpdateUserProfile,
+  useUploadProfilePicture,
+} from "@/app/hooks/useUserApi";
+
+// Mock data for fallback
 import { mockUserProfile } from "@/app/features/profile/mockData";
+
+// Define Notification type for typechecking
+type NotificationType = "appointment" | "message" | "payment";
+
+interface Notification {
+  id: number;
+  type: NotificationType;
+  message: string;
+  time: string;
+}
 
 export default function ProfilePage() {
   const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("personal");
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
-  const [profile, setProfile] = useState(mockUserProfile);
 
-  // Shadow color based on theme
-  const shadowColor =
-    theme === "dark" ? "rgba(0, 0, 0, 0.35)" : "rgba(0, 0, 0, 0.15)";
+  // React Query hooks for profile data
+  const {
+    data: profile,
+    isLoading,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useCurrentUserProfile();
 
-  // Simulate data loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  const { mutate: updateProfile } = useUpdateUserProfile();
 
-  // Tabs configuration
-  const tabs = [
-    { id: "personal", label: "Personal Info", icon: <User size={18} /> },
-    {
-      id: "medical",
-      label: "Medical Information",
-      icon: <HeartPulse size={18} />,
-    },
-    { id: "settings", label: "Account Settings", icon: <Settings size={18} /> },
-    { id: "security", label: "Security", icon: <Shield size={18} /> },
-  ];
+  const { mutate: uploadAvatar } = useUploadProfilePicture();
+
+  // Use profile data or fallback to mock data
+  const profileData = profile || mockUserProfile;
+
+  // Format error message
+  const error = profileError
+    ? typeof profileError === "object" && profileError.message
+      ? profileError.message
+      : "Failed to load profile data"
+    : null;
 
   // Mock user data for header
   const userData = {
-    name: profile.name,
-    avatar: profile.avatarUrl || "",
+    name: profileData.name,
+    avatar: profileData.avatarUrl || "",
     notifications: [
       {
         id: 1,
-        type: "appointment",
+        type: "appointment" as NotificationType,
         message: "Appointment with Dr. Williams tomorrow",
         time: "1 hour ago",
       },
@@ -93,23 +91,64 @@ export default function ProfilePage() {
 
   // Handle profile update
   const handleProfileUpdate = async (data: any) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setProfile((prev) => ({ ...prev, ...data }));
-    return true;
+    try {
+      updateProfile(data, {
+        onSuccess: (updatedData) => {
+          toast.success("Profile updated successfully");
+          return true;
+        },
+        onError: (error) => {
+          console.error("Error updating profile:", error);
+          toast.error("Failed to update profile");
+          return false;
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
+      return false;
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      let avatarUrl: string | null = null;
+
+      uploadAvatar(file, {
+        onSuccess: (response) => {
+          avatarUrl = response.avatarUrl;
+          toast.success("Profile picture updated successfully");
+          refetchProfile(); // Refresh profile data
+        },
+        onError: (error) => {
+          console.error("Failed to upload avatar:", error);
+          toast.error("Failed to upload profile picture");
+        },
+      });
+
+      return avatarUrl;
+    } catch (error) {
+      console.error("Failed to upload avatar:", error);
+      toast.error("Failed to upload profile picture");
+      return null;
+    }
   };
 
   // Tab content mapping
   const tabContent = {
-    personal: <ProfileInfo profile={profile} onUpdate={handleProfileUpdate} />,
+    personal: (
+      <ProfileInfo profile={profileData} onUpdate={handleProfileUpdate} />
+    ),
     medical: (
-      <ProfileMedical profile={profile} onUpdate={handleProfileUpdate} />
+      <ProfileMedical profile={profileData} onUpdate={handleProfileUpdate} />
     ),
     settings: (
-      <ProfileSettings profile={profile} onUpdate={handleProfileUpdate} />
+      <ProfileSettings profile={profileData} onUpdate={handleProfileUpdate} />
     ),
     security: (
-      <ProfileSecurity profile={profile} onUpdate={handleProfileUpdate} />
+      <ProfileSecurity profile={profileData} onUpdate={handleProfileUpdate} />
     ),
   };
 
@@ -121,7 +160,7 @@ export default function ProfilePage() {
       <NeumorphicHeader
         userData={userData}
         onMenuToggle={() => setSidebarOpen(true)}
-        loading={loading}
+        loading={isLoading}
       />
 
       {/* Mobile Sidebar */}
@@ -131,214 +170,170 @@ export default function ProfilePage() {
 
       {/* Main content */}
       <div className="pt-28 pb-24 md:pb-0 px-4 max-w-7xl mx-auto relative z-10">
-        {/* Profile Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-8"
-        >
-          {loading ? (
-            <Skeleton className="h-64 w-full rounded-3xl" />
-          ) : (
-            <div
-              className="rounded-3xl overflow-hidden relative neumorph-card hover:transform-none"
-              style={{
-                boxShadow: `0 20px 40px ${shadowColor}`,
-              }}
+        {/* Error message */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl neumorph-pressed bg-red-500/10 text-red-500">
+            <p className="font-medium">Error loading profile data</p>
+            <p className="text-sm">{error}</p>
+            <button
+              onClick={() => refetchProfile()}
+              className="mt-2 px-3 py-1 text-xs rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
             >
-              {/* Cover Photo with Gradient Overlay */}
-              <div className="h-40 md:h-64 w-full relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-secondary/30 z-10"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent z-10"></div>
-                <div className="absolute inset-0 bg-[url('/images/profile-cover.jpg')] bg-center bg-cover"></div>
-              </div>
+              Try Again
+            </button>
+          </div>
+        )}
 
-              {/* Profile Info Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-20">
-                <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
-                  {/* Avatar Section */}
-                  <div className="relative">
-                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden border-4 border-card shadow-lg relative neumorph-flat">
-                      {profile.avatarUrl ? (
-                        <Image
-                          src={profile.avatarUrl}
-                          alt={profile.name}
-                          width={128}
-                          height={128}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                          <User size={40} className="text-primary" />
-                        </div>
-                      )}
-
-                      {/* Camera Upload Button */}
-                      <div className="absolute bottom-2 right-2">
-                        <div className="relative">
-                          <button
-                            onClick={() =>
-                              setIsUploadMenuOpen(!isUploadMenuOpen)
-                            }
-                            className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
-                          >
-                            <Camera size={14} />
-                          </button>
-
-                          {/* Upload Menu Dropdown */}
-                          <AnimatePresence>
-                            {isUploadMenuOpen && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 5 }}
-                                className="absolute bottom-full right-0 mb-2 bg-card border border-border rounded-lg shadow-lg p-2 w-48"
-                                style={{
-                                  boxShadow: `0 10px 15px ${shadowColor}`,
-                                }}
-                              >
-                                <div className="flex flex-col gap-1">
-                                  <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 text-sm">
-                                    <Upload size={14} />
-                                    <span>Upload Photo</span>
-                                  </button>
-                                  <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 text-sm">
-                                    <Camera size={14} />
-                                    <span>Take Photo</span>
-                                  </button>
-                                  <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-red-500/10 text-red-500 text-sm">
-                                    <Trash size={14} />
-                                    <span>Remove Photo</span>
-                                  </button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* User Details */}
-                  <div className="flex-1 text-center md:text-left">
-                    <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-                      {profile.name}
-                    </h1>
-                    <div className="text-muted-foreground">
-                      <div className="mb-1">
-                        {profile.email} • {profile.phone}
-                      </div>
-                      <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                          <User size={12} />
-                          {profile.role}
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-medium">
-                          <Shield size={12} />
-                          Account Verified
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-xs font-medium">
-                          <Calendar size={12} />
-                          Member since {new Date(profile.created).getFullYear()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 mt-2 md:mt-0">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm flex items-center gap-2 shadow-lg hover:bg-primary/90 transition-colors"
-                    >
-                      <FileEdit size={16} />
-                      <span>Edit Profile</span>
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Tabs Navigation */}
-        <div className="overflow-x-auto md:overflow-visible">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex space-x-1 md:space-x-2 mb-6 pb-2 md:pb-0 min-w-max"
-          >
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all relative
-                  ${
-                    activeTab === tab.id
-                      ? "text-foreground neumorph-button"
-                      : "text-muted-foreground hover:text-foreground hover:bg-primary/5"
-                  }`}
-                style={
-                  activeTab === tab.id
-                    ? {
-                        boxShadow: `0 8px 16px ${shadowColor}`,
-                      }
-                    : {}
-                }
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="activeTabIndicator"
-                    className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-primary to-secondary rounded-t-full"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
+        {/* Profile Header */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                {isLoading ? (
+                  <Skeleton className="w-40 h-8" />
+                ) : (
+                  <>
+                    <span className="gradient-text">My Profile</span>
+                  </>
                 )}
-              </button>
-            ))}
-          </motion.div>
+              </h1>
+              <p className="text-foreground/60">
+                {isLoading ? (
+                  <Skeleton className="w-64 h-5" />
+                ) : (
+                  "Manage your account settings and preferences"
+                )}
+              </p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="group flex items-center gap-2 py-2 px-4 rounded-xl neumorph-button bg-primary/5 hover:bg-primary/10 text-foreground transition-all duration-300"
+                onClick={() => {
+                  refetchProfile();
+                  toast.success("Profile refreshed");
+                }}
+                disabled={isLoading}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`${isLoading ? "animate-spin" : ""}`}
+                >
+                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                  <path d="M16 21h5v-5" />
+                </svg>
+                <span>Refresh</span>
+              </motion.button>
+            </div>
+          </div>
         </div>
 
-        {/* Tab Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mb-10"
-        >
-          {loading ? (
-            <div className="space-y-6">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-40 w-full" />
-              <Skeleton className="h-32 w-full" />
+        {/* Main Content */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Left Sidebar - Navigation */}
+          <div className="md:col-span-1">
+            <div className="neumorph-card p-4 rounded-xl">
+              <ul className="space-y-1">
+                <li>
+                  <button
+                    onClick={() => setActiveTab("personal")}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      activeTab === "personal"
+                        ? "neumorph-pressed bg-primary/5 text-primary"
+                        : "hover:bg-primary/5"
+                    }`}
+                  >
+                    <User size={18} />
+                    <span>Personal Info</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab("medical")}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      activeTab === "medical"
+                        ? "neumorph-pressed bg-primary/5 text-primary"
+                        : "hover:bg-primary/5"
+                    }`}
+                  >
+                    <HeartPulse size={18} />
+                    <span>Medical Info</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab("settings")}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      activeTab === "settings"
+                        ? "neumorph-pressed bg-primary/5 text-primary"
+                        : "hover:bg-primary/5"
+                    }`}
+                  >
+                    <Settings size={18} />
+                    <span>Preferences</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab("security")}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      activeTab === "security"
+                        ? "neumorph-pressed bg-primary/5 text-primary"
+                        : "hover:bg-primary/5"
+                    }`}
+                  >
+                    <Shield size={18} />
+                    <span>Security</span>
+                  </button>
+                </li>
+              </ul>
             </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                {tabContent[activeTab as keyof typeof tabContent]}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </motion.div>
+          </div>
+
+          {/* Right Content Area */}
+          <div className="md:col-span-3">
+            <div className="neumorph-card p-6 rounded-xl">
+              {isLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="w-full h-8" />
+                  <Skeleton className="w-3/4 h-6" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Skeleton className="w-full h-12" />
+                    <Skeleton className="w-full h-12" />
+                  </div>
+                  <Skeleton className="w-full h-12" />
+                  <Skeleton className="w-full h-32" />
+                </div>
+              ) : (
+                tabContent[activeTab as keyof typeof tabContent]
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Bottom Navigation for Mobile */}
-      <BottomNavigation />
+      {/* Footer for desktop */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
 
-      {/* Footer */}
-      <Footer />
+      {/* Bottom Navigation for mobile */}
+      <div className="block md:hidden">
+        <BottomNavigation unreadMessages={3} />
+      </div>
     </main>
   );
 }

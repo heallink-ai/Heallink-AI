@@ -15,11 +15,13 @@ import Link from "next/link";
 interface UserActionMenuProps {
   userId: string;
   userStatus: string;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 export default function UserActionMenu({
   userId,
   userStatus,
+  onStatusChange,
 }: UserActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -84,7 +86,9 @@ export default function UserActionMenu({
               <button
                 className="flex items-center w-full text-left px-4 py-2 text-sm hover:bg-[color:var(--accent)]/20 text-amber-600 dark:text-amber-400"
                 onClick={() => {
-                  // Suspend account logic would go here
+                  if (onStatusChange) {
+                    onStatusChange(userId, userStatus);
+                  }
                   setIsOpen(false);
                 }}
               >
@@ -95,7 +99,9 @@ export default function UserActionMenu({
               <button
                 className="flex items-center w-full text-left px-4 py-2 text-sm hover:bg-[color:var(--accent)]/20 text-green-600 dark:text-green-400"
                 onClick={() => {
-                  // Activate account logic would go here
+                  if (onStatusChange) {
+                    onStatusChange(userId, userStatus);
+                  }
                   setIsOpen(false);
                 }}
               >

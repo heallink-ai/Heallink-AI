@@ -25,8 +25,27 @@ import {
 } from "lucide-react";
 import BackgroundGradient from "@/app/components/dashboard/BackgroundGradient";
 
+// Define a proper type for the user
+interface UserType {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  phone: string;
+  role: string;
+  status: string;
+  address: string;
+  dateOfBirth: string;
+  lastActive: string;
+  created: string;
+  medicalProvider: string;
+  emergencyContact: string;
+  appointments: number;
+  notes: string;
+}
+
 // Mock users for this example
-const MOCK_USERS = [
+const MOCK_USERS: UserType[] = [
   {
     id: "u1",
     name: "James Wilson",
@@ -74,17 +93,19 @@ export default function UserDetailsPage() {
   const userId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
   const { theme } = useTheme();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState<any>(null);
+  const [editedUser, setEditedUser] = useState<UserType | null>(null);
 
   // Fetch user data
   useEffect(() => {
     const timer = setTimeout(() => {
-      const fetchedUser = getUserById(userId);
-      setUser(fetchedUser);
-      setEditedUser(fetchedUser ? { ...fetchedUser } : null);
+      if (userId) {
+        const fetchedUser = getUserById(userId);
+        setUser(fetchedUser);
+        setEditedUser(fetchedUser ? { ...fetchedUser } : null);
+      }
       setLoading(false);
     }, 1500);
 
@@ -101,10 +122,13 @@ export default function UserDetailsPage() {
     >
   ) => {
     const { name, value } = e.target;
-    setEditedUser((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEditedUser((prev: UserType | null) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
   };
 
   // Save edited user data
@@ -117,7 +141,8 @@ export default function UserDetailsPage() {
 
   // Cancel editing
   const handleCancel = () => {
-    setEditedUser({ ...user });
+    // Only spread the user if it exists
+    setEditedUser(user ? { ...user } : null);
     setIsEditing(false);
   };
 
@@ -470,7 +495,7 @@ export default function UserDetailsPage() {
                       <input
                         type="text"
                         name="name"
-                        value={editedUser.name}
+                        value={editedUser?.name || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
@@ -483,7 +508,7 @@ export default function UserDetailsPage() {
                       <input
                         type="email"
                         name="email"
-                        value={editedUser.email}
+                        value={editedUser?.email || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
@@ -496,7 +521,7 @@ export default function UserDetailsPage() {
                       <input
                         type="tel"
                         name="phone"
-                        value={editedUser.phone}
+                        value={editedUser?.phone || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
@@ -509,7 +534,7 @@ export default function UserDetailsPage() {
                       <input
                         type="date"
                         name="dateOfBirth"
-                        value={editedUser.dateOfBirth}
+                        value={editedUser?.dateOfBirth || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
@@ -523,7 +548,7 @@ export default function UserDetailsPage() {
                       </label>
                       <select
                         name="role"
-                        value={editedUser.role}
+                        value={editedUser?.role || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
@@ -539,7 +564,7 @@ export default function UserDetailsPage() {
                       </label>
                       <select
                         name="status"
-                        value={editedUser.status}
+                        value={editedUser?.status || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
@@ -556,7 +581,7 @@ export default function UserDetailsPage() {
                       <input
                         type="text"
                         name="address"
-                        value={editedUser.address}
+                        value={editedUser?.address || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
@@ -569,7 +594,7 @@ export default function UserDetailsPage() {
                       <input
                         type="text"
                         name="emergencyContact"
-                        value={editedUser.emergencyContact}
+                        value={editedUser?.emergencyContact || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
@@ -582,7 +607,7 @@ export default function UserDetailsPage() {
                     </label>
                     <textarea
                       name="notes"
-                      value={editedUser.notes}
+                      value={editedUser?.notes || ""}
                       onChange={handleChange}
                       rows={4}
                       className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"

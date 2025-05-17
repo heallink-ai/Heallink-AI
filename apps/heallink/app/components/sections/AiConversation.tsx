@@ -2,12 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import ScrollReveal from "../animations/ScrollReveal";
-import dynamic from "next/dynamic";
 
-// Import Vapi with dynamic import to prevent SSR issues
-const VapiModule = dynamic(() => import("@vapi-ai/web"), {
-  ssr: false,
-});
+// Using a more generic type to avoid complex typing issues with Vapi
+type VapiType = any;
 
 export default function AiConversation() {
   const [isActive, setIsActive] = useState(false);
@@ -21,7 +18,7 @@ export default function AiConversation() {
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
-  const vapiRef = useRef<any>(null); // Will hold our Vapi instance
+  const vapiRef = useRef<VapiType | null>(null); // Use more generic type
 
   // Create a Vapi instance when the component mounts
   useEffect(() => {

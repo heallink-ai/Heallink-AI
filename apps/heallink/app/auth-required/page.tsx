@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+// Explicitly import React to make sure we have access to the proper types
+import * as React from "react";
 import Button from "../components/ui/Button";
 
 // Component that uses useSearchParams
@@ -86,7 +87,8 @@ function AuthRequiredContent() {
 export default function AuthRequiredPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <Suspense
+      {/* Use React.Suspense instead of Suspense directly for proper typing */}
+      <React.Suspense
         fallback={
           <div className="text-center p-8">
             Loading authentication screen...
@@ -94,7 +96,7 @@ export default function AuthRequiredPage() {
         }
       >
         <AuthRequiredContent />
-      </Suspense>
+      </React.Suspense>
     </div>
   );
 }

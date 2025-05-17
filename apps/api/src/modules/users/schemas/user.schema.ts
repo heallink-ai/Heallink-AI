@@ -53,6 +53,9 @@ export class User {
   @Prop()
   password?: string;
 
+  @Prop()
+  avatarUrl?: string;
+
   @Prop({ default: false })
   emailVerified: boolean;
 
@@ -101,6 +104,96 @@ export class User {
 
   @Prop({ type: Date })
   otpExpiry?: Date;
+
+  @Prop()
+  dateOfBirth?: string;
+
+  @Prop({ enum: ['male', 'female', 'other', 'prefer-not-to-say'] })
+  gender?: string;
+
+  @Prop({
+    type: {
+      streetAddress: String,
+      city: String,
+      state: String,
+      zipCode: String,
+      country: String,
+    },
+  })
+  address?: {
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
+
+  @Prop({
+    type: {
+      name: String,
+      relationship: String,
+      phone: String,
+    },
+  })
+  emergencyContact?: {
+    name?: string;
+    relationship?: string;
+    phone?: string;
+  };
+
+  @Prop({
+    type: {
+      bloodType: {
+        type: String,
+        enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'unknown'],
+      },
+      allergies: [String],
+      medications: [String],
+      chronicConditions: [String],
+      insuranceProvider: String,
+      insurancePolicyNumber: String,
+      primaryCarePhysician: String,
+    },
+  })
+  medicalInformation?: {
+    bloodType?: string;
+    allergies?: string[];
+    medications?: string[];
+    chronicConditions?: string[];
+    insuranceProvider?: string;
+    insurancePolicyNumber?: string;
+    primaryCarePhysician?: string;
+  };
+
+  @Prop({
+    type: {
+      provider: String,
+      policyNumber: String,
+      groupNumber: String,
+      primaryInsured: String,
+      relationship: String,
+    },
+  })
+  insurance?: {
+    provider?: string;
+    policyNumber?: string;
+    groupNumber?: string;
+    primaryInsured?: string;
+    relationship?: string;
+  };
+
+  @Prop({
+    type: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+    },
+  })
+  communicationPreferences?: {
+    email: boolean;
+    sms: boolean;
+    push: boolean;
+  };
 
   @Prop({
     type: MongooseSchema.Types.Mixed,

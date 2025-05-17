@@ -36,85 +36,71 @@ export default function ProfileDropdown({
   // Try to load cached image from localStorage when component mounts
   useEffect(() => {
     const originalImageUrl = session?.user?.image || avatarUrl;
+
+    // Reset image error when URL changes
     if (originalImageUrl) {
-      // Create a cache key based on the image URL
-      const cacheKey = `image_cache_${btoa(originalImageUrl).substring(0, 32)}`;
+      setImgError(false);
+    } else {
+      // If no image URL is available, set imgError to true to show initials
+      setImgError(true);
+      return;
+    }
 
-      // Try to get the cached image from localStorage
-      const cachedImage = localStorage.getItem(cacheKey);
-      if (cachedImage) {
-        setCachedImageUrl(cachedImage);
-        console.log("Using cached image from localStorage");
-      } else if (originalImageUrl.includes("lh3.googleusercontent.com")) {
-        // For Google images, preload and cache
-        // Modified to use data URL approach
-        const img = new window.Image();
-        img.crossOrigin = "anonymous";
-        img.onload = function () {
-          try {
-            // Create a canvas to convert the image to a data URL
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-              ctx.drawImage(img, 0, 0);
-              const dataUrl = canvas.toDataURL("image/jpeg", 0.5); // Reduce quality for storage
+    // Create a cache key based on the image URL
+    const cacheKey = `image_cache_${btoa(originalImageUrl).substring(0, 32)}`;
 
-              // Save to localStorage
-              localStorage.setItem(cacheKey, dataUrl);
-              setCachedImageUrl(dataUrl);
-              console.log("Image cached successfully");
-            }
-          } catch (error) {
-            console.error("Failed to cache image:", error);
+    // Try to get the cached image from localStorage
+    const cachedImage = localStorage.getItem(cacheKey);
+    if (cachedImage) {
+      setCachedImageUrl(cachedImage);
+    } else if (originalImageUrl.includes("lh3.googleusercontent.com")) {
+      // For Google images, preload and cache
+      // Modified to use data URL approach
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function () {
+        try {
+          // Create a canvas to convert the image to a data URL
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.5); // Reduce quality for storage
+
+            // Save to localStorage
+            localStorage.setItem(cacheKey, dataUrl);
+            setCachedImageUrl(dataUrl);
           }
-        };
+        } catch (error) {
+          console.error("Failed to cache image:", error);
+          // Set image error if caching fails
+          setImgError(true);
+        }
+      };
 
-        img.onerror = function () {
-          console.log("Failed to preload image for caching");
-        };
+      img.onerror = function () {
+        console.log("Failed to preload image for caching");
+        setImgError(true);
+      };
 
-        // Start loading the optimized version
-        const optimizedUrl = getOptimizedGoogleImageUrl(originalImageUrl);
-        img.src = optimizedUrl;
-      }
+      // Start loading the optimized version
+      const optimizedUrl = getOptimizedGoogleImageUrl(originalImageUrl);
+      img.src = optimizedUrl;
     }
   }, [session?.user?.image, avatarUrl]);
 
-  // Reset image error state when avatar URL changes
-  useEffect(() => {
-    setImgError(false);
-  }, [displayAvatar]);
-
-  // Debug user profile data
-  useEffect(() => {
-    if (session?.user) {
-      console.log("ProfileDropdown - Session data:", {
-        name: session.user.name,
-        image: session.user.image,
-        avatarUrl,
-      });
-    }
-  }, [session, avatarUrl]);
-
   // Handle image error
-  const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>
-  ) => {
-    console.log({ e });
-    console.log("Image failed to load:", {
-      url: displayAvatar,
-      optimizedUrl: optimizedAvatarUrl,
-      target: e.currentTarget,
-      path: e.currentTarget.src,
-    });
+  const handleImageError = () => {
+    console.log("Image failed to load:", displayAvatar);
     setImgError(true);
   };
 
   // Generate initials for fallback avatar
   const getInitials = (name: string) => {
-    if (!name) return "U";
+    if (!name || name.trim() === "") return "U";
+
     return name
       .split(" ")
       .map((n) => n[0])
@@ -277,16 +263,11 @@ export default function ProfileDropdown({
 
   const optimizedAvatarUrl = getOptimizedGoogleImageUrl(displayAvatar);
 
-  console.log({
-    imgError,
-    displayAvatar,
-    cachedImageUrl,
-    optimizedAvatarUrl,
-    isExternal: isExternalImage(displayAvatar),
-  });
-
   // Determine if we should use data URL or regular image
   const isDataUrl = displayAvatar && displayAvatar.startsWith("data:image");
+
+  // Check if we have a valid avatar URL
+  const hasValidAvatar = Boolean(displayAvatar) && !imgError;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -295,7 +276,7 @@ export default function ProfileDropdown({
         className="relative w-10 h-10 rounded-full overflow-hidden transition-all duration-300 hover:shadow-md active:scale-95"
         aria-label="Open profile menu"
       >
-        {imgError ? (
+        {!hasValidAvatar ? (
           <div className="w-full h-full flex items-center justify-center bg-primary text-white font-medium">
             {userInitials}
           </div>
@@ -366,7 +347,7 @@ export default function ProfileDropdown({
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {imgError ? (
+                        {!hasValidAvatar ? (
                           <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center bg-primary text-white font-medium">
                             {userInitials}
                           </div>

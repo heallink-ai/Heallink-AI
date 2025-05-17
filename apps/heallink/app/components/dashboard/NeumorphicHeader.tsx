@@ -4,11 +4,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/app/theme/ThemeProvider";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 // Component imports
 import NotificationBell from "./NotificationBell";
 import QuickActions from "./QuickActions";
 import ProfileDropdown from "./ProfileDropdown";
+
+// API imports
+import { useCurrentUserProfile } from "@/app/hooks/useUserApi";
 
 // Types
 type NotificationType = "appointment" | "message" | "payment";
@@ -39,23 +43,44 @@ export default function NeumorphicHeader({
   const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
 
-  console.log({ session });
+  // Use React Query to fetch user profile
+  const {
+    data: profileData,
+    isLoading: isLoadingProfile,
+    error: profileError,
+    isError: hasProfileError,
+    refetch: refetchProfile,
+  } = useCurrentUserProfile();
 
-  // Debug session data for profile image issue
+  // Log errors if they occur
   useEffect(() => {
-    if (session?.user) {
-      console.log("Session user data:", {
-        name: session.user.name,
-        image: session.user.image,
-        provider: session.user.provider,
-      });
+    if (hasProfileError && profileError) {
+      console.error("Error fetching profile:", profileError);
     }
-  }, [session]);
+  }, [hasProfileError, profileError]);
 
-  // Use session data if available
+  // Retry fetching profile on error after a delay
+  useEffect(() => {
+    let retryTimeout: NodeJS.Timeout;
+
+    if (hasProfileError) {
+      retryTimeout = setTimeout(() => {
+        refetchProfile();
+      }, 30000); // Retry after 30 seconds
+    }
+
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [hasProfileError, refetchProfile]);
+
+  // Use profile data or session data if available, or fall back to the provided userData
   const userProfile = {
-    name: session?.user?.name || userData.name,
-    avatar: session?.user?.image || userData.avatar || "/vercel.svg",
+    name: profileData?.name || session?.user?.name || userData.name,
+    avatar:
+      profileData?.avatarUrl || session?.user?.image || userData.avatar || "",
     notifications: userData.notifications,
   };
 
@@ -76,6 +101,9 @@ export default function NeumorphicHeader({
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
+
+  // Determine if the header is in a loading state
+  const isHeaderLoading = loading || isLoadingProfile;
 
   // Skeleton loaders for UI elements when loading
   const Skeleton = ({ className }: { className?: string }) => (
@@ -114,8 +142,8 @@ export default function NeumorphicHeader({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -123,66 +151,36 @@ export default function NeumorphicHeader({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <line x1="4" x2="20" y1="12" y2="12" />
-                <line x1="4" x2="20" y1="6" y2="6" />
-                <line x1="4" x2="20" y1="18" y2="18" />
+                <line x1="4" y1="12" y2="12" x2="20" />
+                <line x1="4" y1="6" y2="6" x2="20" />
+                <line x1="4" y1="18" y2="18" x2="20" />
               </svg>
             </motion.button>
 
-            <motion.div
-              className="text-xl font-semibold"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <span className="gradient-text">HealLink</span>
-            </motion.div>
-          </div>
-
-          {/* Search bar - center section (visible only on larger screens) */}
-          <div className="hidden md:block flex-1 max-w-md mx-4">
-            <div
-              className={`relative transition-all duration-300 ${
-                scrolled
-                  ? "neumorph-input"
-                  : "bg-primary/5 rounded-full overflow-hidden"
-              }`}
-            >
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full py-2 pl-4 pr-10 bg-transparent border-none focus:outline-none focus:ring-0"
-              />
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-muted-foreground"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
-              </span>
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold">
+                {isHeaderLoading ? (
+                  <Skeleton className="w-32 h-8" />
+                ) : (
+                  <Link href="/dashboard">
+                    <span className="gradient-text inline-block">HealLink</span>
+                    <span className="opacity-60">+</span>
+                  </Link>
+                )}
+              </h1>
             </div>
           </div>
 
-          {/* Right section with actions */}
+          {/* Right section with actions and profile */}
           <div className="flex items-center gap-2">
-            {/* Theme Toggle Button */}
+            {/* Theme toggle button */}
             <motion.button
               onClick={toggleTheme}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+              className={`p-2.5 rounded-xl transition-all duration-300 ${
                 scrolled
-                  ? "neumorph-button neumorph-accent-primary"
+                  ? "neumorph-button"
                   : `hover:bg-primary/10 border ${borderColor}`
               }`}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
@@ -198,17 +196,16 @@ export default function NeumorphicHeader({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-amber-300"
                 >
                   <circle cx="12" cy="12" r="4" />
                   <path d="M12 2v2" />
                   <path d="M12 20v2" />
-                  <path d="M4.93 4.93l1.41 1.41" />
-                  <path d="M17.66 17.66l1.41 1.41" />
+                  <path d="m4.93 4.93 1.41 1.41" />
+                  <path d="m17.66 17.66 1.41 1.41" />
                   <path d="M2 12h2" />
                   <path d="M20 12h2" />
-                  <path d="M6.34 17.66l-1.41 1.41" />
-                  <path d="M19.07 4.93l-1.41 1.41" />
+                  <path d="m6.34 17.66-1.41 1.41" />
+                  <path d="m19.07 4.93-1.41 1.41" />
                 </svg>
               ) : (
                 <svg
@@ -221,7 +218,6 @@ export default function NeumorphicHeader({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-purple-heart"
                 >
                   <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                 </svg>
@@ -229,7 +225,7 @@ export default function NeumorphicHeader({
             </motion.button>
 
             {/* Quick Actions */}
-            {!loading && (
+            {!isHeaderLoading && (
               <div
                 className={`${scrolled ? "scale-95" : "scale-100"} transition-all duration-300`}
               >
@@ -238,7 +234,7 @@ export default function NeumorphicHeader({
             )}
 
             {/* Notification Bell */}
-            {!loading && (
+            {!isHeaderLoading && (
               <div
                 className={`${scrolled ? "scale-95" : "scale-100"} transition-all duration-300`}
               >
@@ -247,13 +243,9 @@ export default function NeumorphicHeader({
             )}
 
             {/* Profile Dropdown */}
-            {loading ? (
-              <div
-                className={`relative w-10 h-10 rounded-xl overflow-hidden ${
-                  scrolled ? "neumorph-flat" : ""
-                }`}
-              >
-                <Skeleton className="w-full h-full" />
+            {isHeaderLoading ? (
+              <div className="h-10 w-10">
+                <Skeleton className="h-full w-full rounded-full" />
               </div>
             ) : (
               <div

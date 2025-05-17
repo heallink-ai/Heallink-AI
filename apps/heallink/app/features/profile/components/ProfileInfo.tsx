@@ -301,7 +301,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                     <input
                       type="text"
                       name="address.streetAddress"
-                      value={formData.address.streetAddress}
+                      value={formData.address?.streetAddress || ""}
                       onChange={handleChange}
                       className="w-full px-3 py-2 rounded-lg border border-input bg-transparent neumorph-input focus:outline-none"
                     />
@@ -315,7 +315,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                       <input
                         type="text"
                         name="address.city"
-                        value={formData.address.city}
+                        value={formData.address?.city || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent neumorph-input focus:outline-none"
                       />
@@ -328,7 +328,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                       <input
                         type="text"
                         name="address.state"
-                        value={formData.address.state}
+                        value={formData.address?.state || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent neumorph-input focus:outline-none"
                       />
@@ -343,7 +343,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                       <input
                         type="text"
                         name="address.zipCode"
-                        value={formData.address.zipCode}
+                        value={formData.address?.zipCode || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent neumorph-input focus:outline-none"
                       />
@@ -356,7 +356,7 @@ export default function ProfileInfo({ profile, onUpdate }: ProfileInfoProps) {
                       <input
                         type="text"
                         name="address.country"
-                        value={formData.address.country}
+                        value={formData.address?.country || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 rounded-lg border border-input bg-transparent neumorph-input focus:outline-none"
                       />

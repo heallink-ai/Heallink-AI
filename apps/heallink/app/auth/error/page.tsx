@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
+import * as React from "react";
 
 // Component that uses useSearchParams
 function ErrorContent() {
@@ -63,11 +63,11 @@ export default function ErrorPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-        <Suspense
+        <React.Suspense
           fallback={<div className="text-center">Loading error details...</div>}
         >
           <ErrorContent />
-        </Suspense>
+        </React.Suspense>
       </div>
     </div>
   );

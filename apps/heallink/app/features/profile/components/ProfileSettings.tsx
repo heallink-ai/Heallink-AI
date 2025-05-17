@@ -70,13 +70,28 @@ export default function ProfileSettings({
 
   // Handle toggle change
   const handleToggleChange = (section: string, setting: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
-        [setting]: !prev[section as keyof typeof prev][setting as any],
-      },
-    }));
+    setSettings((prev) => {
+      if (section === "notifications") {
+        const notifications = prev.notifications;
+        return {
+          ...prev,
+          notifications: {
+            ...notifications,
+            [setting]: !notifications[setting as keyof typeof notifications],
+          },
+        };
+      } else if (section === "preferences") {
+        const preferences = prev.preferences;
+        return {
+          ...prev,
+          preferences: {
+            ...preferences,
+            [setting]: !preferences[setting as keyof typeof preferences],
+          },
+        };
+      }
+      return prev;
+    });
   };
 
   // Handle select change
@@ -97,7 +112,9 @@ export default function ProfileSettings({
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      await onUpdate({ settings });
+      await onUpdate({
+        name: profile.name,
+      });
       // We don't change the theme based on settings.preferences.theme
       // because that's handled by the ThemeProvider independently
     } catch (error) {

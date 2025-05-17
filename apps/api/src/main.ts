@@ -4,10 +4,13 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { LoggingService } from './modules/logging/logging.service';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import * as fs from 'fs';
 
 async function bootstrap() {
-  // Initialize app with Winston logger
-  const app = await NestFactory.create(AppModule);
+  // Initialize app with Winston logger and specify Express platform
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
   // Use resolve for transient scoped service
@@ -22,9 +25,36 @@ async function bootstrap() {
     nodeEnv: configService.get<string>('nodeEnv') || 'development',
   });
 
+  // Create uploads directories if they don't exist
+  const uploadsDir = join(__dirname, '..', 'uploads');
+  const avatarsDir = join(uploadsDir, 'avatars');
+
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    loggingService.log('Created uploads directory');
+  }
+
+  if (!fs.existsSync(avatarsDir)) {
+    fs.mkdirSync(avatarsDir, { recursive: true });
+    loggingService.log('Created avatars directory');
+  }
+
+  // Serve static files from the uploads directory
+  app.useStaticAssets(uploadsDir, {
+    prefix: '/uploads',
+  });
+
   // Enable CORS
+  const corsOrigins =
+    configService.get<string>('CORS_ORIGIN') || 'http://localhost:3000';
+  const originsArray = corsOrigins.split(',').map((origin) => origin.trim());
+
+  loggingService.log(
+    `Configuring CORS for origins: ${originsArray.join(', ')}`,
+  );
+
   app.enableCors({
-    origin: '*', // Allow all origins in development
+    origin: originsArray,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

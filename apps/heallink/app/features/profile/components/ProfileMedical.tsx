@@ -33,6 +33,7 @@ export default function ProfileMedical({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
+    name: profile.name,
     medicalInformation: {
       bloodType: profile.medicalInformation?.bloodType || "unknown",
       allergies: profile.medicalInformation?.allergies || [],
