@@ -10,6 +10,8 @@ import { User, AuthProvider, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { randomBytes } from 'crypto';
+import { S3Service } from '../aws/s3.service';
+import { UserRole } from './schemas/user.schema';
 
 // Interface defined outside the class to avoid scoping issues
 export interface UserWithFlags extends UserDocument {
@@ -20,6 +22,7 @@ export interface UserWithFlags extends UserDocument {
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly s3Service: S3Service,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
@@ -70,6 +73,25 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    // If user has an avatarUrl that points to S3, generate a presigned URL
+    if (user.avatarUrl && user.avatarUrl.startsWith('avatars/')) {
+      try {
+        // Generate presigned URL valid for 24 hours
+        const signedUrl = await this.s3Service.getSignedUrl(
+          user.avatarUrl,
+          86400,
+        );
+        // We don't want to modify the actual document, so we create a new object
+        const userWithSignedUrl = user.toObject();
+        userWithSignedUrl.avatarUrl = signedUrl;
+        return userWithSignedUrl as UserDocument;
+      } catch (error) {
+        console.error('Error generating presigned URL for avatar:', error);
+        // If there's an error, continue with the original URL
+      }
+    }
+
     return user;
   }
 
@@ -110,6 +132,24 @@ export class UsersService {
 
     if (!updatedUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // If user has an avatarUrl that points to S3, generate a presigned URL
+    if (updatedUser.avatarUrl && updatedUser.avatarUrl.startsWith('avatars/')) {
+      try {
+        // Generate presigned URL valid for 24 hours
+        const signedUrl = await this.s3Service.getSignedUrl(
+          updatedUser.avatarUrl,
+          86400,
+        );
+        // We don't want to modify the actual document, so we create a new object
+        const userWithSignedUrl = updatedUser.toObject();
+        userWithSignedUrl.avatarUrl = signedUrl;
+        return userWithSignedUrl as UserDocument;
+      } catch (error) {
+        console.error('Error generating presigned URL for avatar:', error);
+        // If there's an error, continue with the original URL
+      }
     }
 
     return updatedUser;
@@ -261,38 +301,36 @@ export class UsersService {
             },
           )
           .exec();
-      }
 
-      const updatedUser = await this.findOne(user._id);
-      return updatedUser as UserWithFlags;
+        // Refresh the user object
+        user = await this.userModel.findById(user._id).exec();
+      }
     } else {
-      // If user doesn't exist, we'll create a new one
+      // Create new user with provider info
       isNewUser = true;
+
+      const newUser: CreateUserDto = {
+        name: providerData.name,
+        email: providerData.email,
+        phone: providerData.phone,
+        emailVerified: !!providerData.email, // Emails from OAuth providers are assumed to be verified
+        phoneVerified: false,
+        role: UserRole.USER,
+        providers: [providerData.provider],
+        accounts: [
+          {
+            provider: providerData.provider,
+            providerId: providerData.providerId,
+          },
+        ],
+      };
+
+      user = await this.create(newUser);
     }
 
-    // If user doesn't exist, create a new one
-    const createUserDto: CreateUserDto = {
-      email: providerData.email,
-      phone: providerData.phone,
-      name: providerData.name,
-      providers: [providerData.provider],
-      accounts: [
-        {
-          provider: providerData.provider,
-          providerId: providerData.providerId,
-        },
-      ],
-      // Mark email as verified for social logins since they are pre-verified by the provider
-      emailVerified: providerData.email ? true : false,
-    };
-
-    const newUser = await this.create(createUserDto);
-
-    // Add the isNewUser flag to the returned user
-    const userWithFlag = newUser as UserWithFlags;
-    userWithFlag.isNewUser = isNewUser;
-
-    return userWithFlag;
+    // Add isNewUser flag before returning
+    (user as UserWithFlags).isNewUser = isNewUser;
+    return user as UserWithFlags;
   }
 
   async findByResetToken(resetToken: string): Promise<UserDocument | null> {
@@ -310,8 +348,8 @@ export class UsersService {
   async findUsersWithResetToken(): Promise<UserDocument[]> {
     return this.userModel
       .find({
-        passwordResetToken: { $exists: true, $ne: null },
-        passwordResetRequestedAt: { $exists: true, $ne: null },
+        resetToken: { $ne: null },
+        resetTokenExpiry: { $ne: null },
       })
       .exec();
   }
