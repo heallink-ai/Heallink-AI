@@ -48,30 +48,30 @@ services:
       - heallink-network
     restart: unless-stopped
 
-  heallink-providers:
-    build:
-      context: .
-      dockerfile: ./apps/heallink-providers/Dockerfile.dev
-    container_name: heallink-providers
-    ports:
-      - "3002:3002"
-    volumes:
-      - ./apps/heallink-providers:/app/apps/heallink-providers
-      - ./packages:/app/packages
-      - heallink-providers-node-modules:/app/apps/heallink-providers/node_modules
-    environment:
-      - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-      - PORT=3002
-      # For browser-side requests (must be accessible from user's browser)
-      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
-      # For server-side requests (within Docker network)
-      - API_URL=http://api:3003/api/v1
-    depends_on:
-      - api
-    networks:
-      - heallink-network
-    restart: unless-stopped
+  # heallink-providers:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/heallink-providers/Dockerfile.dev
+  #   container_name: heallink-providers
+  #   ports:
+  #     - "3002:3002"
+  #   volumes:
+  #     - ./apps/heallink-providers:/app/apps/heallink-providers
+  #     - ./packages:/app/packages
+  #     - heallink-providers-node-modules:/app/apps/heallink-providers/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     - PORT=3002
+  #     # For browser-side requests (must be accessible from user's browser)
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+  #     # For server-side requests (within Docker network)
+  #     - API_URL=http://api:3003/api/v1
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - heallink-network
+  #   restart: unless-stopped
 
   api:
     build:

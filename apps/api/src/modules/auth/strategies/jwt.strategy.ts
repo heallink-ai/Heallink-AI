@@ -18,12 +18,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    console.log({ payload });
     const user = await this.usersService.findOne(payload.sub);
-    
+    console.log({ user });
+
     if (!user) {
       throw new UnauthorizedException('Invalid token');
     }
-    
+
     // Return user without sensitive data
     return {
       id: user._id,
