@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Color codes:
+/* CSS HEX */
+ --biloba-flower: #bda8e5; (https://imagecolorpicker.com/color-code/bda8e5)
+--purple-heart: #5a2dcf; (https://imagecolorpicker.com/color-code/5a2dcf)
+--royal-blue: #2066e4; (https://imagecolorpicker.com/color-code/2066e4)
+--royal-blue: #2c5cde; (https://imagecolorpicker.com/color-code/2c5cde)
+--royal-blue: #3253dc; (https://imagecolorpicker.com/color-code/3253dc)
+--purple-heart: #7730ca; (https://imagecolorpicker.com/color-code/7730ca)
+--royal-blue: #3c4cdb; (https://imagecolorpicker.com/color-code/3c4cdb)
+--royal-blue: #4144dc;(https://imagecolorpicker.com/color-code/4144dc)
+--portage: #9aa5ec; (https://imagecolorpicker.com/color-code/9aa5ec)
+--havelock-blue: #6578e4; (https://imagecolorpicker.com/color-code/6578e4)
+
+
+/* SCSS HEX */
+$biloba-flower: #bda8e5;
+$purple-heart: #5a2dcf;
+$royal-blue: #2066e4;
+$royal-blue: #2c5cde;
+$royal-blue: #3253dc;
+$purple-heart: #7730ca;
+$royal-blue: #3c4cdb;
+$royal-blue: #4144dc;
+$portage: #9aa5ec;
+$havelock-blue: #6578e4;
+
+
+/* SCSS RGB */
+--biloba-flower: rgba(189,168,229,1);
+--purple-heart: rgba(90,45,207,1);
+--royal-blue: rgba(32,102,228,1);
+--royal-blue: rgba(44,92,222,1);
+--royal-blue: rgba(50,83,220,1);
+--purple-heart: rgba(119,48,202,1);
+--royal-blue: rgba(60,76,219,1);
+--royal-blue: rgba(65,68,220,1);
+--portage: rgba(154,165,236,1);
+--havelock-blue: rgba(101,120,228,1);
+
+
+Font Family:
+
+font-family: "Mona Sans", MonaSansFallback, -apple-system, "system-ui", "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+Source: 
