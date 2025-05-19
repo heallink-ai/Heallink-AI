@@ -27,9 +27,6 @@ import {
   useUploadProfilePicture,
 } from "@/app/hooks/useUserApi";
 
-// Mock data for fallback
-import { mockUserProfile } from "@/app/features/profile/mockData";
-
 export default function ProfilePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
@@ -47,9 +44,6 @@ export default function ProfilePage() {
 
   const { mutate: uploadAvatar } = useUploadProfilePicture();
 
-  // Use profile data or fallback to mock data
-  const profileData = profile || mockUserProfile;
-
   // Format error message
   const error = profileError
     ? typeof profileError === "object" && profileError.message
@@ -57,10 +51,10 @@ export default function ProfilePage() {
       : "Failed to load profile data"
     : null;
 
-  // Mock user data for header
+  // User data for header - only use available data, no fallbacks
   const userData = {
-    name: profileData.name,
-    avatar: profileData.avatarUrl || "",
+    name: profile?.name || "",
+    avatar: profile?.avatarUrl || "",
     notifications: [
       {
         id: 1,
@@ -124,26 +118,50 @@ export default function ProfilePage() {
     }
   };
 
-  // Tab content mapping
-  const tabContent = {
-    personal: (
-      <ProfileInfo profile={profileData} onUpdate={handleProfileUpdate} />
-    ),
-    medical: (
-      <ProfileMedical profile={profileData} onUpdate={handleProfileUpdate} />
-    ),
-    settings: (
-      <ProfileSettings profile={profileData} onUpdate={handleProfileUpdate} />
-    ),
-    security: (
-      <ProfileSecurity profile={profileData} onUpdate={handleProfileUpdate} />
-    ),
-  };
+  // Skeleton avatar upload component for loading state
+  const SkeletonAvatarUpload = () => (
+    <div className="flex flex-col items-center">
+      <div className="relative">
+        <div className="h-28 w-28 rounded-full overflow-hidden shadow-lg">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
+      <Skeleton className="mt-3 h-5 w-32" />
+    </div>
+  );
+
+  // Skeleton tab content
+  const SkeletonTabContent = () => (
+    <div className="space-y-6">
+      <div>
+        <Skeleton className="h-8 w-48 mb-2" />
+        <Skeleton className="h-5 w-64" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+      <Skeleton className="h-10 w-32" />
+    </div>
+  );
 
   return (
     <main className="min-h-screen bg-background text-foreground pb-0 relative">
       <BackgroundGradient />
-
       {/* Header */}
       <NeumorphicHeader
         userData={userData}
@@ -177,12 +195,18 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
             {/* Avatar Upload Section */}
             <div className="order-1 md:order-none">
-              <ProfileAvatarUpload
-                avatarUrl={profileData.avatarUrl}
-                name={profileData.name}
-                onAvatarChange={handleAvatarUpload}
-                isUploading={isUploading}
-              />
+              {isLoading ? (
+                <SkeletonAvatarUpload />
+              ) : profile ? (
+                <ProfileAvatarUpload
+                  avatarUrl={profile.avatarUrl}
+                  name={profile.name}
+                  onAvatarChange={handleAvatarUpload}
+                  isUploading={isUploading}
+                />
+              ) : (
+                <SkeletonAvatarUpload />
+              )}
             </div>
 
             <div className="flex-1">
@@ -245,58 +269,77 @@ export default function ProfilePage() {
           <div className="md:col-span-1">
             <div className="neumorph-card p-4 rounded-xl">
               <ul className="space-y-1">
-                <li>
-                  <button
-                    onClick={() => setActiveTab("personal")}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      activeTab === "personal"
-                        ? "neumorph-pressed bg-primary/5 text-primary"
-                        : "hover:bg-primary/5"
-                    }`}
-                  >
-                    <User size={18} />
-                    <span>Personal Info</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setActiveTab("medical")}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      activeTab === "medical"
-                        ? "neumorph-pressed bg-primary/5 text-primary"
-                        : "hover:bg-primary/5"
-                    }`}
-                  >
-                    <HeartPulse size={18} />
-                    <span>Medical Info</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setActiveTab("settings")}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      activeTab === "settings"
-                        ? "neumorph-pressed bg-primary/5 text-primary"
-                        : "hover:bg-primary/5"
-                    }`}
-                  >
-                    <Settings size={18} />
-                    <span>Preferences</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setActiveTab("security")}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      activeTab === "security"
-                        ? "neumorph-pressed bg-primary/5 text-primary"
-                        : "hover:bg-primary/5"
-                    }`}
-                  >
-                    <Shield size={18} />
-                    <span>Security</span>
-                  </button>
-                </li>
+                {isLoading ? (
+                  <>
+                    <li>
+                      <Skeleton className="w-full h-12" />
+                    </li>
+                    <li>
+                      <Skeleton className="w-full h-12" />
+                    </li>
+                    <li>
+                      <Skeleton className="w-full h-12" />
+                    </li>
+                    <li>
+                      <Skeleton className="w-full h-12" />
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <button
+                        onClick={() => setActiveTab("personal")}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                          activeTab === "personal"
+                            ? "neumorph-pressed bg-primary/5 text-primary"
+                            : "hover:bg-primary/5"
+                        }`}
+                      >
+                        <User size={18} />
+                        <span>Personal Info</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => setActiveTab("medical")}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                          activeTab === "medical"
+                            ? "neumorph-pressed bg-primary/5 text-primary"
+                            : "hover:bg-primary/5"
+                        }`}
+                      >
+                        <HeartPulse size={18} />
+                        <span>Medical Info</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => setActiveTab("settings")}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                          activeTab === "settings"
+                            ? "neumorph-pressed bg-primary/5 text-primary"
+                            : "hover:bg-primary/5"
+                        }`}
+                      >
+                        <Settings size={18} />
+                        <span>Preferences</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => setActiveTab("security")}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                          activeTab === "security"
+                            ? "neumorph-pressed bg-primary/5 text-primary"
+                            : "hover:bg-primary/5"
+                        }`}
+                      >
+                        <Shield size={18} />
+                        <span>Security</span>
+                      </button>
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
           </div>
@@ -304,19 +347,48 @@ export default function ProfilePage() {
           {/* Right Content Area */}
           <div className="md:col-span-3">
             <div className="neumorph-card p-6 rounded-xl">
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="w-full h-8" />
-                  <Skeleton className="w-3/4 h-6" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Skeleton className="w-full h-12" />
-                    <Skeleton className="w-full h-12" />
-                  </div>
-                  <Skeleton className="w-full h-12" />
-                  <Skeleton className="w-full h-32" />
-                </div>
+              {isLoading || !profile ? (
+                <SkeletonTabContent />
               ) : (
-                tabContent[activeTab as keyof typeof tabContent]
+                (() => {
+                  switch (activeTab) {
+                    case "personal":
+                      return (
+                        <ProfileInfo
+                          profile={profile}
+                          onUpdate={handleProfileUpdate}
+                        />
+                      );
+                    case "medical":
+                      return (
+                        <ProfileMedical
+                          profile={profile}
+                          onUpdate={handleProfileUpdate}
+                        />
+                      );
+                    case "settings":
+                      return (
+                        <ProfileSettings
+                          profile={profile}
+                          onUpdate={handleProfileUpdate}
+                        />
+                      );
+                    case "security":
+                      return (
+                        <ProfileSecurity
+                          profile={profile}
+                          onUpdate={handleProfileUpdate}
+                        />
+                      );
+                    default:
+                      return (
+                        <ProfileInfo
+                          profile={profile}
+                          onUpdate={handleProfileUpdate}
+                        />
+                      );
+                  }
+                })()
               )}
             </div>
           </div>
