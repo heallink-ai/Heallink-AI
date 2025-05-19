@@ -2,9 +2,15 @@ import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { jwtDecode } from "jwt-decode";
 
 // Import API client for custom authentication
-import { loginUser, socialLogin, verifyOtp } from "./api/auth-api";
+import {
+  loginUser,
+  socialLogin,
+  verifyOtp,
+  refreshAuthToken,
+} from "./api/auth-api";
 import { AuthProvider, UserRole } from "./types/auth-types";
 
 // Force Node.js runtime
@@ -208,6 +214,46 @@ export const authConfig: NextAuthConfig = {
           ...user,
           provider: account.provider,
         };
+      }
+
+      // Handle token refresh - check if access token is about to expire
+      if (token.accessToken) {
+        try {
+          // Check expiration of the token
+          const decodedToken = jwtDecode<{ exp: number }>(
+            token.accessToken as string
+          );
+          const currentTime = Math.floor(Date.now() / 1000);
+          const timeUntilExpiry = decodedToken.exp - currentTime;
+
+          // If token expires in less than 5 minutes, refresh it
+          if (timeUntilExpiry < 300) {
+            authLog("Access token expiring soon, attempting refresh");
+            const refreshResult = await refreshAuthToken(
+              token.refreshToken as string
+            );
+
+            if (refreshResult.data) {
+              authLog("Token refreshed successfully");
+              token.accessToken = refreshResult.data.accessToken;
+              token.refreshToken = refreshResult.data.refreshToken;
+              // Update the expiry time in the token for logging
+              const newExpiry = jwtDecode<{ exp: number }>(
+                refreshResult.data.accessToken
+              ).exp;
+              authLog(
+                `New token expiry: ${new Date(newExpiry * 1000).toISOString()}`
+              );
+            } else {
+              authLog("Token refresh failed:", refreshResult.error);
+              // Don't invalidate the session here; let the request proceed with the old token
+              // The API will return a 401 if the token is invalid, and the frontend can handle that
+            }
+          }
+        } catch (error) {
+          authLog("Error checking token expiration:", error);
+          // Continue with the existing token
+        }
       }
 
       return token;

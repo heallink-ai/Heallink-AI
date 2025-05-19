@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "@/app/theme/ThemeProvider";
 import { toast } from "react-hot-toast";
 
 // Component imports
@@ -15,12 +14,13 @@ import ProfileInfo from "@/app/features/profile/components/ProfileInfo";
 import ProfileSettings from "@/app/features/profile/components/ProfileSettings";
 import ProfileMedical from "@/app/features/profile/components/ProfileMedical";
 import ProfileSecurity from "@/app/features/profile/components/ProfileSecurity";
+import { ProfileAvatarUpload } from "@/app/features/profile/components/ProfileAvatarUpload";
 
 // Icons
 import { User, Settings, Shield, HeartPulse } from "lucide-react";
 
 // API & Types
-import { UserProfileData } from "@/app/features/profile/types";
+import { UserProfileFormData } from "@/app/features/profile/types";
 import {
   useCurrentUserProfile,
   useUpdateUserProfile,
@@ -30,21 +30,10 @@ import {
 // Mock data for fallback
 import { mockUserProfile } from "@/app/features/profile/mockData";
 
-// Define Notification type for typechecking
-type NotificationType = "appointment" | "message" | "payment";
-
-interface Notification {
-  id: number;
-  type: NotificationType;
-  message: string;
-  time: string;
-}
-
 export default function ProfilePage() {
-  const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
-  const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // React Query hooks for profile data
   const {
@@ -75,7 +64,7 @@ export default function ProfilePage() {
     notifications: [
       {
         id: 1,
-        type: "appointment" as NotificationType,
+        type: "appointment" as const,
         message: "Appointment with Dr. Williams tomorrow",
         time: "1 hour ago",
       },
@@ -84,16 +73,16 @@ export default function ProfilePage() {
 
   // Skeleton loader
   const Skeleton = ({ className }: { className?: string }) => (
-    <div
-      className={`animate-pulse bg-primary/10 rounded-lg ${className}`}
-    ></div>
+    <span
+      className={`inline-block animate-pulse bg-primary/10 rounded-lg ${className}`}
+    ></span>
   );
 
   // Handle profile update
-  const handleProfileUpdate = async (data: any) => {
+  const handleProfileUpdate = async (data: Partial<UserProfileFormData>) => {
     try {
       updateProfile(data, {
-        onSuccess: (updatedData) => {
+        onSuccess: () => {
           toast.success("Profile updated successfully");
           return true;
         },
@@ -113,12 +102,10 @@ export default function ProfilePage() {
 
   // Handle avatar upload
   const handleAvatarUpload = async (file: File) => {
+    setIsUploading(true);
     try {
-      let avatarUrl: string | null = null;
-
       uploadAvatar(file, {
-        onSuccess: (response) => {
-          avatarUrl = response.avatarUrl;
+        onSuccess: () => {
           toast.success("Profile picture updated successfully");
           refetchProfile(); // Refresh profile data
         },
@@ -126,13 +113,14 @@ export default function ProfilePage() {
           console.error("Failed to upload avatar:", error);
           toast.error("Failed to upload profile picture");
         },
+        onSettled: () => {
+          setIsUploading(false);
+        },
       });
-
-      return avatarUrl;
     } catch (error) {
       console.error("Failed to upload avatar:", error);
       toast.error("Failed to upload profile picture");
-      return null;
+      setIsUploading(false);
     }
   };
 
@@ -186,9 +174,19 @@ export default function ProfilePage() {
 
         {/* Profile Header */}
         <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+          <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+            {/* Avatar Upload Section */}
+            <div className="order-1 md:order-none">
+              <ProfileAvatarUpload
+                avatarUrl={profileData.avatarUrl}
+                name={profileData.name}
+                onAvatarChange={handleAvatarUpload}
+                isUploading={isUploading}
+              />
+            </div>
+
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2 text-center md:text-left">
                 {isLoading ? (
                   <Skeleton className="w-40 h-8" />
                 ) : (
@@ -197,13 +195,13 @@ export default function ProfilePage() {
                   </>
                 )}
               </h1>
-              <p className="text-foreground/60">
+              <div className="text-foreground/60 text-center md:text-left">
                 {isLoading ? (
                   <Skeleton className="w-64 h-5" />
                 ) : (
                   "Manage your account settings and preferences"
                 )}
-              </p>
+              </div>
             </div>
 
             {/* Action buttons */}

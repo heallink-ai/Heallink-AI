@@ -158,7 +158,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
-      expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
+      expiresIn: this.configService.get<string>('jwt.expiresIn') || '30m',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
@@ -192,36 +192,81 @@ export class AuthService {
     userId: string,
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const user = await this.usersService.findOne(userId);
+    try {
+      const user = await this.usersService.findOne(userId);
 
-    if (!user || user.refreshToken !== refreshToken) {
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const payload = { sub: user._id, email: user.email, role: user.role };
+
+      const accessToken = this.jwtService.sign(payload, {
+        secret:
+          this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
+        expiresIn: this.configService.get<string>('jwt.expiresIn') || '30m', // Extended from 15m to 30m to match NextAuth session
+      });
+
+      // Only issue a new refresh token if the existing one is nearing expiration
+      // This will allow more frequent access token refreshes without changing the refresh token
+      let newRefreshToken = refreshToken;
+      try {
+        // Decode the token to check expiration
+        const decoded = this.jwtService.decode(refreshToken) as {
+          exp?: number;
+        };
+        const now = Math.floor(Date.now() / 1000);
+
+        // If refresh token will expire in less than 1 day or is invalid, issue a new one
+        if (
+          decoded &&
+          typeof decoded === 'object' &&
+          decoded.exp &&
+          decoded.exp - now < 86400
+        ) {
+          newRefreshToken = this.jwtService.sign(payload, {
+            secret:
+              this.configService.get<string>('jwt.refreshSecret') ||
+              'dev-jwt-refresh-secret',
+            expiresIn:
+              this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
+          });
+
+          // Update the refresh token in the user document
+          await this.usersService.updateRefreshToken(
+            user._id.toString(),
+            newRefreshToken,
+          );
+        }
+      } catch (decodeError) {
+        // If token decoding fails, issue a new refresh token anyway
+        newRefreshToken = this.jwtService.sign(payload, {
+          secret:
+            this.configService.get<string>('jwt.refreshSecret') ||
+            'dev-jwt-refresh-secret',
+          expiresIn:
+            this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
+        });
+
+        // Update the refresh token in the user document
+        await this.usersService.updateRefreshToken(
+          user._id.toString(),
+          newRefreshToken,
+        );
+      }
+
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error: unknown) {
+      // Log the error for debugging
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error refreshing tokens: ${errorMessage}`, errorStack);
       throw new UnauthorizedException('Invalid refresh token');
     }
-
-    const payload = { sub: user._id, email: user.email, role: user.role };
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
-      expiresIn: this.configService.get<string>('jwt.expiresIn') || '15m',
-    });
-
-    const newRefreshToken = this.jwtService.sign(payload, {
-      secret:
-        this.configService.get<string>('jwt.refreshSecret') ||
-        'dev-jwt-refresh-secret',
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
-    });
-
-    // Update the refresh token in the user document
-    await this.usersService.updateRefreshToken(
-      user._id.toString(),
-      newRefreshToken,
-    );
-
-    return {
-      accessToken,
-      refreshToken: newRefreshToken,
-    };
   }
 
   async logout(userId: string): Promise<void> {

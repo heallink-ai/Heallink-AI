@@ -11,6 +11,7 @@ import {
   UploadedFile,
   Request,
   BadRequestException,
+  UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -37,6 +38,18 @@ interface MulterFile {
   buffer: Buffer;
 }
 
+// Define a type for the multer callbacks
+type FileNameCallback = (error: null, filename: string) => void;
+
+// Define a type for the authenticated request
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    email?: string;
+    role: UserRole;
+  };
+}
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -57,14 +70,17 @@ export class UsersController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@Request() req) {
+  async getProfile(@Request() req: AuthenticatedRequest) {
     // req.user is set by JwtStrategy.validate
     return this.usersService.findOne(req.user.id);
   }
 
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
-  async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+  async updateProfile(
+    @Request() req: AuthenticatedRequest,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(req.user.id, updateUserDto);
   }
 
@@ -87,14 +103,13 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 
-  @Post(':id/avatar')
+  @Post('profile/avatar')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: diskStorage({
         destination: './uploads/avatars',
-        filename: (req, file, cb) => {
-          // Generate a unique filename with original extension
+        filename: (req, file, cb: FileNameCallback) => {
           const uniqueFilename = `${uuidv4()}${extname(file.originalname)}`;
           cb(null, uniqueFilename);
         },
@@ -102,13 +117,44 @@ export class UsersController {
       limits: {
         fileSize: 5 * 1024 * 1024, // 5MB limit
       },
-      fileFilter: (req, file, cb) => {
-        // Allow only images
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
-          cb(new BadRequestException('Only image files are allowed!'), false);
-          return;
-        }
-        cb(null, true);
+    }),
+  )
+  async uploadProfileAvatar(
+    @Request() req: AuthenticatedRequest,
+    @UploadedFile() file: MulterFile,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Validate the file is an image
+    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+      throw new UnsupportedMediaTypeException('Only image files are allowed');
+    }
+
+    // Build the URL to the uploaded file
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3003/api/v1';
+    const avatarUrl = `${baseUrl}/uploads/avatars/${file.filename}`;
+
+    // Update the user's avatarUrl field using the ID from the JWT token
+    await this.usersService.update(req.user.id, { avatarUrl });
+
+    return { avatarUrl };
+  }
+
+  @Post(':id/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './uploads/avatars',
+        filename: (req, file, cb: FileNameCallback) => {
+          const uniqueFilename = `${uuidv4()}${extname(file.originalname)}`;
+          cb(null, uniqueFilename);
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
       },
     }),
   )
@@ -118,6 +164,11 @@ export class UsersController {
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
+    }
+
+    // Validate the file is an image
+    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+      throw new UnsupportedMediaTypeException('Only image files are allowed');
     }
 
     // Build the URL to the uploaded file

@@ -32,6 +32,11 @@ const nextConfig = {
         hostname: "platform-lookaside.fbsbx.com",
         pathname: "**",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        pathname: "**",
+      },
     ],
   },
   typescript: {

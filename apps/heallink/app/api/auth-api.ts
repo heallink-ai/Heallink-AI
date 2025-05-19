@@ -11,6 +11,7 @@ import {
   PasswordResetRequestPayload,
   ResetPasswordPayload,
 } from "../api-types";
+import { jwtDecode } from "jwt-decode";
 
 // User type definition
 interface User {
@@ -260,7 +261,7 @@ export async function verifyOtp(
 /**
  * Refresh access token
  */
-export async function refreshToken(
+export async function refreshAuthToken(
   refreshToken: string
 ): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
   try {
@@ -557,4 +558,117 @@ export async function resetPassword({
       error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
+}
+
+/**
+ * Checks if the current token is valid or needs refresh
+ */
+export async function checkAndRefreshToken(
+  accessToken: string | undefined,
+  refreshToken: string | undefined
+): Promise<{ accessToken: string; refreshToken: string } | null> {
+  if (!accessToken || !refreshToken) {
+    console.warn("Missing tokens for refresh check");
+    return null;
+  }
+
+  try {
+    // Check if token is expired or will expire in the next 60 seconds
+    const decodedToken = jwtDecode<{ exp: number }>(accessToken);
+    const currentTime = Math.floor(Date.now() / 1000);
+    const timeUntilExpiry = decodedToken.exp - currentTime;
+
+    // If token is valid for more than one minute, no need to refresh
+    if (timeUntilExpiry > 60) {
+      return { accessToken, refreshToken };
+    }
+
+    // Token is expired or will expire soon, try to refresh
+    console.log("Token expiring soon, refreshing...");
+    const { data, error } = await refreshAuthToken(refreshToken);
+
+    if (error || !data) {
+      console.error("Failed to refresh token:", error);
+      // Session is invalid, return null to trigger a new login
+      return null;
+    }
+
+    return {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+    };
+  } catch (error) {
+    console.error("Error checking token expiration:", error);
+    return null;
+  }
+}
+
+/**
+ * Makes an authenticated API request with token refresh if needed
+ *
+ * Note: This function is kept for backwards compatibility and simple cases.
+ * For most cases, consider using the React Query-based hooks instead.
+ */
+export async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+  accessToken?: string,
+  refreshToken?: string
+): Promise<Response> {
+  // Try to get tokens from session if not provided
+  if (!accessToken || !refreshToken) {
+    try {
+      // This works only on client-side
+      const session =
+        typeof window !== "undefined"
+          ? // This is a simplified approach. In a real app, you'd use a proper session management solution
+            JSON.parse(sessionStorage.getItem("auth-session") || "{}")
+          : null;
+
+      if (session?.accessToken && session?.refreshToken) {
+        accessToken = session.accessToken;
+        refreshToken = session.refreshToken;
+      }
+    } catch (error) {
+      console.error("Error getting session data:", error);
+    }
+  }
+
+  // If we still don't have tokens, proceed without authentication
+  if (!accessToken || !refreshToken) {
+    return fetch(url, options);
+  }
+
+  // Check and refresh token if needed
+  const tokens = await checkAndRefreshToken(accessToken, refreshToken);
+
+  if (!tokens) {
+    // Token refresh failed, proceed with original request (will likely fail)
+    return fetch(url, options);
+  }
+
+  // If tokens were refreshed, update the session storage
+  if (tokens.accessToken !== accessToken) {
+    try {
+      if (typeof window !== "undefined") {
+        const session = JSON.parse(
+          sessionStorage.getItem("auth-session") || "{}"
+        );
+        session.accessToken = tokens.accessToken;
+        session.refreshToken = tokens.refreshToken;
+        sessionStorage.setItem("auth-session", JSON.stringify(session));
+      }
+    } catch (error) {
+      console.error("Error updating session data:", error);
+    }
+  }
+
+  // Add the (possibly refreshed) token to the request
+  const headers = new Headers(options.headers || {});
+  headers.set("Authorization", `Bearer ${tokens.accessToken}`);
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
 }
