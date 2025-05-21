@@ -146,16 +146,20 @@ export default function ProfileSettings({
         </div>
         <button
           type="button"
-          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-            enabled ? "bg-primary" : "bg-muted"
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
+            enabled
+              ? "bg-gradient-to-r from-purple-heart to-royal-blue border-transparent"
+              : "bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
           }`}
           role="switch"
           aria-checked={enabled}
           onClick={onChange}
         >
           <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-              enabled ? "translate-x-5" : "translate-x-0"
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out ${
+              enabled
+                ? "translate-x-5 bg-white"
+                : "translate-x-0 bg-gray-100 dark:bg-gray-400"
             }`}
           />
         </button>
@@ -293,14 +297,23 @@ export default function ProfileSettings({
                           }}
                           className={`p-4 rounded-xl flex flex-col items-center gap-2 transition-all border-2 ${
                             theme === "light"
-                              ? "border-primary bg-primary/10"
-                              : "border-border hover:border-primary/40"
+                              ? "border-purple-heart shadow-lg shadow-purple-heart/20 bg-gradient-to-r from-purple-heart/10 to-royal-blue/10"
+                              : "border-gray-200 dark:border-gray-700 hover:border-purple-heart/30"
                           }`}
                         >
-                          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
+                          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md">
                             <SunMedium size={24} className="text-yellow-500" />
                           </div>
-                          <span className="font-medium">Light</span>
+                          <span
+                            className={`font-medium ${theme === "light" ? "text-purple-heart" : ""}`}
+                          >
+                            Light
+                          </span>
+                          {theme === "light" && (
+                            <span className="absolute top-2 right-2 bg-purple-heart text-white rounded-full p-1">
+                              <Check size={12} />
+                            </span>
+                          )}
                         </button>
 
                         <button
@@ -314,10 +327,10 @@ export default function ProfileSettings({
                               },
                             }));
                           }}
-                          className={`p-4 rounded-xl flex flex-col items-center gap-2 transition-all border-2 ${
+                          className={`p-4 rounded-xl flex flex-col items-center gap-2 transition-all border-2 relative ${
                             theme === "dark"
-                              ? "border-primary bg-primary/10"
-                              : "border-border hover:border-primary/40"
+                              ? "border-royal-blue shadow-lg shadow-royal-blue/20 bg-gradient-to-r from-purple-heart/10 to-royal-blue/10"
+                              : "border-gray-200 dark:border-gray-700 hover:border-royal-blue/30"
                           }`}
                         >
                           <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center shadow-lg">
@@ -447,10 +460,7 @@ export default function ProfileSettings({
         <button
           onClick={handleSaveSettings}
           disabled={isSaving}
-          className="px-6 py-3 rounded-xl neumorph-button neumorph-accent-primary flex items-center gap-2 text-primary font-medium hover:transform hover:-translate-y-1 transition-transform dark:text-white"
-          style={{
-            boxShadow: `0 10px 25px ${shadowColor}`,
-          }}
+          className="px-6 py-3 rounded-xl flex items-center gap-2 font-medium transition-all bg-gradient-to-r from-purple-heart to-royal-blue text-white hover:shadow-lg hover:shadow-purple-heart/25 border border-purple-heart/50"
         >
           {isSaving ? (
             <>

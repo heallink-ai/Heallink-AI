@@ -21,29 +21,31 @@ import {
 import { UserProfileData, UserProfileFormData } from "../types";
 
 interface ProfileMedicalProps {
-  profile: UserProfileData;
+  profile: UserProfileData | null | undefined;
   onUpdate: (data: UserProfileFormData) => Promise<boolean | undefined>;
+  isLoading: boolean;
 }
 
 export default function ProfileMedical({
   profile,
   onUpdate,
+  isLoading,
 }: ProfileMedicalProps) {
   const { theme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: profile.name,
+    name: profile?.name || "",
     medicalInformation: {
-      bloodType: profile.medicalInformation?.bloodType || "unknown",
-      allergies: profile.medicalInformation?.allergies || [],
-      medications: profile.medicalInformation?.medications || [],
-      chronicConditions: profile.medicalInformation?.chronicConditions || [],
-      insuranceProvider: profile.medicalInformation?.insuranceProvider || "",
+      bloodType: profile?.medicalInformation?.bloodType || "unknown",
+      allergies: profile?.medicalInformation?.allergies || [],
+      medications: profile?.medicalInformation?.medications || [],
+      chronicConditions: profile?.medicalInformation?.chronicConditions || [],
+      insuranceProvider: profile?.medicalInformation?.insuranceProvider || "",
       insurancePolicyNumber:
-        profile.medicalInformation?.insurancePolicyNumber || "",
+        profile?.medicalInformation?.insurancePolicyNumber || "",
       primaryCarePhysician:
-        profile.medicalInformation?.primaryCarePhysician || "",
+        profile?.medicalInformation?.primaryCarePhysician || "",
     },
   });
 
@@ -71,6 +73,23 @@ export default function ProfileMedical({
     hidden: { opacity: 0, x: -10 },
     visible: { opacity: 1, x: 0 },
   };
+
+  // If profile is not available, show a loading state
+  if (!profile) {
+    return (
+      <div className="space-y-6 pt-20 sm:pt-12 pb-8">
+        <div className="neumorph-card p-8 rounded-xl">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-primary/10 rounded w-1/3"></div>
+            <div className="h-4 bg-primary/10 rounded w-2/3"></div>
+            <div className="h-32 bg-primary/5 rounded"></div>
+            <div className="h-4 bg-primary/10 rounded w-1/2"></div>
+            <div className="h-4 bg-primary/10 rounded w-1/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Handle form change
   const handleChange = (
@@ -256,9 +275,9 @@ export default function ProfileMedical({
                           <Droplets className="text-red-500" size={20} />
                         </div>
                         <span className="text-xl font-semibold">
-                          {profile.medicalInformation?.bloodType === "unknown"
+                          {profile?.medicalInformation?.bloodType === "unknown"
                             ? "Unknown"
-                            : profile.medicalInformation?.bloodType}
+                            : profile?.medicalInformation?.bloodType}
                         </span>
                       </div>
                     </>
@@ -291,7 +310,7 @@ export default function ProfileMedical({
                           <Shield className="text-blue-500" size={20} />
                         </div>
                         <span className="text-md font-medium">
-                          {profile.medicalInformation?.insuranceProvider ||
+                          {profile?.medicalInformation?.insuranceProvider ||
                             "Not specified"}
                         </span>
                       </div>
@@ -327,7 +346,7 @@ export default function ProfileMedical({
                           <FileText className="text-purple-500" size={20} />
                         </div>
                         <span className="text-md font-medium">
-                          {profile.medicalInformation?.insurancePolicyNumber ||
+                          {profile?.medicalInformation?.insurancePolicyNumber ||
                             "Not specified"}
                         </span>
                       </div>
@@ -361,7 +380,7 @@ export default function ProfileMedical({
                           <User className="text-green-500" size={20} />
                         </div>
                         <span className="text-md font-medium">
-                          {profile.medicalInformation?.primaryCarePhysician ||
+                          {profile?.medicalInformation?.primaryCarePhysician ||
                             "Not specified"}
                         </span>
                       </div>
@@ -437,7 +456,7 @@ export default function ProfileMedical({
                 </div>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {!profile.medicalInformation?.allergies?.length ? (
+                  {!profile?.medicalInformation?.allergies?.length ? (
                     <div className="py-8 flex flex-col items-center justify-center text-center">
                       <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mb-3">
                         <AlertTriangle className="text-yellow-500" size={20} />
@@ -450,7 +469,7 @@ export default function ProfileMedical({
                       </p>
                     </div>
                   ) : (
-                    profile.medicalInformation?.allergies?.map(
+                    profile?.medicalInformation?.allergies?.map(
                       (allergy, index) => (
                         <motion.div
                           key={`allergy-${index}`}
@@ -538,7 +557,7 @@ export default function ProfileMedical({
                 </div>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {!profile.medicalInformation?.medications?.length ? (
+                  {!profile?.medicalInformation?.medications?.length ? (
                     <div className="py-8 flex flex-col items-center justify-center text-center">
                       <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-3">
                         <Pill className="text-blue-500" size={20} />
@@ -551,7 +570,7 @@ export default function ProfileMedical({
                       </p>
                     </div>
                   ) : (
-                    profile.medicalInformation?.medications?.map(
+                    profile?.medicalInformation?.medications?.map(
                       (medication, index) => (
                         <motion.div
                           key={`medication-${index}`}
@@ -639,7 +658,7 @@ export default function ProfileMedical({
                 </div>
               ) : (
                 <div>
-                  {!profile.medicalInformation?.chronicConditions?.length ? (
+                  {!profile?.medicalInformation?.chronicConditions?.length ? (
                     <div className="py-8 flex flex-col items-center justify-center text-center">
                       <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mb-3">
                         <Activity className="text-green-500" size={20} />
@@ -653,7 +672,7 @@ export default function ProfileMedical({
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {profile.medicalInformation?.chronicConditions?.map(
+                      {profile?.medicalInformation?.chronicConditions?.map(
                         (condition, index) => (
                           <motion.div
                             key={`condition-${index}`}

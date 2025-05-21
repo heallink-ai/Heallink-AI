@@ -14,7 +14,7 @@ import {
 } from "@/app/hooks/useUserApi";
 
 // Presentation components
-import ProfilePage from "../components/ProfilePage";
+import NeuProfilePage from "../components/NeuProfilePage";
 
 export default function ProfileContainer() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -111,7 +111,7 @@ export default function ProfileContainer() {
   };
 
   return (
-    <ProfilePage
+    <NeuProfilePage
       profile={profile}
       isLoading={isLoading}
       error={error}

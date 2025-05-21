@@ -365,7 +365,7 @@ export default function ProfileSecurity({
                       isSaving ||
                       formData.newPassword !== formData.confirmPassword
                     }
-                    className="w-full px-4 py-3 rounded-xl neumorph-button bg-primary/5 font-medium disabled:opacity-50 transition-all hover:bg-primary/10"
+                    className="w-full px-4 py-3 rounded-xl font-medium disabled:opacity-50 transition-all bg-gradient-to-r from-purple-heart to-royal-blue text-white border border-purple-heart/50 hover:shadow-lg hover:shadow-purple-heart/20"
                   >
                     {isSaving ? (
                       <div className="flex items-center justify-center gap-2">
@@ -401,11 +401,11 @@ export default function ProfileSecurity({
             <div className="p-6">
               <div className="space-y-6">
                 {/* Two-Factor Authentication */}
-                <div className="p-4 rounded-xl border border-border bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer">
+                <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="mt-1 h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <Smartphone className="text-primary" size={20} />
+                      <div className="mt-1 h-10 w-10 rounded-lg bg-purple-heart/20 flex items-center justify-center">
+                        <Smartphone className="text-purple-heart" size={20} />
                       </div>
                       <div>
                         <h3 className="font-medium">
