@@ -49,6 +49,28 @@ export default function ProfileMedical({
     },
   });
 
+  // Update form data when profile changes
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        medicalInformation: {
+          bloodType: profile.medicalInformation?.bloodType || "unknown",
+          allergies: profile.medicalInformation?.allergies || [],
+          medications: profile.medicalInformation?.medications || [],
+          chronicConditions:
+            profile.medicalInformation?.chronicConditions || [],
+          insuranceProvider:
+            profile.medicalInformation?.insuranceProvider || "",
+          insurancePolicyNumber:
+            profile.medicalInformation?.insurancePolicyNumber || "",
+          primaryCarePhysician:
+            profile.medicalInformation?.primaryCarePhysician || "",
+        },
+      });
+    }
+  }, [profile]);
+
   // New item state
   const [newAllergy, setNewAllergy] = useState("");
   const [newMedication, setNewMedication] = useState("");
@@ -156,7 +178,97 @@ export default function ProfileMedical({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const success = await onUpdate(formData);
+      // Filter out empty fields
+      const cleanedFormData: UserProfileFormData = {
+        name: formData.name || "",
+      };
+
+      // Only include medicalInformation if it has at least one valid field
+      const medicalInfo = { ...formData.medicalInformation };
+      let hasValidMedicalField = false;
+
+      // Include bloodType if it's not "unknown" or empty
+      if (medicalInfo.bloodType && medicalInfo.bloodType !== "unknown") {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.bloodType = medicalInfo.bloodType;
+        hasValidMedicalField = true;
+      }
+
+      // Include non-empty arrays
+      if (medicalInfo.allergies && medicalInfo.allergies.length > 0) {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.allergies = medicalInfo.allergies;
+        hasValidMedicalField = true;
+      }
+
+      if (medicalInfo.medications && medicalInfo.medications.length > 0) {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.medications =
+          medicalInfo.medications;
+        hasValidMedicalField = true;
+      }
+
+      if (
+        medicalInfo.chronicConditions &&
+        medicalInfo.chronicConditions.length > 0
+      ) {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.chronicConditions =
+          medicalInfo.chronicConditions;
+        hasValidMedicalField = true;
+      }
+
+      // Include non-empty string fields
+      if (
+        medicalInfo.insuranceProvider &&
+        medicalInfo.insuranceProvider.trim() !== ""
+      ) {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.insuranceProvider =
+          medicalInfo.insuranceProvider;
+        hasValidMedicalField = true;
+      }
+
+      if (
+        medicalInfo.insurancePolicyNumber &&
+        medicalInfo.insurancePolicyNumber.trim() !== ""
+      ) {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.insurancePolicyNumber =
+          medicalInfo.insurancePolicyNumber;
+        hasValidMedicalField = true;
+      }
+
+      if (
+        medicalInfo.primaryCarePhysician &&
+        medicalInfo.primaryCarePhysician.trim() !== ""
+      ) {
+        if (!cleanedFormData.medicalInformation) {
+          cleanedFormData.medicalInformation = {};
+        }
+        cleanedFormData.medicalInformation.primaryCarePhysician =
+          medicalInfo.primaryCarePhysician;
+        hasValidMedicalField = true;
+      }
+
+      // Only include medicalInformation if we have at least one valid field
+      if (!hasValidMedicalField) {
+        delete cleanedFormData.medicalInformation;
+      }
+
+      const success = await onUpdate(cleanedFormData);
       if (success) {
         setIsEditing(false);
       }

@@ -40,36 +40,86 @@ export default function ProfileContainer() {
       : "Failed to load profile data"
     : null;
 
-  // User data for header - only use available data, no fallbacks
-  const userData = {
-    name: profile?.name || "",
-    avatar: profile?.avatarUrl || "",
-    notifications: [
-      {
-        id: 1,
-        type: "appointment" as const,
-        message: "Appointment with Dr. Williams tomorrow",
-        time: "1 hour ago",
-      },
-    ],
-  };
-
   // Handle profile update
   const handleProfileUpdate = async (data: Partial<UserProfileFormData>) => {
     try {
-      updateProfile(data, {
-        onSuccess: () => {
-          toast.success("Profile updated successfully");
-          return true;
-        },
-        onError: (error) => {
-          console.error("Error updating profile:", error);
-          toast.error("Failed to update profile");
-          return false;
-        },
+      // Filter out any empty fields before sending to the API
+      const filteredData: Partial<UserProfileFormData> = { ...data };
+
+      // Handle empty strings at root level
+      Object.keys(filteredData).forEach((key) => {
+        const value = filteredData[key as keyof UserProfileFormData];
+        if (value === "" || value === null || value === undefined) {
+          delete filteredData[key as keyof UserProfileFormData];
+        }
       });
+
+      // Handle empty address fields
+      if (filteredData.address) {
+        const address = { ...filteredData.address };
+        let hasValidAddressField = false;
+
+        Object.keys(address).forEach((key) => {
+          const value = address[key as keyof typeof address];
+          if (value === "" || value === null || value === undefined) {
+            delete address[key as keyof typeof address];
+          } else {
+            hasValidAddressField = true;
+          }
+        });
+
+        if (!hasValidAddressField) {
+          delete filteredData.address;
+        } else {
+          filteredData.address = address;
+        }
+      }
+
+      // Handle empty emergency contact fields
+      if (filteredData.emergencyContact) {
+        const emergencyContact = { ...filteredData.emergencyContact };
+        let hasValidEmergencyField = false;
+
+        Object.keys(emergencyContact).forEach((key) => {
+          const value = emergencyContact[key as keyof typeof emergencyContact];
+          if (value === "" || value === null || value === undefined) {
+            delete emergencyContact[key as keyof typeof emergencyContact];
+          } else {
+            hasValidEmergencyField = true;
+          }
+        });
+
+        if (!hasValidEmergencyField) {
+          delete filteredData.emergencyContact;
+        } else {
+          filteredData.emergencyContact = emergencyContact;
+        }
+      }
+
+      // Only make the API call if we have data to update
+      if (Object.keys(filteredData).length > 0) {
+        updateProfile(filteredData, {
+          onSuccess: () => {
+            toast.success("Profile updated successfully");
+            return true;
+          },
+          onError: (error: unknown) => {
+            console.error("Error updating profile:", error);
+            const errorMessage =
+              error && typeof error === "object" && "message" in error
+                ? String(error.message)
+                : "Failed to update profile";
+            toast.error(errorMessage);
+            return false;
+          },
+        });
+      } else {
+        toast.success("No changes to save");
+        return false;
+      }
+
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to update profile:", error);
       toast.error("Failed to update profile");
       return false;
@@ -85,7 +135,7 @@ export default function ProfileContainer() {
           toast.success("Profile picture updated successfully");
           refetchProfile(); // Refresh profile data
         },
-        onError: (error) => {
+        onError: (error: unknown) => {
           console.error("Failed to upload avatar:", error);
           toast.error("Failed to upload profile picture");
         },
@@ -93,7 +143,7 @@ export default function ProfileContainer() {
           setIsUploading(false);
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to upload avatar:", error);
       toast.error("Failed to upload profile picture");
       setIsUploading(false);
@@ -115,7 +165,6 @@ export default function ProfileContainer() {
       profile={profile}
       isLoading={isLoading}
       error={error}
-      userData={userData}
       sidebarOpen={sidebarOpen}
       activeTab={activeTab}
       isUploading={isUploading}

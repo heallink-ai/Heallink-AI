@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useTheme } from "@/app/theme/ThemeProvider";
 import { UserProfileData } from "../types";
 import { Camera, Check, Mail, Phone, User } from "lucide-react";
+import { ImageUploadModal } from "./ImageUploadModal";
 
 interface NeuProfileHeaderProps {
   profile: UserProfileData | null;
@@ -18,10 +18,8 @@ export function NeuProfileHeader({
   uploadAvatar,
   isUploading,
 }: NeuProfileHeaderProps) {
-  const { theme } = useTheme();
   const [isHovering, setIsHovering] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getInitials = (name: string) => {
     if (!name) return "U";
@@ -33,29 +31,19 @@ export function NeuProfileHeader({
       .substring(0, 2);
   };
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      await uploadAvatar(file);
-    }
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSaveAvatar = async (file: File) => {
+    await uploadAvatar(file);
   };
 
   if (!profile) return null;
-
-  // Determine which image to show
-  const displayImage = previewUrl || profile.avatarUrl;
 
   return (
     <div className="w-full overflow-hidden">
@@ -78,55 +66,49 @@ export function NeuProfileHeader({
 
         {/* User profile content */}
         <div className="relative z-10 h-full px-6 sm:px-8 container mx-auto flex flex-col sm:flex-row items-center justify-end gap-6 sm:justify-start sm:gap-8">
-          {/* Avatar */}
-          <motion.div
-            className="absolute left-1/2 sm:left-8 -bottom-16 transform -translate-x-1/2 sm:translate-x-0"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onHoverStart={() => setIsHovering(true)}
-            onHoverEnd={() => setIsHovering(false)}
-            onClick={triggerFileInput}
-          >
-            <div className="relative h-32 w-32 rounded-full overflow-hidden cursor-pointer neumorph-flat border-4 border-background">
-              {isUploading && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80">
-                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                </div>
-              )}
+          {/* Avatar with image upload modal */}
+          <div className="absolute left-1/2 sm:left-8 -bottom-16 transform -translate-x-1/2 sm:translate-x-0">
+            <motion.div
+              className="relative h-32 w-32"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onHoverStart={() => setIsHovering(true)}
+              onHoverEnd={() => setIsHovering(false)}
+              onClick={handleOpenModal}
+            >
+              <div className="relative h-32 w-32 rounded-full overflow-hidden cursor-pointer neumorph-flat border-4 border-background">
+                {isUploading && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                  </div>
+                )}
 
-              {displayImage ? (
-                <Image
-                  src={displayImage}
-                  alt={profile.name || "Profile"}
-                  fill
-                  sizes="(max-width: 768px) 128px, 128px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-primary/20 text-3xl font-bold text-primary">
-                  {getInitials(profile.name)}
-                </div>
-              )}
+                {profile.avatarUrl ? (
+                  <Image
+                    src={profile.avatarUrl}
+                    alt={profile.name || "Profile"}
+                    fill
+                    sizes="(max-width: 768px) 128px, 128px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-primary/20 text-3xl font-bold text-primary">
+                    {getInitials(profile.name)}
+                  </div>
+                )}
 
-              {/* Camera icon overlay */}
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center bg-black/50"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isHovering ? 1 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Camera size={32} className="text-white" />
-              </motion.div>
-            </div>
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </motion.div>
+                {/* Camera icon overlay */}
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center bg-black/50"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isHovering ? 1 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Camera size={32} className="text-white" />
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
 
           {/* User Info */}
           <div className="text-center sm:text-right ml-auto mr-8 sm:mr-16 text-white pb-8">
@@ -179,6 +161,15 @@ export function NeuProfileHeader({
           </div>
         </div>
       </div>
+
+      {/* Image Upload Modal */}
+      <ImageUploadModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveAvatar}
+        currentImageUrl={profile.avatarUrl}
+        isUploading={isUploading}
+      />
     </div>
   );
 }

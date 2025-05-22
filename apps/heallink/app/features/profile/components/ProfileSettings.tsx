@@ -38,9 +38,9 @@ export default function ProfileSettings({
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState({
     notifications: {
-      email: true,
-      sms: true,
-      push: false,
+      email: profile?.communicationPreferences?.email || true,
+      sms: profile?.communicationPreferences?.sms || true,
+      push: profile?.communicationPreferences?.push || false,
       appointments: true,
       updates: true,
       marketing: false,
@@ -53,6 +53,21 @@ export default function ProfileSettings({
       theme: theme,
     },
   });
+
+  // Update settings when profile changes
+  React.useEffect(() => {
+    if (profile) {
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        notifications: {
+          ...prevSettings.notifications,
+          email: profile.communicationPreferences?.email || true,
+          sms: profile.communicationPreferences?.sms || true,
+          push: profile.communicationPreferences?.push || false,
+        },
+      }));
+    }
+  }, [profile]);
 
   // Shadow color based on theme
   const shadowColor =
@@ -112,9 +127,17 @@ export default function ProfileSettings({
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      await onUpdate({
+      // Create a clean object with only the fields we want to update
+      const updatedData: Partial<UserProfileFormData> = {
         name: profile.name,
-      });
+        communicationPreferences: {
+          email: settings.notifications.email,
+          sms: settings.notifications.sms,
+          push: settings.notifications.push,
+        },
+      };
+
+      await onUpdate(updatedData);
       // We don't change the theme based on settings.preferences.theme
       // because that's handled by the ThemeProvider independently
     } catch (error) {

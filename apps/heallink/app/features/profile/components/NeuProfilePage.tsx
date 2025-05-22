@@ -83,7 +83,9 @@ export default function NeuProfilePage({
           profile={profile || null}
           uploadAvatar={(file: File) => {
             if (onAvatarUpload) {
-              onAvatarUpload(file);
+              return onAvatarUpload(file).then(() =>
+                Promise.resolve(profile?.avatarUrl)
+              );
             }
             return Promise.resolve(null);
           }}

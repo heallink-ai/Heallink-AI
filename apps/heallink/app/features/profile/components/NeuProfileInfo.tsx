@@ -62,6 +62,31 @@ export function NeuProfileInfo({ profile, onUpdate }: NeuProfileInfoProps) {
     },
   });
 
+  // Update form data when profile changes
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        dateOfBirth: profile.dateOfBirth || "",
+        gender: profile.gender,
+        address: {
+          streetAddress: profile.address?.streetAddress || "",
+          city: profile.address?.city || "",
+          state: profile.address?.state || "",
+          zipCode: profile.address?.zipCode || "",
+          country: profile.address?.country || "",
+        },
+        emergencyContact: {
+          name: profile.emergencyContact?.name || "",
+          relationship: profile.emergencyContact?.relationship || "",
+          phone: profile.emergencyContact?.phone || "",
+        },
+      });
+    }
+  }, [profile]);
+
   // If profile is not available, show a loading state
   if (!profile) {
     return (
@@ -142,7 +167,110 @@ export function NeuProfileInfo({ profile, onUpdate }: NeuProfileInfoProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const success = await onUpdate(formData);
+      // Create a cleaned version of form data without empty fields
+      const cleanedFormData: UserProfileFormData = {
+        name: formData.name || "",
+      };
+
+      // Only add non-empty fields
+      if (formData.email && formData.email.trim() !== "") {
+        cleanedFormData.email = formData.email;
+      }
+
+      if (formData.phone && formData.phone.trim() !== "") {
+        cleanedFormData.phone = formData.phone;
+      }
+
+      if (formData.dateOfBirth && formData.dateOfBirth.trim() !== "") {
+        cleanedFormData.dateOfBirth = formData.dateOfBirth;
+      }
+
+      if (formData.gender) {
+        cleanedFormData.gender = formData.gender;
+      }
+
+      // Handle address fields
+      if (formData.address) {
+        let hasValidAddressField = false;
+        const address: Record<string, string> = {};
+
+        if (
+          formData.address.streetAddress &&
+          formData.address.streetAddress.trim() !== ""
+        ) {
+          address.streetAddress = formData.address.streetAddress;
+          hasValidAddressField = true;
+        }
+
+        if (formData.address.city && formData.address.city.trim() !== "") {
+          address.city = formData.address.city;
+          hasValidAddressField = true;
+        }
+
+        if (formData.address.state && formData.address.state.trim() !== "") {
+          address.state = formData.address.state;
+          hasValidAddressField = true;
+        }
+
+        if (
+          formData.address.zipCode &&
+          formData.address.zipCode.trim() !== ""
+        ) {
+          address.zipCode = formData.address.zipCode;
+          hasValidAddressField = true;
+        }
+
+        if (
+          formData.address.country &&
+          formData.address.country.trim() !== ""
+        ) {
+          address.country = formData.address.country;
+          hasValidAddressField = true;
+        }
+
+        // Only add address if we have at least one valid field
+        if (hasValidAddressField) {
+          cleanedFormData.address = address;
+        }
+      }
+
+      // Handle emergency contact fields
+      if (formData.emergencyContact) {
+        let hasValidEmergencyField = false;
+        const emergencyContact: Record<string, string> = {};
+
+        if (
+          formData.emergencyContact.name &&
+          formData.emergencyContact.name.trim() !== ""
+        ) {
+          emergencyContact.name = formData.emergencyContact.name;
+          hasValidEmergencyField = true;
+        }
+
+        if (
+          formData.emergencyContact.relationship &&
+          formData.emergencyContact.relationship.trim() !== ""
+        ) {
+          emergencyContact.relationship =
+            formData.emergencyContact.relationship;
+          hasValidEmergencyField = true;
+        }
+
+        if (
+          formData.emergencyContact.phone &&
+          formData.emergencyContact.phone.trim() !== ""
+        ) {
+          emergencyContact.phone = formData.emergencyContact.phone;
+          hasValidEmergencyField = true;
+        }
+
+        // Only add emergency contact if we have at least one valid field
+        if (hasValidEmergencyField) {
+          cleanedFormData.emergencyContact = emergencyContact;
+        }
+      }
+
+      const success = await onUpdate(cleanedFormData);
       if (success) {
         setIsEditing(false);
       }
