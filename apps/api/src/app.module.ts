@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { LoggingModule } from './modules/logging/logging.module';
 import { EmailModule } from './modules/emails/email.module';
 import { AwsModule } from './modules/aws';
@@ -114,6 +115,7 @@ import * as Joi from 'joi';
     LoggingModule,
     UsersModule,
     AuthModule,
+    AdminModule,
     EmailModule,
     AwsModule,
   ],

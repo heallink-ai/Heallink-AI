@@ -1,4 +1,4 @@
-import { fetchApi } from "./apiClient";
+import { fetchWithAuth } from "./apiClient";
 
 // Type definitions based on backend entities
 export enum AdminRole {
@@ -54,23 +54,30 @@ export const adminApi = {
    * Get all admin users
    */
   getAllAdmins: async (): Promise<AdminUser[]> => {
-    return fetchApi<AdminUser[]>("/auth/admin/users");
+    const response = await fetchWithAuth<{
+      admins: AdminUser[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>("/admin");
+    return response.admins;
   },
 
   /**
    * Get a specific admin user by ID
    */
   getAdminById: async (id: string): Promise<AdminUser> => {
-    return fetchApi<AdminUser>(`/auth/admin/users/${id}`);
+    return fetchWithAuth<AdminUser>(`/admin/${id}`);
   },
 
   /**
    * Create a new admin user
    */
   createAdmin: async (adminData: CreateAdminDto): Promise<AdminUser> => {
-    return fetchApi<AdminUser>("/auth/admin/register", {
+    return fetchWithAuth<AdminUser>("/admin", {
       method: "POST",
-      body: JSON.stringify(adminData),
+      data: adminData,
     });
   },
 
@@ -81,9 +88,9 @@ export const adminApi = {
     id: string,
     adminData: UpdateAdminDto
   ): Promise<AdminUser> => {
-    return fetchApi<AdminUser>(`/auth/admin/users/${id}`, {
+    return fetchWithAuth<AdminUser>(`/admin/${id}`, {
       method: "PUT",
-      body: JSON.stringify(adminData),
+      data: adminData,
     });
   },
 
@@ -94,9 +101,9 @@ export const adminApi = {
     id: string,
     roleData: UpdateAdminRoleDto
   ): Promise<AdminUser> => {
-    return fetchApi<AdminUser>(`/auth/admin/users/${id}/role`, {
+    return fetchWithAuth<AdminUser>(`/admin/${id}/role`, {
       method: "PUT",
-      body: JSON.stringify(roleData),
+      data: roleData,
     });
   },
 
@@ -104,8 +111,9 @@ export const adminApi = {
    * Deactivate an admin user
    */
   deactivateAdmin: async (id: string): Promise<AdminUser> => {
-    return fetchApi<AdminUser>(`/auth/admin/users/${id}/deactivate`, {
-      method: "PUT",
+    return fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
+      method: "PATCH",
+      data: { status: false },
     });
   },
 
@@ -113,8 +121,9 @@ export const adminApi = {
    * Activate an admin user
    */
   activateAdmin: async (id: string): Promise<AdminUser> => {
-    return fetchApi<AdminUser>(`/auth/admin/users/${id}/activate`, {
-      method: "PUT",
+    return fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
+      method: "PATCH",
+      data: { status: true },
     });
   },
 
@@ -122,7 +131,7 @@ export const adminApi = {
    * Delete an admin user
    */
   deleteAdmin: async (id: string): Promise<void> => {
-    return fetchApi<void>(`/auth/admin/users/${id}`, {
+    return fetchWithAuth<void>(`/admin/${id}`, {
       method: "DELETE",
     });
   },

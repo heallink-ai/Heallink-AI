@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -229,37 +228,5 @@ export class AdminAuthController {
   ) {
     const user = req.user;
     return this.adminAuthService.updateAdminRole(updateRoleDto, user.adminRole);
-  }
-
-  @Get('all')
-  @UseGuards(JwtAuthGuard, AdminRoleGuard)
-  @AllowedRoles(AdminRole.SUPER_ADMIN, AdminRole.SYSTEM_ADMIN)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get all admin users',
-    description: 'Retrieve a list of all admin users',
-  })
-  @ApiBearerAuth('JWT-auth')
-  @ApiOkResponse({
-    description: 'List of admin users',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          email: { type: 'string' },
-          name: { type: 'string' },
-          adminRole: { type: 'string' },
-          isActive: { type: 'boolean' },
-          lastLogin: { type: 'string', format: 'date-time' },
-        },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiForbiddenResponse({ description: 'Insufficient permissions' })
-  getAllAdmins() {
-    return this.adminAuthService.getAllAdmins();
   }
 }

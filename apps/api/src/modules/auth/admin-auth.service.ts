@@ -14,10 +14,11 @@ import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 
 import {
-  AdminUser,
-  AdminRole,
+  User,
+  UserDocument,
   UserRole,
-} from '../users/entities/admin-user.entity';
+  AdminRole,
+} from '../users/schemas/user.schema';
 import {
   AdminLoginDto,
   AdminRegisterDto,
@@ -34,8 +35,8 @@ interface JwtPayload {
   sub: string;
   email: string;
   role: string;
-  adminRole: string;
-  permissions: string[];
+  adminRole?: string;
+  permissions?: string[];
 }
 
 @Injectable()
@@ -43,7 +44,7 @@ export class AdminAuthService {
   private readonly logger = new Logger(AdminAuthService.name);
 
   constructor(
-    @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUser>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private loggingService: LoggingService,
@@ -58,7 +59,12 @@ export class AdminAuthService {
   async login(adminLoginDto: AdminLoginDto) {
     const { email, password } = adminLoginDto;
 
-    const user = await this.adminUserModel.findOne({ email }).exec();
+    const user = await this.userModel
+      .findOne({
+        email,
+        role: UserRole.ADMIN,
+      })
+      .exec();
 
     if (!user) {
       this.loggingService.logAuth('unknown', 'admin-login', false, {
@@ -68,7 +74,7 @@ export class AdminAuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (!user.isActive) {
+    if (user.isActive === false) {
       this.loggingService.logAuth(
         user._id?.toString() || 'unknown',
         'admin-login',
@@ -101,8 +107,17 @@ export class AdminAuthService {
     const tokens = await this.generateTokens(user);
 
     // Store refresh token
-    user.addRefreshToken(tokens.refreshToken);
-    await user.save();
+    if (typeof user.addRefreshToken === 'function') {
+      user.addRefreshToken(tokens.refreshToken);
+      await user.save();
+    } else {
+      // Fallback if method doesn't exist - add to refreshTokens array directly
+      if (!user.refreshTokens) {
+        user.refreshTokens = [];
+      }
+      user.refreshTokens.push(tokens.refreshToken);
+      await user.save();
+    }
 
     this.loggingService.logAuth(
       user._id?.toString() || 'unknown',
@@ -143,7 +158,7 @@ export class AdminAuthService {
     }
 
     // Check if user already exists
-    const existingUser = await this.adminUserModel.findOne({ email });
+    const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
     }
@@ -153,13 +168,16 @@ export class AdminAuthService {
     const rolePermissions = ADMIN_PERMISSIONS[adminRoleEnum] || [];
 
     // Create new admin user
-    const newUser = new this.adminUserModel({
+    const newUser = new this.userModel({
       email,
       password,
       name,
       role: UserRole.ADMIN,
       adminRole: adminRoleEnum,
       permissions: rolePermissions,
+      emailVerified: false,
+      isActive: true,
+      providers: ['local'],
     });
 
     // Save the user
@@ -191,7 +209,10 @@ export class AdminAuthService {
     }
 
     // Check if any admin users already exist
-    const existingAdminsCount = await this.adminUserModel.countDocuments();
+    const existingAdminsCount = await this.userModel.countDocuments({
+      role: UserRole.ADMIN,
+    });
+
     if (existingAdminsCount > 0) {
       this.loggingService.logAuth('unknown', 'initial-admin-setup', false, {
         email,
@@ -203,7 +224,7 @@ export class AdminAuthService {
     }
 
     // Check if user with the email already exists
-    const existingUser = await this.adminUserModel.findOne({ email }).exec();
+    const existingUser = await this.userModel.findOne({ email }).exec();
     if (existingUser) {
       this.loggingService.logAuth('unknown', 'initial-admin-setup', false, {
         email,
@@ -217,7 +238,7 @@ export class AdminAuthService {
     const rolePermissions = ADMIN_PERMISSIONS[superAdminRole] || ['*'];
 
     // Create new admin user
-    const newUser = new this.adminUserModel({
+    const newUser = new this.userModel({
       email,
       password,
       name,
@@ -226,18 +247,26 @@ export class AdminAuthService {
       permissions: rolePermissions,
       emailVerified: true, // Auto-verify for initial setup
       isActive: true,
+      providers: ['local'],
     });
 
-    // Hash password before saving
-    await newUser.hashPassword();
     await newUser.save();
 
     // Generate JWT tokens
     const tokens = await this.generateTokens(newUser);
 
     // Store refresh token
-    newUser.addRefreshToken(tokens.refreshToken);
-    await newUser.save();
+    if (typeof newUser.addRefreshToken === 'function') {
+      newUser.addRefreshToken(tokens.refreshToken);
+      await newUser.save();
+    } else {
+      // Fallback if method doesn't exist
+      if (!newUser.refreshTokens) {
+        newUser.refreshTokens = [];
+      }
+      newUser.refreshTokens.push(tokens.refreshToken);
+      await newUser.save();
+    }
 
     this.loggingService.logAuth(
       newUser._id?.toString() || 'unknown',
@@ -263,7 +292,10 @@ export class AdminAuthService {
     const { email } = resetRequestDto;
 
     // Find the admin user by email
-    const user = await this.adminUserModel.findOne({ email });
+    const user = await this.userModel.findOne({
+      email,
+      role: UserRole.ADMIN,
+    });
 
     if (!user) {
       // Don't reveal if user exists for security
@@ -302,12 +334,13 @@ export class AdminAuthService {
     const { token, newPassword } = resetDto;
 
     // Find user with reset token
-    const users = await this.adminUserModel.find({
+    const users = await this.userModel.find({
       passwordResetRequestedAt: { $ne: null },
+      role: UserRole.ADMIN,
     });
 
     // Find user with matching token
-    let matchedUser: AdminUser | null = null;
+    let matchedUser: UserDocument | null = null;
     for (const u of users) {
       if (u.passwordResetToken) {
         const isMatch = await bcrypt.compare(token, u.passwordResetToken);
@@ -351,7 +384,7 @@ export class AdminAuthService {
   /**
    * Helper method to clear reset token fields
    */
-  private clearResetToken(user: AdminUser): void {
+  private clearResetToken(user: UserDocument): void {
     // Use this approach to set Mongoose fields to null
     user.set('passwordResetToken', null);
     user.set('passwordResetRequestedAt', null);
@@ -374,14 +407,23 @@ export class AdminAuthService {
    */
   async logout(userId: string, refreshToken: string) {
     // Find the user
-    const user = await this.adminUserModel.findById(userId);
+    const user = await this.userModel.findById(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     // Remove the refresh token
-    user.removeRefreshToken(refreshToken);
+    if (typeof user.removeRefreshToken === 'function') {
+      user.removeRefreshToken(refreshToken);
+    } else {
+      // Fallback if method doesn't exist
+      if (user.refreshTokens) {
+        user.refreshTokens = user.refreshTokens.filter(
+          (t) => t !== refreshToken,
+        );
+      }
+    }
     await user.save();
 
     return { message: 'Logged out successfully' };
@@ -393,14 +435,21 @@ export class AdminAuthService {
   async refreshTokens(refreshToken: string) {
     try {
       // Verify token
-      const payload = (await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-      })) as JwtPayload;
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        {
+          secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        },
+      );
 
       // Find user
-      const user = await this.adminUserModel.findById(payload.sub);
+      const user = await this.userModel.findById(payload.sub);
 
-      if (!user || !user.refreshTokens.includes(refreshToken)) {
+      if (
+        !user ||
+        !user.refreshTokens ||
+        !user.refreshTokens.includes(refreshToken)
+      ) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
@@ -408,8 +457,17 @@ export class AdminAuthService {
       const tokens = await this.generateTokens(user);
 
       // Remove old refresh token and add new one
-      user.removeRefreshToken(refreshToken);
-      user.addRefreshToken(tokens.refreshToken);
+      // Update user's refresh tokens
+      if (!user.refreshTokens) {
+        user.refreshTokens = [];
+      } else {
+        user.refreshTokens = user.refreshTokens.filter(
+          (t) => t !== refreshToken,
+        );
+      }
+
+      // Add new refresh token
+      user.refreshTokens.push(tokens.refreshToken);
       await user.save();
 
       return {
@@ -441,7 +499,7 @@ export class AdminAuthService {
     }
 
     // Find user
-    const user = await this.adminUserModel.findById(userId);
+    const user = await this.userModel.findById(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -472,32 +530,44 @@ export class AdminAuthService {
    * Get all admins (for super admin view)
    */
   async getAllAdmins() {
-    const admins = await this.adminUserModel
-      .find()
-      .select('-password -refreshTokens');
+    const admins = await this.userModel
+      .find({ role: UserRole.ADMIN })
+      .select('-password -refreshTokens')
+      .lean();
     return { admins };
   }
 
   /**
    * Helper method to generate JWT tokens
    */
-  private async generateTokens(user: AdminUser) {
-    const payload = {
+  private async generateTokens(user: UserDocument) {
+    const payload: JwtPayload = {
       sub: String(user._id),
-      email: user.email,
+      email: user.email || '',
       role: user.role,
       adminRole: user.adminRole,
       permissions: user.permissions,
     };
 
+    // Use environment variables directly to avoid config mapping issues
+    const jwtSecret = process.env.JWT_SECRET || 'dev-jwt-secret-key';
+    const jwtRefreshSecret =
+      process.env.JWT_REFRESH_SECRET ||
+      process.env.JWT_SECRET ||
+      'dev-jwt-refresh-secret-key';
+
+    this.logger.debug(
+      `Generating tokens with JWT_SECRET: ${jwtSecret ? '[SECRET CONFIGURED]' : 'fallback secret'}`,
+    );
+
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         expiresIn: '15m', // Short lived
-        secret: process.env.JWT_SECRET,
+        secret: jwtSecret,
       }),
       this.jwtService.signAsync(payload, {
         expiresIn: '7d', // Longer lived
-        secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        secret: jwtRefreshSecret,
       }),
     ]);
 
@@ -510,7 +580,7 @@ export class AdminAuthService {
   /**
    * Helper method to sanitize user object before returning
    */
-  private sanitizeUser(user: AdminUser) {
+  private sanitizeUser(user: UserDocument) {
     // Convert Mongoose document to plain JavaScript object
     const userObj = user.toObject ? user.toObject() : user;
 

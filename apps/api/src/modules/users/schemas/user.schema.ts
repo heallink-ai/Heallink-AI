@@ -8,6 +8,17 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
+export enum AdminRole {
+  SUPER_ADMIN = 'super_admin',
+  SYSTEM_ADMIN = 'system_admin',
+  USER_ADMIN = 'user_admin',
+  PROVIDER_ADMIN = 'provider_admin',
+  CONTENT_ADMIN = 'content_admin',
+  BILLING_ADMIN = 'billing_admin',
+  SUPPORT_ADMIN = 'support_admin',
+  READONLY_ADMIN = 'readonly_admin',
+}
+
 export enum AuthProvider {
   LOCAL = 'local',
   GOOGLE = 'google',
@@ -18,6 +29,9 @@ export enum AuthProvider {
 export type UserDocument = User &
   Document & {
     comparePassword(candidatePassword: string): Promise<boolean>;
+    addRefreshToken?(token: string): void;
+    removeRefreshToken?(token: string): void;
+    hasPermission?(permission: string): boolean;
   };
 
 @Schema({
@@ -33,6 +47,7 @@ export type UserDocument = User &
       delete ret.verificationTokenExpiry;
       delete ret.otpCode;
       delete ret.otpExpiry;
+      delete ret.refreshTokens;
       delete ret.__v;
       return ret;
     },
@@ -64,6 +79,26 @@ export class User {
 
   @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role: UserRole;
+
+  // Admin-specific fields
+  @Prop({
+    type: String,
+    enum: Object.values(AdminRole),
+    sparse: true,
+  })
+  adminRole?: AdminRole;
+
+  @Prop({ type: [String], default: [] })
+  permissions?: string[];
+
+  @Prop({ default: true })
+  isActive?: boolean;
+
+  @Prop({ type: Date })
+  lastLogin?: Date;
+
+  @Prop({ type: [String], default: [] })
+  refreshTokens?: string[];
 
   @Prop([{ type: String, enum: AuthProvider }])
   providers: AuthProvider[];
@@ -232,4 +267,39 @@ UserSchema.methods.comparePassword = function (
   return user.password
     ? bcrypt.compare(candidatePassword, user.password)
     : Promise.resolve(false);
+};
+
+// Method to add a refresh token
+UserSchema.methods.addRefreshToken = function (token: string): void {
+  const user = this as Document & User;
+  if (!user.refreshTokens) {
+    user.refreshTokens = [];
+  }
+  // Keep only the most recent 5 tokens
+  if (user.refreshTokens.length >= 5) {
+    user.refreshTokens = user.refreshTokens.slice(-4);
+  }
+  user.refreshTokens.push(token);
+};
+
+// Method to remove a refresh token
+UserSchema.methods.removeRefreshToken = function (token: string): void {
+  const user = this as Document & User;
+  if (user.refreshTokens) {
+    user.refreshTokens = user.refreshTokens.filter((t) => t !== token);
+  }
+};
+
+// Method to check if a user has a specific permission
+UserSchema.methods.hasPermission = function (permission: string): boolean {
+  const user = this as Document & User;
+  // Super admins have all permissions
+  if (
+    user.adminRole === AdminRole.SUPER_ADMIN ||
+    (user.permissions && user.permissions.includes('*'))
+  ) {
+    return true;
+  }
+
+  return user.permissions ? user.permissions.includes(permission) : false;
 };

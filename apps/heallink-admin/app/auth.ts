@@ -56,7 +56,7 @@ export const authConfig: NextAuthConfig = {
       redirectUrl.searchParams.append("callbackUrl", nextUrl.href);
       return Response.redirect(redirectUrl);
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
       // Initial sign in
       if (account && user) {
         // Ensure only admin users can sign in
@@ -75,6 +75,17 @@ export const authConfig: NextAuthConfig = {
           ...user,
           provider: account.provider,
         };
+      }
+
+      // Handle token updates (e.g., from token refresh)
+      if (
+        trigger === "update" &&
+        session?.accessToken &&
+        session?.refreshToken
+      ) {
+        token.accessToken = session.accessToken;
+        token.refreshToken = session.refreshToken;
+        console.log("Session tokens updated via update trigger");
       }
 
       return token;

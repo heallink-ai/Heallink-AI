@@ -58,6 +58,39 @@ export async function loginAdminUser(credentials: {
 }
 
 /**
+ * Refresh access token using refresh token
+ */
+export async function refreshToken(
+  refreshToken: string
+): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
+  try {
+    const API_URL = getApiUrl();
+    console.log("Refreshing access token");
+
+    const response = await fetch(`${API_URL}/auth/admin/refresh-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Token refresh failed:", data.message || "Unknown error");
+      return { error: data.message || "Token refresh failed" };
+    }
+
+    console.log("Token refresh successful");
+    return { data };
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    return { error: "Network error" };
+  }
+}
+
+/**
  * Request password reset for admin
  */
 export async function requestPasswordReset(
