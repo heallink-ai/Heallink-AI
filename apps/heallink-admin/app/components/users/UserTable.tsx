@@ -85,12 +85,12 @@ export default function UserTable({
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse table-auto">
           <colgroup>
-            <col className="w-auto" /> {/* Name */}
-            <col className="hidden md:table-column w-auto" /> {/* Email */}
-            <col className="w-auto" /> {/* Role */}
-            <col className="w-auto" /> {/* Status */}
-            <col className="hidden lg:table-column w-auto" /> {/* Last Login */}
-            <col className="w-[80px]" /> {/* Actions - fixed width */}
+            <col className="w-auto" />
+            <col className="hidden md:table-column w-auto" />
+            <col className="w-auto" />
+            <col className="w-auto" />
+            <col className="hidden lg:table-column w-auto" />
+            <col className="w-[80px]" />
           </colgroup>
           <thead className="sticky top-0 bg-[color:var(--card)] z-10">
             <tr className="border-b border-[color:var(--border)]">
@@ -184,9 +184,9 @@ export default function UserTable({
           </thead>
           <tbody>
             {sortedUsers.length > 0 ? (
-              sortedUsers.map((user) => (
+              sortedUsers.map((user, index) => (
                 <tr
-                  key={user.id}
+                  key={`user-row-${user.id || index}`}
                   className="border-b border-[color:var(--border)] hover:bg-[color:var(--accent)]/5"
                 >
                   <td className="p-4">
