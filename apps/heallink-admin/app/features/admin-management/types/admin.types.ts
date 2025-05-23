@@ -20,6 +20,7 @@ export interface AdminUser {
   avatarUrl?: string;
   emailVerified: boolean;
   phoneVerified: boolean;
+  isActive: boolean;
   providers: AuthProvider[];
   accounts?: Array<{
     provider: AuthProvider;

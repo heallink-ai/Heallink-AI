@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/dashboard/Header";
 import Sidebar from "../components/dashboard/Sidebar";
 import Breadcrumbs from "../components/dashboard/Breadcrumbs";
@@ -13,8 +13,29 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const { status } = useSession();
   const router = useRouter();
+
+  // Monitor screen size for mobile vs desktop view
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileView(window.innerWidth < 768);
+      // Auto-collapse sidebar on small screens
+      if (window.innerWidth < 768) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    // Initial check
+    checkScreenSize();
+
+    // Add event listener
+    window.addEventListener("resize", checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Redirect to login if user is not authenticated
   if (status === "loading") {
@@ -41,33 +62,43 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
-      <div className="flex h-screen">
-        {/* Sidebar */}
+    <div className="bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <div className="flex flex-col md:flex-row min-h-screen w-full relative">
+        {/* Sidebar - mobile: fixed with overlay, desktop: part of the flex layout */}
         <div
-          className={`fixed top-0 left-0 h-full z-20 transition-all duration-300 ${
-            sidebarCollapsed ? "w-[64px]" : "w-[240px]"
-          }`}
+          className={`${
+            isMobileView
+              ? `fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out ${
+                  sidebarCollapsed ? "-translate-x-full" : "translate-x-0"
+                }`
+              : "sticky top-0 h-screen overflow-y-auto flex-shrink-0"
+          } ${sidebarCollapsed && !isMobileView ? "w-[64px]" : "w-[240px]"}`}
         >
           <Sidebar collapsed={sidebarCollapsed} toggleSidebar={toggleSidebar} />
         </div>
 
-        {/* Main content */}
-        <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${
-            sidebarCollapsed ? "ml-[64px]" : "ml-[240px]"
-          }`}
-        >
+        {/* Overlay for mobile sidebar */}
+        {isMobileView && !sidebarCollapsed && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={toggleSidebar}
+          />
+        )}
+
+        {/* Main content - flex-grow to take remaining space */}
+        <div className="flex-1 flex flex-col min-w-0 w-full">
           {/* Header */}
           <Header toggleSidebar={toggleSidebar} />
 
           {/* Main content wrapper */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 flex flex-col overflow-hidden relative">
             {/* Breadcrumbs */}
             <Breadcrumbs />
 
-            {/* Page content */}
-            <main className="px-6 py-4">{children}</main>
+            {/* Page content - ensure scrolling */}
+            <main className="flex-1 overflow-auto p-4 sm:px-6 sm:py-4 min-w-0 w-full">
+              <div className="max-w-full">{children}</div>
+            </main>
           </div>
         </div>
       </div>

@@ -42,9 +42,11 @@ export default function AdminsPage() {
       roleFilter === "All" ||
       admin.adminRole.includes(roleFilter.toLowerCase());
 
+    // Handle status filtering based on API's isActive property
     const matchesStatus =
       statusFilter === "All" ||
-      (statusFilter === "Active" ? admin.isActive : !admin.isActive);
+      (statusFilter === "Active" && admin.status === "active") ||
+      (statusFilter === "Inactive" && admin.status === "inactive");
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -58,21 +60,21 @@ export default function AdminsPage() {
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" "),
-    status: admin.isActive ? "Active" : "Inactive",
+    status: admin.status,
     lastLogin: admin.lastLogin || null,
     created: admin.createdAt,
   }));
 
   return (
-    <div className="bg-[color:var(--background)]">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-[color:var(--background)] h-full flex flex-col">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <div className="flex items-center">
           <ShieldCheck size={24} className="mr-2 text-[color:var(--primary)]" />
           <h1 className="text-2xl font-semibold">Admin Management</h1>
         </div>
         <Link
           href="/dashboard/admins/invite"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--primary)] text-white hover:bg-[color:var(--primary-dark)] transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[color:var(--primary)] text-white hover:bg-[color:var(--primary-dark)] transition-colors w-full md:w-auto"
         >
           <UserPlus size={16} />
           <span>Invite Admin</span>
@@ -100,7 +102,7 @@ export default function AdminsPage() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3 justify-between">
             <div className="flex items-center">
               <Filter
                 size={16}
@@ -125,7 +127,7 @@ export default function AdminsPage() {
                 <option value="Readonly">Readonly Admin</option>
               </select>
             </div>
-            <div className="flex items-center ml-0 md:ml-2">
+            <div className="flex items-center">
               <span className="text-sm text-[color:var(--muted-foreground)] mr-2">
                 Status:
               </span>
@@ -145,15 +147,15 @@ export default function AdminsPage() {
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-wrap justify-between items-center">
-          <div className="text-sm text-[color:var(--muted-foreground)]">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="text-sm text-[color:var(--muted-foreground)] w-full sm:w-auto text-center sm:text-left">
             {isLoading ? (
-              <span className="flex items-center">
+              <span className="flex items-center justify-center sm:justify-start">
                 <Loader size={14} className="animate-spin mr-2" />
                 Loading administrators...
               </span>
             ) : isError ? (
-              <span className="flex items-center text-red-500">
+              <span className="flex items-center justify-center sm:justify-start text-red-500">
                 <AlertCircle size={14} className="mr-2" />
                 Error loading administrators:{" "}
                 {error instanceof Error ? error.message : "Unknown error"}
@@ -162,7 +164,7 @@ export default function AdminsPage() {
               `Showing ${filteredAdmins.length} administrators`
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
             <button className="px-3 py-1.5 rounded-lg bg-[color:var(--secondary-background)] border border-[color:var(--border)] hover:bg-[color:var(--accent)] text-sm flex items-center gap-1.5">
               <Upload size={14} />
               <span>Import</span>
@@ -176,37 +178,41 @@ export default function AdminsPage() {
       </div>
 
       {/* Admins table */}
-      {isLoading ? (
-        <div className="bg-[color:var(--card)] rounded-xl p-8 flex justify-center items-center">
-          <Loader
-            size={24}
-            className="animate-spin mr-3 text-[color:var(--primary)]"
-          />
-          <span>Loading administrators...</span>
-        </div>
-      ) : isError ? (
-        <div className="bg-[color:var(--card)] rounded-xl p-8">
-          <ErrorDisplay
-            message="Failed to load administrators"
-            details={
-              error instanceof Error
-                ? error.message
-                : "An unknown error occurred"
-            }
-          />
-        </div>
-      ) : (
-        <UserTable
-          users={transformedAdmins}
-          onStatusChange={(id: string, status: string) => {
-            if (status.toLowerCase() === "active") {
-              deactivateAdmin(id);
-            } else {
-              activateAdmin(id);
-            }
-          }}
-        />
-      )}
+      <div className="flex-grow flex">
+        {isLoading ? (
+          <div className="bg-[color:var(--card)] rounded-xl p-8 flex justify-center items-center w-full">
+            <Loader
+              size={24}
+              className="animate-spin mr-3 text-[color:var(--primary)]"
+            />
+            <span>Loading administrators...</span>
+          </div>
+        ) : isError ? (
+          <div className="bg-[color:var(--card)] rounded-xl p-8 w-full">
+            <ErrorDisplay
+              message="Failed to load administrators"
+              details={
+                error instanceof Error
+                  ? error.message
+                  : "An unknown error occurred"
+              }
+            />
+          </div>
+        ) : (
+          <div className="w-full">
+            <UserTable
+              users={transformedAdmins}
+              onStatusChange={(id: string, status: string) => {
+                if (status.toLowerCase() === "active") {
+                  deactivateAdmin(id);
+                } else {
+                  activateAdmin(id);
+                }
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

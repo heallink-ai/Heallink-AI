@@ -406,27 +406,34 @@ export class AdminAuthService {
    * Logout admin user
    */
   async logout(userId: string, refreshToken: string) {
-    // Find the user
-    const user = await this.userModel.findById(userId);
+    try {
+      const user = await this.userModel.findById(userId).exec();
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Remove the refresh token
-    if (typeof user.removeRefreshToken === 'function') {
-      user.removeRefreshToken(refreshToken);
-    } else {
-      // Fallback if method doesn't exist
-      if (user.refreshTokens) {
-        user.refreshTokens = user.refreshTokens.filter(
-          (t) => t !== refreshToken,
-        );
+      if (!user) {
+        throw new NotFoundException('User not found');
       }
-    }
-    await user.save();
 
-    return { message: 'Logged out successfully' };
+      // Remove refresh token
+      if (typeof user.removeRefreshToken === 'function') {
+        user.removeRefreshToken(refreshToken);
+      } else {
+        // Fallback if method doesn't exist
+        if (user.refreshTokens && Array.isArray(user.refreshTokens)) {
+          user.refreshTokens = user.refreshTokens.filter(
+            (token) => token !== refreshToken,
+          );
+        }
+      }
+
+      await user.save();
+
+      this.loggingService.logAuth(userId, 'admin-logout', true, {});
+
+      return { success: true };
+    } catch (error) {
+      this.logger.error(`Logout error: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   /**
@@ -434,22 +441,26 @@ export class AdminAuthService {
    */
   async refreshTokens(refreshToken: string) {
     try {
-      // Verify token
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(
-        refreshToken,
-        {
-          secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-        },
-      );
+      // Verify refresh token
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get<string>('auth.refreshTokenSecret'),
+      });
 
-      // Find user
-      const user = await this.userModel.findById(payload.sub);
+      const userId = payload.sub;
+      const user = await this.userModel.findById(userId).exec();
 
-      if (
-        !user ||
-        !user.refreshTokens ||
-        !user.refreshTokens.includes(refreshToken)
-      ) {
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Check if the refresh token exists in the user's refresh tokens
+      let isValidToken = false;
+
+      if (user.refreshTokens && Array.isArray(user.refreshTokens)) {
+        isValidToken = user.refreshTokens.includes(refreshToken);
+      }
+
+      if (!isValidToken) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
@@ -457,24 +468,32 @@ export class AdminAuthService {
       const tokens = await this.generateTokens(user);
 
       // Remove old refresh token and add new one
-      // Update user's refresh tokens
-      if (!user.refreshTokens) {
-        user.refreshTokens = [];
+      if (
+        typeof user.removeRefreshToken === 'function' &&
+        typeof user.addRefreshToken === 'function'
+      ) {
+        user.removeRefreshToken(refreshToken);
+        user.addRefreshToken(tokens.refreshToken);
       } else {
-        user.refreshTokens = user.refreshTokens.filter(
-          (t) => t !== refreshToken,
-        );
+        // Fallback if methods don't exist
+        if (user.refreshTokens && Array.isArray(user.refreshTokens)) {
+          user.refreshTokens = user.refreshTokens.filter(
+            (token) => token !== refreshToken,
+          );
+          user.refreshTokens.push(tokens.refreshToken);
+        } else {
+          user.refreshTokens = [tokens.refreshToken];
+        }
       }
 
-      // Add new refresh token
-      user.refreshTokens.push(tokens.refreshToken);
       await user.save();
 
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       };
-    } catch {
+    } catch (error) {
+      this.logger.error(`Refresh token error: ${error.message}`, error.stack);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

@@ -234,13 +234,19 @@ export default function AdminTable({
                 </td>
                 <td>
                   <div className="flex items-center gap-2">
-                    {admin.emailVerified ? (
+                    {admin.isActive ? (
                       <UserCheck className="w-4 h-4 text-[color:var(--success)]" />
                     ) : (
-                      <UserX className="w-4 h-4 text-[color:var(--warning)]" />
+                      <UserX className="w-4 h-4 text-[color:var(--error)]" />
                     )}
-                    <span className="text-sm">
-                      {admin.emailVerified ? "Verified" : "Pending"}
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        admin.isActive
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                      }`}
+                    >
+                      {admin.isActive ? "Active" : "Inactive"}
                     </span>
                   </div>
                 </td>
@@ -279,12 +285,12 @@ export default function AdminTable({
 
                         <button
                           onClick={() => {
-                            onToggleStatus(admin, !admin.emailVerified);
+                            onToggleStatus(admin, !admin.isActive);
                             setActiveDropdown(null);
                           }}
                           className="w-full px-4 py-2 text-left text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2"
                         >
-                          {admin.emailVerified ? (
+                          {admin.isActive ? (
                             <>
                               <UserX className="w-4 h-4" />
                               Suspend
