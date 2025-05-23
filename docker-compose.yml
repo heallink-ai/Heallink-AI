@@ -15,10 +15,13 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       # For browser-side requests (must be accessible from user's browser)
       - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+      - NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8000/api/v1
       # For server-side requests (within Docker network)
       - API_URL=http://api:3003/api/v1
+      - AI_ENGINE_URL=http://ai-engine:8000/api/v1
     depends_on:
       - api
+      - ai-engine
     networks:
       - heallink-network
     restart: unless-stopped
@@ -145,6 +148,27 @@ services:
       retries: 5
       start_period: 10s
 
+  ai-engine:
+    build:
+      context: .
+      dockerfile: ./apps/ai-engine/Dockerfile.dev
+    container_name: heallink-ai-engine
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/ai-engine:/app
+    env_file:
+      - ./apps/ai-engine/.env
+    networks:
+      - heallink-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 networks:
   heallink-network:
     driver: bridge
@@ -155,3 +179,4 @@ volumes:
   heallink-providers-node-modules:
   api-node-modules:
   localstack-data:
+  ai-engine-data:
