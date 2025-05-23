@@ -44,7 +44,7 @@ export default function AdminsPage() {
 
     const matchesStatus =
       statusFilter === "All" ||
-      admin.status.toLowerCase() === statusFilter.toLowerCase();
+      (statusFilter === "Active" ? admin.isActive : !admin.isActive);
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -58,7 +58,7 @@ export default function AdminsPage() {
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" "),
-    status: admin.status.charAt(0).toUpperCase() + admin.status.slice(1),
+    status: admin.isActive ? "Active" : "Inactive",
     lastLogin: admin.lastLogin || null,
     created: admin.createdAt,
   }));
