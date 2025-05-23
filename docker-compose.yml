@@ -157,6 +157,7 @@ services:
       - "8000:8000"
     volumes:
       - ./apps/ai-engine:/app
+      - ai-engine-venv:/app/venv
     env_file:
       - ./apps/ai-engine/.env
     networks:
@@ -180,3 +181,4 @@ volumes:
   api-node-modules:
   localstack-data:
   ai-engine-data:
+  ai-engine-venv:
