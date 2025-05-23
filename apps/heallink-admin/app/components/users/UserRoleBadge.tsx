@@ -7,10 +7,22 @@ interface UserRoleBadgeProps {
 }
 
 export default function UserRoleBadge({ role }: UserRoleBadgeProps) {
+  // Normalize role for consistent display
+  const getNormalizedRole = () => {
+    if (!role || typeof role !== "string") {
+      return "Unknown";
+    }
+
+    // Capitalize first letter for display
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  };
+
+  const normalizedRole = getNormalizedRole();
+
   // Define styles based on role
   const getRoleStyles = () => {
     // Handle both full role names and role types
-    const lowerRole = role.toLowerCase();
+    const lowerRole = (role || "").toLowerCase();
 
     if (lowerRole.includes("admin") || lowerRole.includes("super")) {
       return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
@@ -37,7 +49,7 @@ export default function UserRoleBadge({ role }: UserRoleBadgeProps) {
     <span
       className={`inline-flex px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getRoleStyles()}`}
     >
-      {role}
+      {normalizedRole}
     </span>
   );
 }

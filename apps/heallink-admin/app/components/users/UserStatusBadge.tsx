@@ -12,15 +12,38 @@ interface UserStatusBadgeProps {
     | "inactive"
     | "pending"
     | "suspended"
+    | boolean
     | string;
 }
 
 export default function UserStatusBadge({ status }: UserStatusBadgeProps) {
   // Normalize status for consistent display
-  const normalizedStatus =
-    typeof status === "string"
-      ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
-      : "Unknown";
+  const getNormalizedStatus = () => {
+    // Handle boolean values (isActive can be a boolean in some APIs)
+    if (typeof status === "boolean") {
+      return status ? "Active" : "Inactive";
+    }
+
+    // Handle string values
+    if (typeof status === "string") {
+      const lowerStatus = status.toLowerCase();
+
+      if (lowerStatus === "true" || lowerStatus === "active") {
+        return "Active";
+      }
+
+      if (lowerStatus === "false" || lowerStatus === "inactive") {
+        return "Inactive";
+      }
+
+      // For other values, just capitalize the first letter
+      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    }
+
+    return "Unknown";
+  };
+
+  const normalizedStatus = getNormalizedStatus();
 
   // Define styles based on status
   const getStatusStyles = () => {

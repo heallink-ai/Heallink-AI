@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Users,
   MoreVertical,
@@ -14,6 +13,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { AdminUser, UserRole } from "../types/admin.types";
+import ActionMenu from "../../../components/common/ActionMenu";
 
 interface AdminTableProps {
   admins: AdminUser[];
@@ -68,8 +68,6 @@ export default function AdminTable({
   currentUserRole,
   currentUserId,
 }: AdminTableProps) {
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
   const canModifyAdmin = (admin: AdminUser) => {
     if (currentUserRole !== UserRole.ADMIN) return false;
     if (admin._id === currentUserId) return false; // Can't modify self
@@ -258,68 +256,46 @@ export default function AdminTable({
                 </td>
                 <td>
                   <div className="relative">
-                    <button
-                      onClick={() =>
-                        setActiveDropdown(
-                          activeDropdown === admin._id ? null : admin._id
-                        )
-                      }
-                      className="p-1 rounded-md hover:bg-[color:var(--navbar-item-hover)] transition-colors"
+                    <ActionMenu
                       disabled={!canModifyAdmin(admin)}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-
-                    {activeDropdown === admin._id && canModifyAdmin(admin) && (
-                      <div className="absolute right-0 top-8 z-10 w-48 bg-[color:var(--card)] rounded-lg shadow-lg border border-[color:var(--border)] py-1">
-                        <button
-                          onClick={() => {
-                            onEdit(admin);
-                            setActiveDropdown(null);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Edit Admin
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            onToggleStatus(admin, !admin.isActive);
-                            setActiveDropdown(null);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2"
-                        >
-                          {admin.isActive ? (
-                            <>
-                              <UserX className="w-4 h-4" />
-                              Suspend
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="w-4 h-4" />
-                              Activate
-                            </>
-                          )}
-                        </button>
-
-                        {canDeleteAdmin(admin) && (
-                          <>
-                            <div className="h-px bg-[color:var(--border)] my-1"></div>
-                            <button
-                              onClick={() => {
-                                onDelete(admin);
-                                setActiveDropdown(null);
-                              }}
-                              className="w-full px-4 py-2 text-left text-sm hover:bg-[color:var(--navbar-item-hover)] flex items-center gap-2 text-[color:var(--error)]"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete Admin
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
+                      groups={[
+                        {
+                          items: [
+                            {
+                              label: "Edit Admin",
+                              icon: <Edit className="w-4 h-4" />,
+                              onClick: () => onEdit(admin),
+                            },
+                            {
+                              label: admin.isActive ? "Suspend" : "Activate",
+                              icon: admin.isActive ? (
+                                <UserX className="w-4 h-4" />
+                              ) : (
+                                <UserCheck className="w-4 h-4" />
+                              ),
+                              onClick: () =>
+                                onToggleStatus(admin, !admin.isActive),
+                            },
+                          ],
+                        },
+                        canDeleteAdmin(admin)
+                          ? {
+                              items: [
+                                {
+                                  label: "Delete Admin",
+                                  icon: <Trash2 className="w-4 h-4" />,
+                                  onClick: () => onDelete(admin),
+                                  isDestructive: true,
+                                },
+                              ],
+                              showDivider: true,
+                            }
+                          : { items: [] },
+                      ]}
+                      triggerIcon={<MoreVertical className="w-4 h-4" />}
+                      triggerClassName="p-1 rounded-md hover:bg-[color:var(--navbar-item-hover)] transition-colors"
+                      id={`admin-action-menu-${admin._id}`}
+                    />
                   </div>
                 </td>
               </tr>

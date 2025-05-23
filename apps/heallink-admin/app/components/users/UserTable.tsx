@@ -57,9 +57,10 @@ export default function UserTable({
         : bVal.localeCompare(aVal);
     }
 
+    // Use numbers for numerical comparison
     return sortOrder === "asc"
-      ? (aVal as any) - (bVal as any)
-      : (bVal as any) - (aVal as any);
+      ? (Number(aVal) || 0) - (Number(bVal) || 0)
+      : (Number(bVal) || 0) - (Number(aVal) || 0);
   });
 
   // Format date for display
@@ -82,160 +83,166 @@ export default function UserTable({
       )}
 
       <div className="w-full overflow-x-auto">
-        <div className="min-w-full max-h-[calc(100vh-300px)] overflow-y-auto">
-          <table className="w-full border-collapse table-auto min-w-full">
-            <thead className="sticky top-0 bg-[color:var(--card)] z-10">
-              <tr className="border-b border-[color:var(--border)]">
-                <th className="p-4 text-left whitespace-nowrap">
-                  <div
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => handleSort("name")}
-                  >
-                    <span>Name</span>
-                    {sortBy === "name" && (
-                      <span className="text-[color:var(--primary)]">
-                        {sortOrder === "asc" ? (
-                          <ChevronUp size={14} />
-                        ) : (
-                          <ChevronDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-                <th className="p-4 text-left hidden md:table-cell">
-                  <div
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => handleSort("email")}
-                  >
-                    <span>Email</span>
-                    {sortBy === "email" && (
-                      <span className="text-[color:var(--primary)]">
-                        {sortOrder === "asc" ? (
-                          <ChevronUp size={14} />
-                        ) : (
-                          <ChevronDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-                <th className="p-4 text-left">
-                  <div
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => handleSort("role")}
-                  >
-                    <span>Role</span>
-                    {sortBy === "role" && (
-                      <span className="text-[color:var(--primary)]">
-                        {sortOrder === "asc" ? (
-                          <ChevronUp size={14} />
-                        ) : (
-                          <ChevronDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-                <th className="p-4 text-left">
-                  <div
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => handleSort("status")}
-                  >
-                    <span>Status</span>
-                    {sortBy === "status" && (
-                      <span className="text-[color:var(--primary)]">
-                        {sortOrder === "asc" ? (
-                          <ChevronUp size={14} />
-                        ) : (
-                          <ChevronDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-                <th className="p-4 text-left hidden lg:table-cell">
-                  <div
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => handleSort("lastLogin")}
-                  >
-                    <span>Last Login</span>
-                    {sortBy === "lastLogin" && (
-                      <span className="text-[color:var(--primary)]">
-                        {sortOrder === "asc" ? (
-                          <ChevronUp size={14} />
-                        ) : (
-                          <ChevronDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-                <th className="p-4 text-center min-w-[60px] w-[60px]">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedUsers.length > 0 ? (
-                sortedUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-[color:var(--border)] hover:bg-[color:var(--accent)]/5"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 bg-[color:var(--primary)] text-white rounded-full flex items-center justify-center flex-shrink-0">
-                          <User size={16} />
+        <table className="w-full border-collapse table-auto">
+          <colgroup>
+            <col className="w-auto" /> {/* Name */}
+            <col className="hidden md:table-column w-auto" /> {/* Email */}
+            <col className="w-auto" /> {/* Role */}
+            <col className="w-auto" /> {/* Status */}
+            <col className="hidden lg:table-column w-auto" /> {/* Last Login */}
+            <col className="w-[80px]" /> {/* Actions - fixed width */}
+          </colgroup>
+          <thead className="sticky top-0 bg-[color:var(--card)] z-10">
+            <tr className="border-b border-[color:var(--border)]">
+              <th className="p-4 text-left whitespace-nowrap">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => handleSort("name")}
+                >
+                  <span>Name</span>
+                  {sortBy === "name" && (
+                    <span className="text-[color:var(--primary)]">
+                      {sortOrder === "asc" ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </span>
+                  )}
+                </div>
+              </th>
+              <th className="p-4 text-left hidden md:table-cell">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => handleSort("email")}
+                >
+                  <span>Email</span>
+                  {sortBy === "email" && (
+                    <span className="text-[color:var(--primary)]">
+                      {sortOrder === "asc" ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </span>
+                  )}
+                </div>
+              </th>
+              <th className="p-4 text-left">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => handleSort("role")}
+                >
+                  <span>Role</span>
+                  {sortBy === "role" && (
+                    <span className="text-[color:var(--primary)]">
+                      {sortOrder === "asc" ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </span>
+                  )}
+                </div>
+              </th>
+              <th className="p-4 text-left">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => handleSort("status")}
+                >
+                  <span>Status</span>
+                  {sortBy === "status" && (
+                    <span className="text-[color:var(--primary)]">
+                      {sortOrder === "asc" ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </span>
+                  )}
+                </div>
+              </th>
+              <th className="p-4 text-left hidden lg:table-cell">
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={() => handleSort("lastLogin")}
+                >
+                  <span>Last Login</span>
+                  {sortBy === "lastLogin" && (
+                    <span className="text-[color:var(--primary)]">
+                      {sortOrder === "asc" ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </span>
+                  )}
+                </div>
+              </th>
+              <th className="p-4 text-center w-[80px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedUsers.length > 0 ? (
+              sortedUsers.map((user) => (
+                <tr
+                  key={user.id}
+                  className="border-b border-[color:var(--border)] hover:bg-[color:var(--accent)]/5"
+                >
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 bg-[color:var(--primary)] text-white rounded-full flex items-center justify-center flex-shrink-0">
+                        <User size={16} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate hover:text-[color:var(--primary)]">
+                          <Link href={`/dashboard/users/${user.id}`}>
+                            {user.name}
+                          </Link>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium truncate hover:text-[color:var(--primary)]">
-                            <Link href={`/dashboard/users/${user.id}`}>
-                              {user.name}
-                            </Link>
-                          </div>
-                          <div className="text-xs text-[color:var(--muted-foreground)]">
-                            <span className="md:hidden truncate block">
-                              {user.email}
-                            </span>
-                            <span className="truncate block">
-                              Since {formatDate(user.created)}
-                            </span>
-                          </div>
+                        <div className="text-xs text-[color:var(--muted-foreground)]">
+                          <span className="md:hidden truncate block">
+                            {user.email}
+                          </span>
+                          <span className="truncate block">
+                            Since {formatDate(user.created)}
+                          </span>
                         </div>
                       </div>
-                    </td>
-                    <td className="p-4 hidden md:table-cell">
-                      <div className="truncate max-w-[200px]">{user.email}</div>
-                    </td>
-                    <td className="p-4">
-                      <UserRoleBadge role={user.role} />
-                    </td>
-                    <td className="p-4">
-                      <UserStatusBadge status={user.status} />
-                    </td>
-                    <td className="p-4 text-sm hidden lg:table-cell">
-                      {formatDate(user.lastLogin)}
-                    </td>
-                    <td className="p-4 text-center relative">
+                    </div>
+                  </td>
+                  <td className="p-4 hidden md:table-cell">
+                    <div className="truncate max-w-[200px]">{user.email}</div>
+                  </td>
+                  <td className="p-4">
+                    <UserRoleBadge role={user.role} />
+                  </td>
+                  <td className="p-4">
+                    <UserStatusBadge status={user.status} />
+                  </td>
+                  <td className="p-4 text-sm hidden lg:table-cell">
+                    {formatDate(user.lastLogin)}
+                  </td>
+                  <td className="p-4 text-center w-[80px] min-w-[80px] max-w-[80px]">
+                    <div className="flex justify-center">
                       <UserActionMenu
                         userId={user.id}
                         userStatus={user.status}
                         onStatusChange={onStatusChange}
                       />
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="p-4 text-center">
-                    No users found
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="p-4 text-center">
+                  No users found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {showPagination && (
