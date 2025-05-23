@@ -24,6 +24,7 @@ console.log(
 export async function loginAdminUser(credentials: {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }): Promise<
   ApiResponse<{ accessToken: string; refreshToken: string; user: User }>
 > {
@@ -31,6 +32,7 @@ export async function loginAdminUser(credentials: {
     const API_URL = getApiUrl();
     console.log("Attempting admin login for:", credentials.email);
     console.log("Using API URL:", API_URL);
+    console.log("Remember Me:", credentials.rememberMe ? "Yes" : "No");
 
     const response = await fetch(`${API_URL}/auth/admin/login`, {
       method: "POST",

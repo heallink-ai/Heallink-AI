@@ -37,6 +37,7 @@ interface JwtPayload {
   role: string;
   adminRole?: string;
   permissions?: string[];
+  rememberMe?: boolean;
 }
 
 @Injectable()
@@ -57,7 +58,7 @@ export class AdminAuthService {
    * Login admin user with email and password
    */
   async login(adminLoginDto: AdminLoginDto) {
-    const { email, password } = adminLoginDto;
+    const { email, password, rememberMe } = adminLoginDto;
 
     const user = await this.userModel
       .findOne({
@@ -104,7 +105,7 @@ export class AdminAuthService {
     user.lastLogin = new Date();
     await user.save();
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.generateTokens(user, rememberMe);
 
     // Store refresh token
     if (typeof user.addRefreshToken === 'function') {
@@ -126,6 +127,7 @@ export class AdminAuthService {
       {
         adminRole: user.adminRole,
         ip: adminLoginDto.ip || 'unknown',
+        rememberMe: !!rememberMe,
       },
     );
 
@@ -464,8 +466,11 @@ export class AdminAuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
+      // Check if payload has rememberMe flag (from previous token)
+      const rememberMe = payload.rememberMe === true;
+
       // Generate new tokens
-      const tokens = await this.generateTokens(user);
+      const tokens = await this.generateTokens(user, rememberMe);
 
       // Remove old refresh token and add new one
       if (
@@ -559,13 +564,14 @@ export class AdminAuthService {
   /**
    * Helper method to generate JWT tokens
    */
-  private async generateTokens(user: UserDocument) {
+  private async generateTokens(user: UserDocument, rememberMe = false) {
     const payload: JwtPayload = {
       sub: String(user._id),
       email: user.email || '',
       role: user.role,
       adminRole: user.adminRole,
       permissions: user.permissions,
+      rememberMe: rememberMe,
     };
 
     // Use environment variables directly to avoid config mapping issues
@@ -579,13 +585,21 @@ export class AdminAuthService {
       `Generating tokens with JWT_SECRET: ${jwtSecret ? '[SECRET CONFIGURED]' : 'fallback secret'}`,
     );
 
+    // Set token expiration based on rememberMe flag
+    const accessTokenExpiry = rememberMe ? '2h' : '15m';
+    const refreshTokenExpiry = rememberMe ? '30d' : '7d';
+
+    this.logger.debug(
+      `Token expiry: accessToken=${accessTokenExpiry}, refreshToken=${refreshTokenExpiry}, rememberMe=${rememberMe}`,
+    );
+
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        expiresIn: '15m', // Short lived
+        expiresIn: accessTokenExpiry,
         secret: jwtSecret,
       }),
       this.jwtService.signAsync(payload, {
-        expiresIn: '7d', // Longer lived
+        expiresIn: refreshTokenExpiry,
         secret: jwtRefreshSecret,
       }),
     ]);

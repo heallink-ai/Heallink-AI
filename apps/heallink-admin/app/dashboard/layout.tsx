@@ -37,9 +37,15 @@ export default function DashboardLayout({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Redirect to login if user is not authenticated
+  // Handle authentication redirects using useEffect
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
+
+  // Show loading state while checking authentication
   if (status === "loading") {
-    // Show loading state
     return (
       <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)] flex items-center justify-center">
         <div className="text-center">
@@ -52,9 +58,18 @@ export default function DashboardLayout({
     );
   }
 
+  // Return null early (blank page) while redirecting
   if (status === "unauthenticated") {
-    router.push("/");
-    return null;
+    return (
+      <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[color:var(--primary)] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-[color:var(--muted-foreground)]">
+            Redirecting...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const toggleSidebar = () => {

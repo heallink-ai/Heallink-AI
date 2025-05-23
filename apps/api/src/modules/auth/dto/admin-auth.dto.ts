@@ -32,6 +32,15 @@ export class AdminLoginDto {
   @IsNotEmpty()
   password: string;
 
+  @ApiProperty({
+    description: 'Whether to extend session expiry (Remember Me)',
+    example: true,
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  rememberMe?: boolean;
+
   // Internal property - not sent from client
   @IsOptional()
   @IsString()

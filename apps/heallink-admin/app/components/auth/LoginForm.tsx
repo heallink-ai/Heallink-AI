@@ -31,27 +31,43 @@ export default function LoginForm() {
 
     try {
       console.log("Attempting login with:", email);
+      console.log("Remember me:", remember);
+
+      // Call Next.js SignIn function with our credentials
       const result = await signIn("credentials", {
         redirect: false,
+        callbackUrl: "/dashboard",
         email,
         password,
+        rememberMe: remember ? "true" : "false", // Ensure it's passed as string
       });
 
       console.log("SignIn result:", result);
 
-      if (result?.error) {
+      if (!result) {
+        throw new Error("No response from authentication server");
+      }
+
+      if (result.error) {
         setError("Invalid email or password. Please try again.");
         setIsLoading(false);
         return;
       }
 
-      // Redirect to dashboard on success
-      router.push("/dashboard");
-      router.refresh(); // Refresh to ensure session is updated
+      // Successful login
+      if (result.url) {
+        // Redirect to the URL provided by Next.js (should be the dashboard)
+        router.push(result.url);
+        router.refresh(); // Refresh to ensure session is updated
+      } else {
+        // Fallback in case no URL is provided
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (err) {
       // Log the error in development
       console.error("Login error:", err);
-      setError("An error occurred. Please try again.");
+      setError("An error occurred during authentication. Please try again.");
       setIsLoading(false);
     }
   };

@@ -1,5 +1,5 @@
 // Enhanced API client with token refresh capabilities
-import axios, { AxiosInstance, AxiosError } from "axios";
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from "axios";
 import { getSession, signOut } from "next-auth/react";
 
 const isServer = typeof window === "undefined";
@@ -22,13 +22,13 @@ const API_BASE_URL = getApiUrl();
  */
 export class ApiError extends Error {
   status: number;
-  data: any;
+  data: Record<string, unknown>;
 
-  constructor(status: number, message: string, data?: any) {
+  constructor(status: number, message: string, data?: Record<string, unknown>) {
     super(message);
     this.name = "ApiError";
     this.status = status;
-    this.data = data;
+    this.data = data || {};
   }
 }
 
@@ -44,18 +44,29 @@ const apiClient: AxiosInstance = axios.create({
 let isRefreshing = false;
 // Store pending requests that should be retried after token refresh
 type QueuePromise = {
-  resolve: (value: string | null) => void;
-  reject: (reason?: any) => void;
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+  config: AxiosRequestConfig;
 };
 let failedQueue: QueuePromise[] = [];
 
 // Process the failed queue
-const processQueue = (error: Error | null, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+const processQueue = (error: Error | null, newToken: string | null = null) => {
+  failedQueue.forEach((promise) => {
     if (error) {
-      prom.reject(error);
+      promise.reject(error);
+    } else if (newToken) {
+      // Clone the original request config
+      const retryConfig = { ...promise.config };
+      // Update with new token
+      retryConfig.headers = {
+        ...retryConfig.headers,
+        Authorization: `Bearer ${newToken}`,
+      };
+      // Resolve with a new request using updated config
+      promise.resolve(apiClient(retryConfig));
     } else {
-      prom.resolve(token);
+      promise.reject(new Error("Token refresh failed"));
     }
   });
 
@@ -67,18 +78,64 @@ const refreshTokenRequest = async (): Promise<{
   accessToken: string;
   refreshToken: string;
 }> => {
-  const response = await fetch("/api/auth/refresh", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    const session = await getSession();
+    if (!session?.refreshToken) {
+      console.error("No refresh token in session");
+      throw new Error("No refresh token available");
+    }
 
-  if (!response.ok) {
-    throw new Error("Failed to refresh token");
+    console.log(
+      "Attempting to refresh token with:",
+      session.refreshToken.substring(0, 10) + "..."
+    );
+
+    const response = await fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+
+    // Log response details for debugging
+    console.log("Refresh token response status:", response.status);
+
+    if (!response.ok) {
+      let errorMessage = "Failed to refresh token";
+
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch (parseError) {
+        console.error("Error parsing error response:", parseError);
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    // Safely parse the JSON response
+    try {
+      const data = await response.json();
+
+      if (!data || !data.accessToken || !data.refreshToken) {
+        console.error(
+          "Invalid response format from refresh token endpoint:",
+          data
+        );
+        throw new Error("Invalid token response format");
+      }
+
+      console.log("Token refresh successful, received new tokens");
+      return data;
+    } catch (parseError) {
+      console.error("Error parsing JSON response:", parseError);
+      throw new Error("Invalid JSON response from token refresh");
+    }
+  } catch (error) {
+    console.error("Token refresh error:", error);
+    throw error;
   }
-
-  return response.json();
 };
 
 // Request interceptor to add the auth token to requests
@@ -86,9 +143,13 @@ apiClient.interceptors.request.use(
   async (config) => {
     // If we're in the browser, get the session
     if (!isServer) {
-      const session = await getSession();
-      if (session?.accessToken) {
-        config.headers["Authorization"] = `Bearer ${session.accessToken}`;
+      try {
+        const session = await getSession();
+        if (session?.accessToken) {
+          config.headers["Authorization"] = `Bearer ${session.accessToken}`;
+        }
+      } catch (error) {
+        console.error("Error getting session:", error);
       }
     }
     return config;
@@ -104,9 +165,17 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest: any = error.config;
+    // Need to type cast here since _retry isn't in the type
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-    // If the error is not 401 or we've already tried to refresh, reject
+    // Prevent infinite retry of failed refreshes
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    // If it's not an auth error or refresh token is invalid/expired
     if (
       !error.response ||
       error.response.status !== 401 ||
@@ -115,53 +184,70 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Set the retry flag so we don't loop infinitely
+    // Mark as retried
     originalRequest._retry = true;
 
-    // If we're already refreshing, queue this request
+    // If we're already refreshing, queue this request to retry after refresh completes
     if (isRefreshing) {
-      return new Promise<string | null>((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      })
-        .then((token) => {
-          if (token) {
-            originalRequest.headers["Authorization"] = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          }
-          return Promise.reject(new Error("Token refresh failed"));
-        })
-        .catch((err) => {
-          return Promise.reject(err);
+      console.log("Token refresh in progress, queueing request");
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          resolve,
+          reject,
+          config: originalRequest,
         });
+      });
     }
 
+    // Start refreshing process
     isRefreshing = true;
+    console.log("Starting token refresh");
 
-    // Try to get a new token using our Next.js API route
     try {
-      // Call our server-side endpoint for token refresh
+      // Get new tokens from our API route
       const tokens = await refreshTokenRequest();
+      console.log("Token refresh successful");
 
-      // Now retry the original request with new token
-      originalRequest.headers["Authorization"] = `Bearer ${tokens.accessToken}`;
-
-      // Process any queued requests
-      processQueue(null, tokens.accessToken);
-
-      isRefreshing = false;
-      return apiClient(originalRequest);
-    } catch (refreshError) {
-      // If refresh fails, redirect to login
-      if (!isServer) {
-        await signOut({ redirect: true, callbackUrl: "/" });
+      // Update session with new tokens (this doesn't persist to client storage)
+      if (typeof window !== "undefined") {
+        // This will trigger a session update in NextAuth
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          }),
+        });
       }
 
+      // Process any queued requests with the new token
+      processQueue(null, tokens.accessToken);
+      isRefreshing = false;
+
+      // Retry the original request with new token
+      originalRequest.headers = {
+        ...originalRequest.headers,
+        Authorization: `Bearer ${tokens.accessToken}`,
+      };
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      // Handle refresh failure
       processQueue(
         refreshError instanceof Error
           ? refreshError
           : new Error("Token refresh failed")
       );
       isRefreshing = false;
+
+      // Only redirect if not on login page already and in browser
+      if (!isServer && !window.location.pathname.includes("/login")) {
+        console.error("Token refresh failed, redirecting to login");
+        await signOut({ redirect: true, callbackUrl: "/" });
+      }
+
       return Promise.reject(refreshError);
     }
   }
@@ -172,7 +258,7 @@ apiClient.interceptors.response.use(
  */
 export const fetchWithAuth = async <T>(
   endpoint: string,
-  options?: any
+  options?: Record<string, unknown>
 ): Promise<T> => {
   try {
     const url = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;

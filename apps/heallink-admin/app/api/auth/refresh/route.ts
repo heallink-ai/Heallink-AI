@@ -7,9 +7,16 @@ import { refreshToken } from "../../auth-api";
  */
 export async function POST(request: NextRequest) {
   try {
-    const { refreshToken: token } = await request.json();
+    // Extract the refresh token from the request body
+    const body = await request.json().catch(() => {
+      console.error("Failed to parse JSON in refresh token route");
+      return {};
+    });
+
+    const { refreshToken: token } = body;
 
     if (!token) {
+      console.error("No refresh token provided");
       return NextResponse.json(
         { error: "Refresh token is required" },
         { status: 400 }
@@ -17,19 +24,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Call API to refresh token
-    const { data, error } = await refreshToken(token);
+    const result = await refreshToken(token);
 
-    if (error || !data) {
+    if (result.error || !result.data) {
+      console.error("Token refresh failed:", result.error);
       return NextResponse.json(
-        { error: error || "Failed to refresh token" },
+        { error: result.error || "Failed to refresh token" },
         { status: 401 }
       );
     }
 
     // Return new tokens
     return NextResponse.json({
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
+      accessToken: result.data.accessToken,
+      refreshToken: result.data.refreshToken,
     });
   } catch (err) {
     console.error("Error refreshing token:", err);
