@@ -18,8 +18,10 @@ services:
       - NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8000/api/v1
       # For server-side requests (within Docker network)
       - API_URL=http://api:3003/api/v1
+      - AI_ENGINE_URL=http://ai-engine:8000/api/v1
     depends_on:
       - api
+      - ai-engine
     networks:
       - heallink-network
     restart: unless-stopped
@@ -95,6 +97,36 @@ services:
       - heallink-network
     restart: unless-stopped
 
+  ai-engine:
+    build:
+      context: .
+      dockerfile: ./apps/ai-engine/Dockerfile.dev
+    container_name: heallink-ai-engine
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/ai-engine:/app/apps/ai-engine
+      - ./logs:/app/logs
+      - ai-engine-cache:/root/.cache # Cache for model downloads
+    env_file:
+      - ./apps/ai-engine/.env
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app
+      - PORT=8000
+      - HOST=0.0.0.0
+      # LiveKit connection settings will come from .env file
+    networks:
+      - heallink-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Give more time for model downloads
+
   mongodb:
     image: mongo:latest
     container_name: heallink-mongodb
@@ -156,3 +188,4 @@ volumes:
   heallink-providers-node-modules:
   api-node-modules:
   localstack-data:
+  ai-engine-cache: # Add cache volume for AI engine models
