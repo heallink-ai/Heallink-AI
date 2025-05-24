@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for faster package installation
+RUN pip install uv
+
+# Copy only requirements file first to leverage Docker caching
+COPY ./apps/ai-engine/requirements.txt /app/
+
+# Install dependencies with system option
+RUN uv pip install --system -r requirements.txt
+
+# Copy project files
+COPY ./apps/ai-engine /app/
+
+# Make the entrypoint script executable
+RUN chmod +x docker-entrypoint.sh
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Use the entrypoint script
+ENTRYPOINT ["./docker-entrypoint.sh"]
