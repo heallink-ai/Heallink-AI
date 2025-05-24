@@ -12,6 +12,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { LoggingModule } from './modules/logging/logging.module';
 import { EmailModule } from './modules/emails/email.module';
 import { AwsModule } from './modules/aws';
+import { LiveKitModule } from './modules/livekit/livekit.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -45,6 +46,13 @@ import * as Joi from 'joi';
         APPLE_TEAM_ID: Joi.string().optional().allow(''),
         APPLE_KEY_ID: Joi.string().optional().allow(''),
         APPLE_PRIVATE_KEY: Joi.string().optional().allow(''),
+        // LiveKit
+        LIVEKIT_API_KEY: Joi.string().optional().allow(''),
+        LIVEKIT_API_SECRET: Joi.string().optional().allow(''),
+        LIVEKIT_SERVER_URL: Joi.string().optional().allow(''),
+        // OpenAI and Deepgram
+        OPENAI_API_KEY: Joi.string().optional().allow(''),
+        DEEPGRAM_API_KEY: Joi.string().optional().allow(''),
       }),
       validationOptions: {
         allowUnknown: true,
@@ -78,6 +86,17 @@ import * as Joi from 'joi';
             teamId: process.env.APPLE_TEAM_ID,
             keyId: process.env.APPLE_KEY_ID,
             privateKey: process.env.APPLE_PRIVATE_KEY,
+          },
+          livekit: {
+            apiKey: process.env.LIVEKIT_API_KEY,
+            apiSecret: process.env.LIVEKIT_API_SECRET,
+            serverUrl: process.env.LIVEKIT_SERVER_URL,
+          },
+          openai: {
+            apiKey: process.env.OPENAI_API_KEY,
+          },
+          deepgram: {
+            apiKey: process.env.DEEPGRAM_API_KEY,
           },
         }),
       ],
@@ -118,6 +137,7 @@ import * as Joi from 'joi';
     AdminModule,
     EmailModule,
     AwsModule,
+    LiveKitModule,
   ],
   controllers: [AppController],
   providers: [AppService],

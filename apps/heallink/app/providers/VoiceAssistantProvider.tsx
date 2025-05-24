@@ -4,7 +4,14 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
+import {
+  useGenerateLiveKitToken,
+  useInitializeVoiceAssistant,
+  useVoiceAssistantState,
+  useEndVoiceAssistant,
+} from "@/app/hooks/livekit/useLiveKitApi";
 
 interface VoiceAssistantContextType {
   isConnected: boolean;
@@ -12,8 +19,8 @@ interface VoiceAssistantContextType {
   isSpeaking: boolean;
   transcript: string;
   connect: () => Promise<void>;
-  disconnect: () => void;
-  toggleMicrophone: (isActive: boolean) => void;
+  disconnect: () => Promise<void>;
+  toggleMicrophone: (isActive: boolean) => Promise<void>;
 }
 
 const defaultVoiceAssistantContext: VoiceAssistantContextType = {
@@ -22,8 +29,8 @@ const defaultVoiceAssistantContext: VoiceAssistantContextType = {
   isSpeaking: false,
   transcript: "",
   connect: async () => {},
-  disconnect: () => {},
-  toggleMicrophone: () => {},
+  disconnect: async () => {},
+  toggleMicrophone: async () => {},
 };
 
 const VoiceAssistantContext = createContext<VoiceAssistantContextType>(
@@ -39,73 +46,116 @@ interface VoiceAssistantProviderProps {
 export const VoiceAssistantProvider: React.FC<VoiceAssistantProviderProps> = ({
   children,
 }) => {
-  const [room, setRoom] = useState<any>(null);
+  // Define Room type properly
+  const [room, setRoom] = useState<import("livekit-client").Room | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [userId, setUserId] = useState("");
+  const [roomName, setRoomName] = useState<string>("");
 
+  // LiveKit API hooks
+  const tokenMutation = useGenerateLiveKitToken();
+  const initializeAssistantMutation = useInitializeVoiceAssistant();
+  const endAssistantMutation = useEndVoiceAssistant();
+  const { data: assistantState } = useVoiceAssistantState(
+    roomName,
+    isConnected
+  );
+
+  // Define disconnect function with useCallback to avoid dependency issues
+  const disconnect = useCallback(async () => {
+    try {
+      if (room) {
+        // Clean up voice assistant on the backend using React Query mutation
+        if (roomName) {
+          await endAssistantMutation.mutateAsync(roomName);
+        }
+
+        // Disconnect from the LiveKit room
+        room.disconnect();
+        setRoom(null);
+        setIsConnected(false);
+        setIsListening(false);
+        setIsSpeaking(false);
+        setTranscript("");
+        setRoomName("");
+      }
+    } catch (error) {
+      console.error("Failed to disconnect:", error);
+    }
+  }, [room, roomName, endAssistantMutation]);
+
+  // Generate user ID on mount and handle cleanup
   useEffect(() => {
-    // Generate a random user ID if not already set
     if (!userId) {
       setUserId(`user-${Math.floor(Math.random() * 100000)}`);
     }
 
-    // Cleanup function
+    // Cleanup function for component unmount
     return () => {
       if (room) {
         disconnect();
       }
     };
-  }, []);
+  }, [userId, room, disconnect]);
+
+  // Update assistant state from backend data
+  useEffect(() => {
+    if (assistantState) {
+      setIsListening(assistantState.isListening);
+      setIsSpeaking(assistantState.isSpeaking);
+
+      // Only update transcript if there's new content
+      if (
+        assistantState.transcript &&
+        assistantState.transcript !== transcript
+      ) {
+        setTranscript(assistantState.transcript);
+      }
+    }
+  }, [assistantState, transcript]);
+
+  // Cleanup on roomName change or component unmount
+  useEffect(() => {
+    return () => {
+      if (roomName && room) {
+        disconnect();
+      }
+    };
+  }, [roomName, room, disconnect]);
 
   const connect = async () => {
     try {
       // Load the LiveKit client dynamically
-      const { Room } = await import("livekit-client");
+      const livekitClient = await import("livekit-client");
+      const Room = livekitClient.Room;
 
       // Create a new room instance
       const newRoom = new Room();
       setRoom(newRoom);
 
       // Generate a random room name
-      const roomName = `heallink-room-${Math.floor(Math.random() * 100000)}`;
+      const newRoomName = `heallink-room-${Math.floor(Math.random() * 100000)}`;
+      setRoomName(newRoomName);
 
-      // Get token from backend
-      const response = await fetch("/api/livekit/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          identity: userId,
-          roomName,
-        }),
+      // Get token from backend using React Query mutation
+      const tokenResponse = await tokenMutation.mutateAsync({
+        identity: userId,
+        roomName: newRoomName,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to get LiveKit token");
-      }
-
-      const { token, serverUrl } = await response.json();
-
       // Connect to the LiveKit room
-      await newRoom.connect(serverUrl, token);
+      await newRoom.connect(tokenResponse.serverUrl, tokenResponse.token);
 
       // Enable local microphone
       await newRoom.localParticipant.setMicrophoneEnabled(true);
 
-      // Initialize the AI assistant
-      await fetch("/api/voice-assistant/initialize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          roomName,
-          identity: userId,
-        }),
+      // Initialize the AI assistant using React Query mutation
+      await initializeAssistantMutation.mutateAsync({
+        identity: userId,
+        roomName: newRoomName,
       });
 
       // Set up event listeners
@@ -123,59 +173,10 @@ export const VoiceAssistantProvider: React.FC<VoiceAssistantProviderProps> = ({
 
       // Set state
       setIsConnected(true);
-
-      // Subscribe to agent state changes
-      // This would typically be done with LiveKit's state synchronization
-      // For now, we'll just simulate state changes
-      simulateAssistantStateChanges();
     } catch (error) {
       console.error("Failed to connect to LiveKit:", error);
       setIsConnected(false);
-    }
-  };
-
-  // This is a temporary simulation function
-  // In a real implementation, we would listen to LiveKit state changes
-  const simulateAssistantStateChanges = () => {
-    const stateInterval = setInterval(() => {
-      // Randomly toggle between listening and speaking states
-      const randomState = Math.floor(Math.random() * 3);
-      if (randomState === 0) {
-        setIsListening(true);
-        setIsSpeaking(false);
-      } else if (randomState === 1) {
-        setIsListening(false);
-        setIsSpeaking(true);
-        // Simulate transcript updates
-        setTranscript((prev) => prev + " " + getRandomResponse());
-      } else {
-        setIsListening(false);
-        setIsSpeaking(false);
-      }
-    }, 3000);
-
-    // Clean up interval
-    return () => clearInterval(stateInterval);
-  };
-
-  const getRandomResponse = () => {
-    const responses = [
-      "I can help you schedule an appointment.",
-      "Your last checkup was three months ago.",
-      "Would you like me to remind you about your medication?",
-      "Your test results look normal.",
-      "I've updated your prescription refill request.",
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
-
-  const disconnect = () => {
-    if (room) {
-      room.disconnect();
-      setRoom(null);
-      setIsConnected(false);
-      setIsListening(false);
-      setIsSpeaking(false);
+      setRoomName("");
     }
   };
 
