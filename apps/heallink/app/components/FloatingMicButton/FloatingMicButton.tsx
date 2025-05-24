@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { useDrag } from "react-use-gesture";
 import styles from "./FloatingMicButton.module.css";
@@ -30,7 +32,7 @@ const FloatingMicButton: React.FC<FloatingMicButtonProps> = ({
   }, []);
 
   // Make the button draggable
-  const bind = useDrag(({ offset: [x, y], first, last }) => {
+  const bind = useDrag(({ offset: [x, y] }) => {
     setPosition({ x, y });
   });
 
