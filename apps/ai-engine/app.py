@@ -2,10 +2,14 @@ import os
 import uuid
 import logging
 import asyncio
+import time
 from typing import Dict, Optional, List, Any
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions
 from livekit.plugins import (
@@ -18,24 +22,30 @@ from livekit.plugins import (
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 # Load environment variables
+from dotenv import load_dotenv
 load_dotenv()
 
-# Configure logging
+# Configure logging with more details
 logging.basicConfig(
     level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(process)d - %(thread)d - %(message)s",
 )
 logger = logging.getLogger("heallink-ai")
 
-# Create FastAPI app
-app = FastAPI(
-    title="Heallink AI Engine",
-    description="AI Engine for Heallink Healthcare Platform",
-    version="0.1.0",
-)
-
 # Store active agents
 active_agents: Dict[str, Dict[str, Any]] = {}
+
+# Store rate limiting data
+rate_limits: Dict[str, Dict[str, Any]] = {}
+
+# Configuration settings
+API_TITLE = "Heallink AI Engine"
+API_DESCRIPTION = "AI Engine for Heallink Healthcare Platform"
+API_VERSION = "0.1.0"
+API_PREFIX = "/api/v1"
+RATE_LIMIT_ENABLED = True
+RATE_LIMIT_MAX_REQUESTS = 100
+RATE_LIMIT_TIMEFRAME_SECONDS = 60
 
 # Define request/response models
 class CreateAgentRequest(BaseModel):
@@ -53,6 +63,36 @@ class AgentResponse(BaseModel):
 
 class DisconnectAgentRequest(BaseModel):
     agent_id: str = Field(..., description="ID of the agent to disconnect")
+
+
+# Simple rate limiter
+def is_rate_limited(client_ip: str) -> bool:
+    """Check if a client is currently rate limited."""
+    if not RATE_LIMIT_ENABLED:
+        return False
+        
+    current_time = time.time()
+    
+    if client_ip in rate_limits:
+        count, start_time = rate_limits[client_ip]
+        
+        # Reset if the timeframe has passed
+        if current_time - start_time > RATE_LIMIT_TIMEFRAME_SECONDS:
+            rate_limits[client_ip] = (1, current_time)
+            return False
+            
+        # Increment and check
+        count += 1
+        rate_limits[client_ip] = (count, start_time)
+        
+        if count > RATE_LIMIT_MAX_REQUESTS:
+            logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+            return True
+    else:
+        # First request from this IP
+        rate_limits[client_ip] = (1, current_time)
+        
+    return False
 
 
 # Helper function to create and start a LiveKit agent
@@ -141,14 +181,88 @@ async def create_and_start_agent(
         raise
 
 
+# Create FastAPI app
+app = FastAPI(
+    title=API_TITLE,
+    description=API_DESCRIPTION,
+    version=API_VERSION,
+    docs_url=f"{API_PREFIX}/docs",
+    redoc_url=f"{API_PREFIX}/redoc",
+    openapi_url=f"{API_PREFIX}/openapi.json",
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Add request ID middleware
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    """Add a unique request ID to each request."""
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    
+    # Get client IP for rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    request.state.client_ip = client_ip
+    
+    # Check rate limit for API endpoints
+    if request.url.path.startswith(API_PREFIX) and is_rate_limited(client_ip):
+        return JSONResponse(
+            status_code=429,
+            content={
+                "status": "error",
+                "code": 429,
+                "message": "Too many requests. Please try again later.",
+            },
+            headers={"Retry-After": str(RATE_LIMIT_TIMEFRAME_SECONDS)},
+        )
+    
+    # Process request and track timing
+    start_time = time.time()
+    
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        
+        # Add timing and request ID headers
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Process-Time"] = str(process_time)
+        
+        return response
+    except Exception as e:
+        # Log any unhandled exceptions
+        logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
+        raise
+
+
 # API Routes
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "version": "0.1.0"}
+    return {
+        "status": "healthy", 
+        "version": API_VERSION,
+        "timestamp": time.time(),
+    }
 
 
-@app.post("/api/v1/livekit/agents", response_model=AgentResponse)
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {
+        "name": API_TITLE,
+        "version": API_VERSION,
+        "docs": f"{API_PREFIX}/docs",
+    }
+
+
+@app.post(f"{API_PREFIX}/livekit/agents", response_model=AgentResponse)
 async def create_agent(
     request: CreateAgentRequest,
     background_tasks: BackgroundTasks,
@@ -199,7 +313,7 @@ async def create_agent(
         raise HTTPException(status_code=500, detail=f"Failed to create agent: {str(e)}")
 
 
-@app.post("/api/v1/livekit/agents/disconnect", response_model=AgentResponse)
+@app.post(f"{API_PREFIX}/livekit/agents/disconnect", response_model=AgentResponse)
 async def disconnect_agent(request: DisconnectAgentRequest):
     """
     Disconnect an AI agent from a LiveKit room.
@@ -234,7 +348,7 @@ async def disconnect_agent(request: DisconnectAgentRequest):
         raise HTTPException(status_code=500, detail=f"Failed to disconnect agent: {str(e)}")
 
 
-@app.get("/api/v1/livekit/agents/{agent_id}", response_model=AgentResponse)
+@app.get(f"{API_PREFIX}/livekit/agents/{{agent_id}}", response_model=AgentResponse)
 async def get_agent_status(agent_id: str):
     """
     Get the status of an AI agent.
@@ -251,6 +365,35 @@ async def get_agent_status(agent_id: str):
         status=agent_info["status"],
         connected_at=agent_info["connected_at"],
         disconnected_at=agent_info["disconnected_at"],
+    )
+
+
+# Exception handler for HTTP exceptions
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Custom handler for HTTP exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "code": exc.status_code,
+            "message": str(exc.detail),
+        },
+    )
+
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Custom handler for unexpected exceptions."""
+    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "code": 500,
+            "message": "Internal server error",
+        },
     )
 
 
