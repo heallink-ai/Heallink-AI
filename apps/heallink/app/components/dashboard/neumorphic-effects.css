@@ -232,3 +232,148 @@
 .neumorph-accent-secondary:hover::after {
   opacity: 0.2;
 }
+
+/* Neumorphic Effects */
+
+/* Basic neumorphic effect */
+.neumorph {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow:
+    8px 8px 16px rgba(0, 0, 0, 0.15),
+    -8px -8px 16px rgba(255, 255, 255, 0.05);
+}
+
+/* Flat neumorphic effect */
+.neumorph-flat {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow:
+    4px 4px 8px rgba(0, 0, 0, 0.1),
+    -4px -4px 8px rgba(255, 255, 255, 0.05);
+}
+
+/* Inset neumorphic effect */
+.neumorph-inset {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow:
+    inset 4px 4px 8px rgba(0, 0, 0, 0.15),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.05);
+}
+
+/* Neumorphic buttons */
+.neumorph-button {
+  background: var(--card);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow:
+    4px 4px 8px rgba(0, 0, 0, 0.15),
+    -4px -4px 8px rgba(255, 255, 255, 0.05);
+}
+
+.neumorph-button:hover {
+  box-shadow:
+    5px 5px 10px rgba(0, 0, 0, 0.2),
+    -5px -5px 10px rgba(255, 255, 255, 0.07);
+  transform: translateY(-1px);
+}
+
+.neumorph-button:active {
+  box-shadow:
+    inset 4px 4px 8px rgba(0, 0, 0, 0.15),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.05);
+  transform: translateY(0);
+}
+
+/* Neumorphic text field */
+.neumorph-input {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.15),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.05);
+}
+
+/* Voice Assistant Transcript Bubble */
+.voice-transcript-bubble {
+  position: relative;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow:
+    6px 6px 12px rgba(0, 0, 0, 0.15),
+    -6px -6px 12px rgba(255, 255, 255, 0.05);
+  animation: fade-in-up 0.3s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Voice Assistant Floating Button */
+.voice-assistant-button {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 6rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  box-shadow:
+    6px 6px 12px rgba(0, 0, 0, 0.25),
+    -6px -6px 12px rgba(255, 255, 255, 0.1);
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.voice-assistant-button:hover {
+  transform: scale(1.05);
+}
+
+.voice-assistant-button:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+/* Gradient pulsing animation for active listening */
+@keyframes pulse-gradient {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+.gradient-pulse {
+  animation: pulse-gradient 2s infinite;
+}
+
+/* Sound wave animations */
+.sound-wave-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  height: 1.5rem;
+}
+
+.sound-wave-bar {
+  width: 0.25rem;
+  background-color: white;
+  border-radius: 0.5rem;
+}

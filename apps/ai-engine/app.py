@@ -21,6 +21,9 @@ from livekit.plugins import (
 )
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
+# Import LiveKit token generation
+from livekit_api.access_token import AccessToken, VideoGrant
+
 # Load environment variables
 from dotenv import load_dotenv
 load_dotenv()
@@ -47,6 +50,11 @@ RATE_LIMIT_ENABLED = True
 RATE_LIMIT_MAX_REQUESTS = 100
 RATE_LIMIT_TIMEFRAME_SECONDS = 60
 
+# LiveKit configuration
+LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY", "devkey")
+LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET", "devsecret")
+LIVEKIT_URL = os.getenv("LIVEKIT_URL", "wss://your-livekit-instance.livekit.cloud")
+
 # Define request/response models
 class CreateAgentRequest(BaseModel):
     room_name: str = Field(..., description="LiveKit room name")
@@ -64,6 +72,13 @@ class AgentResponse(BaseModel):
 class DisconnectAgentRequest(BaseModel):
     agent_id: str = Field(..., description="ID of the agent to disconnect")
 
+class TokenRequest(BaseModel):
+    identity: str = Field(..., description="Identity of the participant")
+    room_name: str = Field(..., description="LiveKit room name")
+
+class TokenResponse(BaseModel):
+    token: str = Field(..., description="LiveKit token")
+    serverUrl: str = Field(..., description="LiveKit server URL")
 
 # Simple rate limiter
 def is_rate_limited(client_ip: str) -> bool:
@@ -191,6 +206,34 @@ app = FastAPI(
     openapi_url=f"{API_PREFIX}/openapi.json",
 )
 
+# Print all registered routes for debugging - IMMEDIATELY after app creation
+@app.on_event("startup")
+async def print_routes():
+    """Print all registered routes on startup for debugging."""
+    print("\n\n============= REGISTERED ROUTES =============")
+    print(f"API_PREFIX: {API_PREFIX}")
+    
+    # Extract all routes
+    routes = []
+    for route in app.routes:
+        path = getattr(route, "path", "Unknown")
+        methods = getattr(route, "methods", {"GET"})
+        endpoint = getattr(route, "endpoint", None)
+        endpoint_name = getattr(endpoint, "__name__", "unknown") if endpoint else "unknown"
+        routes.append((path, methods, endpoint_name))
+    
+    # Sort by path for easier reading
+    routes.sort(key=lambda x: x[0])
+    
+    # Print with endpoint name
+    for path, methods, endpoint_name in routes:
+        print(f"Route: {path}, Methods: {methods}, Handler: {endpoint_name}")
+        # Check if this route is in the API_PREFIX path
+        if path.startswith(API_PREFIX):
+            print(f"  --> API ROUTE: {path[len(API_PREFIX):] if len(API_PREFIX) > 0 else path}")
+    
+    print("============================================\n\n")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -210,6 +253,12 @@ async def add_request_id(request: Request, call_next):
     # Get client IP for rate limiting
     client_ip = request.client.host if request.client else "unknown"
     request.state.client_ip = client_ip
+    
+    # Debug log the request path and method
+    print(f"REQUEST: {request.method} {request.url.path}")
+    
+    # We can't read the body here as it will consume the stream
+    # and the route handler won't be able to read it
     
     # Check rate limit for API endpoints
     if request.url.path.startswith(API_PREFIX) and is_rate_limited(client_ip):
@@ -368,6 +417,81 @@ async def get_agent_status(agent_id: str):
     )
 
 
+@app.get(f"{API_PREFIX}/livekit/agents", response_model=List[AgentResponse])
+async def list_agents():
+    """
+    List all active AI agents.
+    """
+    try:
+        agents_list = []
+        
+        for agent_id, agent_info in active_agents.items():
+            agents_list.append(AgentResponse(
+                agent_id=agent_info["agent_id"],
+                room_name=agent_info["room_name"],
+                identity=agent_info["identity"],
+                status=agent_info["status"],
+                connected_at=agent_info["connected_at"],
+                disconnected_at=agent_info["disconnected_at"],
+            ))
+            
+        return agents_list
+        
+    except Exception as e:
+        logger.error(f"Failed to list agents: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to list agents: {str(e)}")
+
+
+@app.post(f"{API_PREFIX}/livekit/token")
+async def generate_token(token_request: TokenRequest):
+    """
+    Generate a LiveKit token for a participant to join a room.
+    """
+    try:
+        logger.info(f"Token request received: {token_request.identity}, room: {token_request.room_name}")
+        
+        # Create a new access token
+        at = AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+        
+        # Add user identity to the token
+        at.identity = token_request.identity
+        
+        # Grant permissions for the specified room
+        grant = VideoGrant(
+            room=token_request.room_name,
+            room_join=True,
+            room_admin=False,
+            can_publish=True,
+            can_subscribe=True,
+        )
+        
+        # Add the grant to the token
+        at.add_grant(grant)
+        
+        # Generate the token string
+        token = at.to_jwt()
+        
+        logger.info(f"Generated token for {token_request.identity} to join room {token_request.room_name}")
+        
+        # Return token and server URL
+        return {
+            "token": token,
+            "serverUrl": LIVEKIT_URL
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to generate token: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate token: {str(e)}")
+
+
+@app.get(f"{API_PREFIX}/test")
+async def test_endpoint():
+    """
+    Simple test endpoint to check if API routes are working.
+    """
+    return {"status": "ok", "message": "Test endpoint is working"}
+
+
 # Exception handler for HTTP exceptions
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -395,7 +519,6 @@ async def global_exception_handler(request: Request, exc: Exception):
             "message": "Internal server error",
         },
     )
-
 
 if __name__ == "__main__":
     import uvicorn

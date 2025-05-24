@@ -1,0 +1,567 @@
+Downloading model files...
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff6b050b90> [90m[0m
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff6b050b90> [90m[0m
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff6a5e3e90> [90m[0m
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff6a5e3e90> [90m[0m
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff6a5e3fd0> [90m[0m
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff6a5e3fd0> [90m[0m
+2025-05-24 15:00:22,629 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff6a6186d0> [90m[0m
+2025-05-24 15:00:22,630 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff6a6186d0> [90m[0m
+2025-05-24 15:00:22,630 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff6a638ad0> [90m[0m
+2025-05-24 15:00:28,356 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 15:00:28,568 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 15:00:28,720 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 15:00:28,986 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 15:00:29,120 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 15:00:29,247 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 15:00:29,416 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 15:00:30,411 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 15:00:30,555 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 15:00:30,555 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff6a638ad0> [90m[0m
+INFO:     127.0.0.1:52668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58858 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44238 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45924 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34338 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40200 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41000 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59452 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41692 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42464 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40460 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60418 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44916 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34946 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52066 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58710 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43090 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37722 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55786 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40812 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34308 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41900 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39036 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45850 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52036 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59330 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57812 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52312 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50794 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60412 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55002 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50168 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49842 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48888 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53642 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54038 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34454 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44754 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59596 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33034 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48434 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49422 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51706 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34390 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53692 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51990 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52050 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37756 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47314 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50522 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33534 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52988 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44652 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35898 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51328 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32936 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45564 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49954 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36690 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43800 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33154 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58364 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40280 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49438 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50924 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56286 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55798 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59098 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46252 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36206 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59560 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56442 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37118 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44074 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56326 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35230 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50836 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57332 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42282 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38222 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44536 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40634 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37238 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36794 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44078 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42538 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52240 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52028 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34640 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45790 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35640 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40056 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47816 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43594 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42020 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33390 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36478 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50802 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33600 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55780 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56822 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45270 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54694 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44408 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52468 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41150 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56892 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42338 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37972 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50932 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50652 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38974 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57190 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39038 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39370 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43610 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35070 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37326 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43132 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41970 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33598 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38586 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57296 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36196 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46726 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59216 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51684 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36346 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51636 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37316 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36628 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45034 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55516 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51848 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45848 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36098 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59256 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48528 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54802 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50894 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59044 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53328 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35824 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34806 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38262 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49148 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38592 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44428 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59464 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37148 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55592 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59892 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51490 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39530 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38548 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45900 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49892 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36304 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58678 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39212 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60430 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54020 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35500 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46270 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47134 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49574 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52068 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42138 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45868 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42426 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43398 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42078 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48636 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51750 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56868 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46940 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55680 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35348 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40524 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36638 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57938 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41040 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40970 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50960 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44274 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55238 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43216 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53532 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41586 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36194 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37402 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32920 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43444 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36608 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35056 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33286 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56324 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37286 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40454 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58168 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35826 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38720 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58784 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48536 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34330 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40560 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41164 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51658 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56012 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41354 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40268 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60532 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47720 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35512 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53358 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54172 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50504 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56722 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35268 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33386 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50540 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40016 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51484 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33504 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59640 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39036 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45202 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59252 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48730 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45696 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55230 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41726 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58116 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53310 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38302 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60036 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44228 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42704 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39100 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35510 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33692 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47426 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42306 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50310 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47932 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48156 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39998 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55664 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46740 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50090 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53436 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44532 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38928 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33748 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38784 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57136 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33090 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40062 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58084 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59364 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42642 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58098 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51282 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40952 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36668 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57168 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44142 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37888 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48644 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39554 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45324 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45876 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46970 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44690 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59490 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60156 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55816 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54092 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47236 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46202 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58530 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38952 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51576 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59254 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57994 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41032 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58770 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41340 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58518 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56586 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35612 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57566 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56812 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36954 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48640 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58698 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60642 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49442 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41838 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36356 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42824 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60630 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58330 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38354 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44978 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32988 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54016 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56118 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60672 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58838 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59424 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47970 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40656 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35462 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56540 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60702 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47848 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47350 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45134 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56704 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55882 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47382 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44626 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41954 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60736 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33856 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36576 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37160 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44492 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57768 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55870 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58016 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56096 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42862 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57612 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55888 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44120 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36702 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37628 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54444 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54722 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59412 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59762 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39340 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34792 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44688 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33390 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43780 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43672 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37122 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55230 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59934 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44388 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57914 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46862 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60992 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41974 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44666 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60326 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37364 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45322 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56196 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37614 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46290 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44706 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33042 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57776 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.65.1:21799 - "POST /api/v1/livekit/token HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:37688 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54588 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37746 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50000 - "POST /api/v1/livekit/token HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50010 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35398 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41202 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57744 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36690 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42910 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33016 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37984 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53400 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60366 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53144 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44554 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35612 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44812 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35986 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52330 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59974 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57422 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39522 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43198 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33284 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43950 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39758 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35040 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34986 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34488 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43616 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52318 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49142 - "GET /health HTTP/1.1" 200 OK
+Downloading model files...
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff7fb42990> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff7fb42990> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff7f2a2c50> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff7f2a2c50> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff7f2b9750> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff7f2b9750> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff7f2c36d0> [90m[0m
+2025-05-24 16:09:34,197 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff7f2c36d0> [90m[0m
+2025-05-24 16:09:34,198 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff7f0f3d90> [90m[0m
+2025-05-24 16:09:35,993 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 16:09:36,213 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:09:36,354 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 16:09:36,681 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:09:36,851 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:09:36,974 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:09:37,092 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 16:09:37,879 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:09:38,167 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:09:38,169 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff7f0f3d90> [90m[0m
+INFO:     127.0.0.1:33772 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52228 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48734 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46240 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48960 - "GET /health HTTP/1.1" 200 OK
+Downloading model files...
+2025-05-24 16:10:29,193 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff5fd72a90> [90m[0m
+2025-05-24 16:10:29,193 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff5fd72a90> [90m[0m
+2025-05-24 16:10:29,193 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff5f4d2c50> [90m[0m
+2025-05-24 16:10:29,193 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff5f4d2c50> [90m[0m
+2025-05-24 16:10:29,193 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff5f4e9750> [90m[0m
+2025-05-24 16:10:29,193 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff5f4e9750> [90m[0m
+2025-05-24 16:10:29,194 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff5f4f36d0> [90m[0m
+2025-05-24 16:10:29,194 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff5f4f36d0> [90m[0m
+2025-05-24 16:10:29,194 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff5f332390> [90m[0m
+2025-05-24 16:10:30,170 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 16:10:30,298 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:30,491 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 16:10:30,735 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:10:30,952 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:31,479 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:31,585 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 16:10:32,423 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:10:32,519 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:32,520 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff5f332390> [90m[0m
+INFO:     127.0.0.1:32798 - "GET /health HTTP/1.1" 200 OK
+Downloading model files...
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff6736e9d0> [90m[0m
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff6736e9d0> [90m[0m
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff66acebd0> [90m[0m
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff66acebd0> [90m[0m
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff66ae56d0> [90m[0m
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff66ae56d0> [90m[0m
+2025-05-24 16:10:42,883 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff66aef650> [90m[0m
+2025-05-24 16:10:42,884 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff66aef650> [90m[0m
+2025-05-24 16:10:42,884 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff669303d0> [90m[0m
+2025-05-24 16:10:43,721 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 16:10:43,880 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:43,991 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 16:10:44,285 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:10:44,380 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:44,477 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:44,585 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 16:10:45,434 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:10:45,528 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:10:45,529 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff669303d0> [90m[0m
+INFO:     127.0.0.1:44394 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44246 - "GET /health HTTP/1.1" 200 OK
+Downloading model files...
+2025-05-24 16:11:15,223 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff78342bd0> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff78342bd0> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff77aa2cd0> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff77aa2cd0> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff77ab97d0> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff77ab97d0> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff77ac3750> [90m[0m
+2025-05-24 16:11:15,224 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff77ac3750> [90m[0m
+2025-05-24 16:11:15,225 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff778eb790> [90m[0m
+2025-05-24 16:11:16,394 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 16:11:16,554 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:11:16,732 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 16:11:17,012 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:11:17,107 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:11:17,210 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:11:17,311 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 16:11:17,850 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:11:17,965 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:11:17,966 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff778eb790> [90m[0m
+INFO:     127.0.0.1:48920 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41264 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36390 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50578 - "GET /health HTTP/1.1" 200 OK
+INFO:     192.168.65.1:62562 - "GET /api/v1/livekit/agents HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:50708 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32994 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43326 - "GET /health HTTP/1.1" 200 OK
+Downloading model files...
+2025-05-24 16:12:26,388 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff63942b10> [90m[0m
+2025-05-24 16:12:26,388 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff63942b10> [90m[0m
+2025-05-24 16:12:26,388 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff630a2cd0> [90m[0m
+2025-05-24 16:12:26,388 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff630a2cd0> [90m[0m
+2025-05-24 16:12:26,389 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff630b97d0> [90m[0m
+2025-05-24 16:12:26,389 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff630b97d0> [90m[0m
+2025-05-24 16:12:26,389 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff630c3790> [90m[0m
+2025-05-24 16:12:26,389 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff630c3790> [90m[0m
+2025-05-24 16:12:26,389 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff62f32a10> [90m[0m
+2025-05-24 16:12:27,342 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 16:12:27,503 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:27,604 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 16:12:27,826 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:12:27,930 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:28,026 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:28,123 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 16:12:28,952 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:12:29,050 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:29,051 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff62f32a10> [90m[0m
+INFO:     127.0.0.1:56722 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43874 - "GET /health HTTP/1.1" 200 OK
+Downloading model files...
+2025-05-24 16:12:52,073 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff72942d50> [90m[0m
+2025-05-24 16:12:52,073 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.openai.OpenAIPlugin object at 0xffff72942d50> [90m[0m
+2025-05-24 16:12:52,073 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff720a2c10> [90m[0m
+2025-05-24 16:12:52,073 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.cartesia.CartesiaPlugin object at 0xffff720a2c10> [90m[0m
+2025-05-24 16:12:52,073 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff720b9710> [90m[0m
+2025-05-24 16:12:52,074 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.deepgram.DeepgramPlugin object at 0xffff720b9710> [90m[0m
+2025-05-24 16:12:52,074 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff720c3690> [90m[0m
+2025-05-24 16:12:52,074 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.silero.SileroPlugin object at 0xffff720c3690> [90m[0m
+2025-05-24 16:12:52,074 - [32mINFO[0m livekit.agents - Downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff71f36510> [90m[0m
+2025-05-24 16:12:52,838 - [36mDEBUG[0m urllib3.connectionpool - Starting new HTTPS connection (1): huggingface.co:443 [90m[0m
+2025-05-24 16:12:52,998 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:53,112 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v1.2.2-en/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 69 [90m[0m
+2025-05-24 16:12:53,365 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:12:53,468 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v1.2.2-en/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:53,561 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/tokenizer_config.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:53,657 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "GET /api/models/livekit/turn-detector/tree/v0.1.0-intl/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 71 [90m[0m
+2025-05-24 16:12:54,141 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/onnx/model_q8.onnx HTTP/1.1" 302 0 [90m[0m
+2025-05-24 16:12:54,235 - [36mDEBUG[0m urllib3.connectionpool - https://huggingface.co:443 "HEAD /livekit/turn-detector/resolve/v0.1.0-intl/languages.json HTTP/1.1" 200 0 [90m[0m
+2025-05-24 16:12:54,236 - [32mINFO[0m livekit.agents - Finished downloading files for <livekit.plugins.turn_detector.EOUPlugin object at 0xffff71f36510> [90m[0m

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Component imports
@@ -17,6 +17,9 @@ import BottomNavigation from "@/app/components/dashboard/BottomNavigation";
 import Footer from "@/app/components/layout/Footer";
 import NeumorphicHeader from "@/app/components/dashboard/NeumorphicHeader";
 
+// Voice Assistant hooks
+import { useVoiceAssistant } from "@/app/providers/VoiceAssistantProvider";
+
 // Type definitions
 type NotificationType = "appointment" | "message" | "payment";
 
@@ -26,6 +29,39 @@ interface Notification {
   message: string;
   time: string;
 }
+
+// Toast notification component
+const Toast = ({
+  message,
+  isVisible,
+  type = "info",
+}: {
+  message: string;
+  isVisible: boolean;
+  type?: "info" | "success" | "error";
+}) => {
+  const bgColor =
+    type === "success"
+      ? "bg-green-600"
+      : type === "error"
+        ? "bg-red-600"
+        : "bg-primary";
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg z-50`}
+        >
+          {message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 export default function Dashboard() {
   // State for sidebar toggle on mobile
@@ -40,6 +76,96 @@ export default function Dashboard() {
     y: 0,
   });
   const [isDragging, setIsDragging] = useState(false);
+
+  // Voice assistant state
+  const [isMicActive, setIsMicActive] = useState(false);
+  const {
+    isConnected,
+    isListening,
+    isSpeaking,
+    transcript,
+    toggleMicrophone,
+    disconnect,
+  } = useVoiceAssistant();
+
+  // Toast notification state
+  const [toast, setToast] = useState({
+    message: "",
+    visible: false,
+    type: "info" as "info" | "success" | "error",
+  });
+
+  // Store the voice transcript in a ref for UI display
+  const transcriptRef = useRef("");
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [transcriptTimeout, setTranscriptTimeout] =
+    useState<NodeJS.Timeout | null>(null);
+
+  // Update transcript and handle visibility
+  useEffect(() => {
+    if (transcript && transcript !== transcriptRef.current) {
+      transcriptRef.current = transcript;
+      setShowTranscript(true);
+
+      // Clear any existing timeout
+      if (transcriptTimeout) {
+        clearTimeout(transcriptTimeout);
+      }
+
+      // Hide transcript after 5 seconds of inactivity
+      const timeout = setTimeout(() => {
+        setShowTranscript(false);
+      }, 5000);
+
+      setTranscriptTimeout(timeout);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (transcriptTimeout) {
+        clearTimeout(transcriptTimeout);
+      }
+    };
+  }, [transcript, transcriptTimeout]);
+
+  // Show toast notification based on connection state
+  useEffect(() => {
+    if (isConnected && isMicActive) {
+      setToast({
+        message: "Connected to AI Assistant",
+        visible: true,
+        type: "success",
+      });
+
+      // Hide toast after 3 seconds
+      const timeout = setTimeout(() => {
+        setToast((prev) => ({ ...prev, visible: false }));
+      }, 3000);
+
+      return () => clearTimeout(timeout);
+    }
+
+    // Show listening feedback
+    if (isListening && isConnected) {
+      setToast({
+        message: "Listening...",
+        visible: true,
+        type: "info",
+      });
+
+      return () => setToast((prev) => ({ ...prev, visible: false }));
+    }
+  }, [isConnected, isMicActive, isListening]);
+
+  // Cleanup voice assistant connection on unmount
+  useEffect(() => {
+    return () => {
+      if (isConnected) {
+        disconnect();
+        setIsMicActive(false);
+      }
+    };
+  }, [isConnected, disconnect]);
 
   // Simulate data loading
   useEffect(() => {
@@ -74,6 +200,61 @@ export default function Dashboard() {
       }
     }
   }, [floatingBtnPosition]);
+
+  // Add AI Engine URL debugging
+  useEffect(() => {
+    console.log("AI Engine URL:", process.env.NEXT_PUBLIC_AI_ENGINE_URL);
+  }, []);
+
+  // Handle microphone toggle with proper error handling
+  const handleMicrophoneToggle = async () => {
+    console.log("handleMicrophoneToggle", isDragging);
+
+    if (isDragging) return;
+
+    try {
+      const newMicState = !isMicActive;
+      console.log("Setting microphone state to:", newMicState);
+
+      // Set state first (UI feedback)
+      setIsMicActive(newMicState);
+
+      // Toggle microphone with proper error handling
+      console.log("Calling toggleMicrophone with:", newMicState);
+      await toggleMicrophone(newMicState);
+
+      console.log("After toggleMicrophone, isConnected:", isConnected);
+
+      if (!newMicState) {
+        setToast({
+          message: "AI Assistant disconnected",
+          visible: true,
+          type: "info",
+        });
+
+        // Hide toast after 3 seconds
+        setTimeout(() => {
+          setToast((prev) => ({ ...prev, visible: false }));
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Failed to toggle microphone:", error);
+
+      // Reset mic state on error
+      setIsMicActive(false);
+
+      setToast({
+        message: "Failed to connect to AI Assistant",
+        visible: true,
+        type: "error",
+      });
+
+      // Hide toast after 3 seconds
+      setTimeout(() => {
+        setToast((prev) => ({ ...prev, visible: false }));
+      }, 3000);
+    }
+  };
 
   // Mock data - in production would come from API
   const userData = {
@@ -159,6 +340,13 @@ export default function Dashboard() {
   return (
     <main className="min-h-screen bg-background text-foreground pb-0 relative">
       <BackgroundGradient />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        isVisible={toast.visible}
+        type={toast.type}
+      />
 
       {/* New Neumorphic Header */}
       <NeumorphicHeader
@@ -450,6 +638,44 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
+        {/* Voice Assistant Transcript Popup */}
+        <AnimatePresence>
+          {showTranscript && transcript && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-28 md:bottom-20 left-4 right-4 md:left-auto md:right-24 md:w-96 z-30 voice-transcript-bubble"
+            >
+              <div className="flex items-start gap-3 p-4 bg-card rounded-lg shadow-lg">
+                <div className="bg-gradient-to-tr from-purple-heart to-royal-blue rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 2c1.7 0 3 1.3 3 3v9c0 1.7-1.3 3-3 3s-3-1.3-3-3V5c0-1.7 1.3-3 3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium mb-1">
+                    HealLink AI Assistant
+                  </h3>
+                  <p className="text-sm text-foreground/80">{transcript}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* AI Assistant Floating Button */}
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
@@ -475,32 +701,55 @@ export default function Dashboard() {
               y: prev.y + info.offset.y,
             }));
           }}
-          onClick={(e) => {
-            if (isDragging) {
-              e.preventDefault();
-              return;
-            }
-            // Add your click handler here
-          }}
-          className="fixed right-5 bottom-24 md:bottom-5 z-30 w-14 h-14 bg-gradient-to-tr from-purple-heart to-royal-blue rounded-full flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing"
+          onClick={handleMicrophoneToggle}
+          className={`voice-assistant-button ${
+            isMicActive
+              ? "bg-red-500 gradient-pulse"
+              : "bg-gradient-to-tr from-purple-heart to-royal-blue"
+          }`}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 2c1.7 0 3 1.3 3 3v9c0 1.7-1.3 3-3 3s-3-1.3-3-3V5c0-1.7 1.3-3 3-3Z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" x2="12" y1="19" y2="22" />
-          </svg>
+          {isSpeaking ? (
+            // Sound wave animation when assistant is speaking
+            <div className="sound-wave-container">
+              <span className="sound-wave-bar animate-sound-wave-1"></span>
+              <span className="sound-wave-bar animate-sound-wave-2"></span>
+              <span className="sound-wave-bar animate-sound-wave-3"></span>
+            </div>
+          ) : isMicActive ? (
+            // Stop icon when microphone is active
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+            </svg>
+          ) : (
+            // Mic icon when inactive
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2c1.7 0 3 1.3 3 3v9c0 1.7-1.3 3-3 3s-3-1.3-3-3V5c0-1.7 1.3-3 3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" x2="12" y1="19" y2="22" />
+            </svg>
+          )}
         </motion.button>
       </div>
 
