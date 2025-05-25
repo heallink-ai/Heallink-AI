@@ -1,11 +1,12 @@
 import os
 import uuid
+import json
 import logging
 import asyncio
 import time
 from typing import Dict, Optional, List, Any
 
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -22,7 +23,6 @@ from livekit.plugins import (
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 # Import LiveKit token generation
-from livekit_api.access_token import AccessToken, VideoGrant
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -79,6 +79,17 @@ class TokenRequest(BaseModel):
 class TokenResponse(BaseModel):
     token: str = Field(..., description="LiveKit token")
     serverUrl: str = Field(..., description="LiveKit server URL")
+
+# Add webhook models
+class WebhookEvent(BaseModel):
+    id: str = Field(..., description="UUID identifying the event")
+    createdAt: int = Field(..., description="UNIX timestamp in seconds")
+    event: str = Field(..., description="Type of event")
+    room: Optional[Dict[str, Any]] = Field(None, description="Room information")
+    participant: Optional[Dict[str, Any]] = Field(None, description="Participant information")
+    track: Optional[Dict[str, Any]] = Field(None, description="Track information")
+    egressInfo: Optional[Dict[str, Any]] = Field(None, description="Egress information")
+    ingressInfo: Optional[Dict[str, Any]] = Field(None, description="Ingress information")
 
 # Simple rate limiter
 def is_rate_limited(client_ip: str) -> bool:
@@ -442,46 +453,6 @@ async def list_agents():
         raise HTTPException(status_code=500, detail=f"Failed to list agents: {str(e)}")
 
 
-@app.post(f"{API_PREFIX}/livekit/token")
-async def generate_token(token_request: TokenRequest):
-    """
-    Generate a LiveKit token for a participant to join a room.
-    """
-    try:
-        logger.info(f"Token request received: {token_request.identity}, room: {token_request.room_name}")
-        
-        # Create a new access token
-        at = AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
-        
-        # Add user identity to the token
-        at.identity = token_request.identity
-        
-        # Grant permissions for the specified room
-        grant = VideoGrant(
-            room=token_request.room_name,
-            room_join=True,
-            room_admin=False,
-            can_publish=True,
-            can_subscribe=True,
-        )
-        
-        # Add the grant to the token
-        at.add_grant(grant)
-        
-        # Generate the token string
-        token = at.to_jwt()
-        
-        logger.info(f"Generated token for {token_request.identity} to join room {token_request.room_name}")
-        
-        # Return token and server URL
-        return {
-            "token": token,
-            "serverUrl": LIVEKIT_URL
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to generate token: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate token: {str(e)}")
 
 
 @app.get(f"{API_PREFIX}/test")
@@ -490,6 +461,68 @@ async def test_endpoint():
     Simple test endpoint to check if API routes are working.
     """
     return {"status": "ok", "message": "Test endpoint is working"}
+
+
+# Add webhook endpoint
+@app.post(f"{API_PREFIX}/webhooks/livekit")
+async def livekit_webhook(request: Request, authorization: Optional[str] = Header(None)):
+    """
+    Receive and log LiveKit webhook events.
+    
+    Currently focused on participant_joined events.
+    
+    Note: In a production environment, you should validate that the webhook
+    is coming from LiveKit by verifying the JWT signature in the Authorization header.
+    """
+    try:
+        # Get the raw request body
+        body = await request.body()
+        
+        # Parse as JSON
+        try:
+            event_data = json.loads(body)
+            logger.info(f"Received LiveKit webhook event: {event_data.get('event', 'unknown')}")
+            
+            # Log the full payload
+            logger.debug(f"Webhook payload: {json.dumps(event_data, indent=2)}")
+            
+            # Handle specific events
+            event_type = event_data.get('event')
+            
+            if event_type == 'participant_joined':
+                room_info = event_data.get('room', {})
+                participant_info = event_data.get('participant', {})
+                
+                logger.info(
+                    f"Participant joined: {participant_info.get('identity', 'unknown')} "
+                    f"joined room {room_info.get('name', 'unknown')}"
+                )
+                
+                # Here you could trigger additional actions when a participant joins
+                # For example, updating analytics, sending notifications, etc.
+            
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse webhook payload as JSON: {body.decode('utf-8', errors='replace')}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Invalid JSON payload"}
+            )
+            
+        # Log Authorization header for debugging (but don't expose in production)
+        if authorization:
+            logger.debug(f"Received Authorization header: {authorization[:20]}...")
+            
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": "Webhook received"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Internal server error: {str(e)}"}
+        )
 
 
 # Exception handler for HTTP exceptions
