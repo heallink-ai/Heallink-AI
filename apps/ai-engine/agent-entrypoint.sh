@@ -17,5 +17,5 @@ else
 fi
 
 # Start the agent in dev mode
-echo "Starting Heallink Agent in dev mode..."
+echo "Starting Heallink Agent in dev mode using new refactored code..."
 exec python agent.py dev 
