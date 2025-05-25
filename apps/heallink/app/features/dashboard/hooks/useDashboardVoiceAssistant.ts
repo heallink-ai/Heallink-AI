@@ -18,7 +18,7 @@ export const useDashboardVoiceAssistant = () => {
   // Toast notification state
   const [toast, setToast] = useState({
     message: "",
-    visible: false,
+    isVisible: false,
     type: "info" as "info" | "success" | "error",
   });
 
@@ -60,13 +60,13 @@ export const useDashboardVoiceAssistant = () => {
     if (isConnected && isMicActive) {
       setToast({
         message: "Connected to AI Assistant",
-        visible: true,
+        isVisible: true,
         type: "success",
       });
 
       // Hide toast after 3 seconds
       const timeout = setTimeout(() => {
-        setToast((prev) => ({ ...prev, visible: false }));
+        setToast((prev) => ({ ...prev, isVisible: false }));
       }, 3000);
 
       return () => clearTimeout(timeout);
@@ -76,11 +76,11 @@ export const useDashboardVoiceAssistant = () => {
     if (isListening && isConnected) {
       setToast({
         message: "Listening...",
-        visible: true,
+        isVisible: true,
         type: "info",
       });
 
-      return () => setToast((prev) => ({ ...prev, visible: false }));
+      return () => setToast((prev) => ({ ...prev, isVisible: false }));
     }
   }, [isConnected, isMicActive, isListening]);
 
@@ -116,13 +116,13 @@ export const useDashboardVoiceAssistant = () => {
       if (!newMicState) {
         setToast({
           message: "AI Assistant disconnected",
-          visible: true,
+          isVisible: true,
           type: "info",
         });
 
         // Hide toast after 3 seconds
         setTimeout(() => {
-          setToast((prev) => ({ ...prev, visible: false }));
+          setToast((prev) => ({ ...prev, isVisible: false }));
         }, 3000);
       }
     } catch (error) {
@@ -133,13 +133,13 @@ export const useDashboardVoiceAssistant = () => {
 
       setToast({
         message: "Failed to connect to AI Assistant",
-        visible: true,
+        isVisible: true,
         type: "error",
       });
 
       // Hide toast after 3 seconds
       setTimeout(() => {
-        setToast((prev) => ({ ...prev, visible: false }));
+        setToast((prev) => ({ ...prev, isVisible: false }));
       }, 3000);
     }
   };
