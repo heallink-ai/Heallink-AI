@@ -2,18 +2,28 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useVoiceAssistant } from "@/app/providers/VoiceAssistantProvider";
+import { useLiveKit } from "@/app/providers/LiveKitProvider";
+import { v4 as uuidv4 } from "uuid";
 
 export const useDashboardVoiceAssistant = () => {
   // Voice assistant state
   const [isMicActive, setIsMicActive] = useState(false);
   const {
-    isConnected,
+    isConnected: isVoiceAssistantConnected,
     isListening,
     isSpeaking,
     transcript,
     toggleMicrophone,
-    disconnect,
+    disconnect: disconnectVoiceAssistant,
   } = useVoiceAssistant();
+
+  // LiveKit integration
+  const {
+    isConnected: isLiveKitConnected,
+    isConnecting: isLiveKitConnecting,
+    connect: connectToLiveKit,
+    disconnect: disconnectFromLiveKit,
+  } = useLiveKit();
 
   // Toast notification state
   const [toast, setToast] = useState({
@@ -27,6 +37,9 @@ export const useDashboardVoiceAssistant = () => {
   const [showTranscript, setShowTranscript] = useState(false);
   const [transcriptTimeout, setTranscriptTimeout] =
     useState<NodeJS.Timeout | null>(null);
+
+  // Generate a unique room name for this user's session
+  const roomNameRef = useRef<string>(`voice-assistant-${uuidv4()}`);
 
   // Update transcript and handle visibility
   useEffect(() => {
@@ -57,7 +70,7 @@ export const useDashboardVoiceAssistant = () => {
 
   // Show toast notification based on connection state
   useEffect(() => {
-    if (isConnected && isMicActive) {
+    if ((isVoiceAssistantConnected || isLiveKitConnected) && isMicActive) {
       setToast({
         message: "Connected to AI Assistant",
         isVisible: true,
@@ -72,8 +85,19 @@ export const useDashboardVoiceAssistant = () => {
       return () => clearTimeout(timeout);
     }
 
+    // Show connecting feedback
+    if (isLiveKitConnecting) {
+      setToast({
+        message: "Connecting...",
+        isVisible: true,
+        type: "info",
+      });
+
+      return () => {};
+    }
+
     // Show listening feedback
-    if (isListening && isConnected) {
+    if (isListening && isVoiceAssistantConnected) {
       setToast({
         message: "Listening...",
         isVisible: true,
@@ -82,17 +106,31 @@ export const useDashboardVoiceAssistant = () => {
 
       return () => setToast((prev) => ({ ...prev, isVisible: false }));
     }
-  }, [isConnected, isMicActive, isListening]);
+  }, [
+    isVoiceAssistantConnected,
+    isLiveKitConnected,
+    isLiveKitConnecting,
+    isMicActive,
+    isListening,
+  ]);
 
   // Cleanup voice assistant connection on unmount
   useEffect(() => {
     return () => {
-      if (isConnected) {
-        disconnect();
+      if (isVoiceAssistantConnected) {
+        disconnectVoiceAssistant();
         setIsMicActive(false);
       }
+      if (isLiveKitConnected) {
+        disconnectFromLiveKit();
+      }
     };
-  }, [isConnected, disconnect]);
+  }, [
+    isVoiceAssistantConnected,
+    isLiveKitConnected,
+    disconnectVoiceAssistant,
+    disconnectFromLiveKit,
+  ]);
 
   // Handle microphone toggle with proper error handling
   const handleMicrophoneToggle = async (isDragging: boolean) => {
@@ -107,11 +145,24 @@ export const useDashboardVoiceAssistant = () => {
       // Set state first (UI feedback)
       setIsMicActive(newMicState);
 
-      // Toggle microphone with proper error handling
+      if (newMicState) {
+        // Connect to LiveKit room when activating microphone
+        await connectToLiveKit(roomNameRef.current);
+        console.log("Connected to LiveKit room:", roomNameRef.current);
+      } else {
+        // Disconnect from LiveKit room when deactivating microphone
+        disconnectFromLiveKit();
+        console.log("Disconnected from LiveKit room");
+      }
+
+      // Toggle original voice assistant as well
       console.log("Calling toggleMicrophone with:", newMicState);
       await toggleMicrophone(newMicState);
 
-      console.log("After toggleMicrophone, isConnected:", isConnected);
+      console.log(
+        "After toggleMicrophone, isConnected:",
+        isVoiceAssistantConnected
+      );
 
       if (!newMicState) {
         setToast({
@@ -146,7 +197,7 @@ export const useDashboardVoiceAssistant = () => {
 
   return {
     isMicActive,
-    isConnected,
+    isConnected: isVoiceAssistantConnected || isLiveKitConnected,
     isListening,
     isSpeaking,
     transcript: transcriptRef.current,

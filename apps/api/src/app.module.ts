@@ -12,6 +12,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { LoggingModule } from './modules/logging/logging.module';
 import { EmailModule } from './modules/emails/email.module';
 import { AwsModule } from './modules/aws';
+import { LivekitModule } from './modules/livekit/livekit.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -36,6 +37,10 @@ import * as Joi from 'joi';
         // Email
         EMAIL_FROM: Joi.string().required(),
         EMAIL_FROM_NAME: Joi.string().optional().allow(''),
+        // LiveKit
+        LIVEKIT_URL: Joi.string().required(),
+        LIVEKIT_API_KEY: Joi.string().required(),
+        LIVEKIT_API_SECRET: Joi.string().required(),
         // OAuth providers
         GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
         GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
@@ -64,6 +69,11 @@ import * as Joi from 'joi';
           frontend: {
             url: process.env.FRONTEND_URL,
             adminUrl: process.env.ADMIN_FRONTEND_URL,
+          },
+          livekit: {
+            url: process.env.LIVEKIT_URL,
+            apiKey: process.env.LIVEKIT_API_KEY,
+            apiSecret: process.env.LIVEKIT_API_SECRET,
           },
           google: {
             clientId: process.env.GOOGLE_CLIENT_ID,
@@ -118,6 +128,7 @@ import * as Joi from 'joi';
     AdminModule,
     EmailModule,
     AwsModule,
+    LivekitModule,
   ],
   controllers: [AppController],
   providers: [AppService],
