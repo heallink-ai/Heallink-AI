@@ -37,9 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     this.logger.log(
       `JWT Strategy initialized with secret: ${jwtSecret ? '[SECRET CONFIGURED]' : 'fallback secret'}`,
     );
-    this.logger.debug(
-      `Direct env JWT_SECRET value exists: ${!!process.env.JWT_SECRET}`,
-    );
+    this.logger.debug(`Direct env JWT_SECRET value exists: ${!!jwtSecret}`);
   }
 
   async validate(payload: JwtPayload) {

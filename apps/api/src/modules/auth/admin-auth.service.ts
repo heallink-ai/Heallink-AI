@@ -575,11 +575,11 @@ export class AdminAuthService {
     };
 
     // Use environment variables directly to avoid config mapping issues
-    const jwtSecret = process.env.JWT_SECRET || 'dev-jwt-secret-key';
+    const jwtSecret =
+      this.configService.get<string>('jwt.secret') || 'dev-jwt-secret';
     const jwtRefreshSecret =
-      process.env.JWT_REFRESH_SECRET ||
-      process.env.JWT_SECRET ||
-      'dev-jwt-refresh-secret-key';
+      this.configService.get<string>('jwt.refreshSecret') ||
+      'dev-jwt-refresh-secret';
 
     this.logger.debug(
       `Generating tokens with JWT_SECRET: ${jwtSecret ? '[SECRET CONFIGURED]' : 'fallback secret'}`,
