@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AccessToken, RoomServiceClient, Room } from 'livekit-server-sdk';
+import {
+  AccessToken,
+  RoomServiceClient,
+  Room,
+  WebhookReceiver,
+} from 'livekit-server-sdk';
 import { CreateRoomDto, CreateTokenDto } from './dto';
 
 interface LiveKitConfig {
@@ -15,6 +20,8 @@ export class LivekitService {
   private roomService: RoomServiceClient;
   private apiKey: string;
   private apiSecret: string;
+  private webhookReceiver: WebhookReceiver;
+  private aiEngineUrl: string;
 
   constructor(private configService: ConfigService) {
     const livekitConfig = this.configService.get<LiveKitConfig>('livekit');
@@ -38,6 +45,57 @@ export class LivekitService {
       this.apiKey,
       this.apiSecret,
     );
+
+    // Initialize webhook receiver
+    this.webhookReceiver = new WebhookReceiver(this.apiKey, this.apiSecret);
+
+    // Get AI Engine URL from config
+    const aiEngineConfig = this.configService.get('aiEngine');
+    this.aiEngineUrl = aiEngineConfig?.url || 'http://ai-engine:8000';
+
+    // Log webhook configuration (no need to await this)
+    // this.configureWebhooks();
+  }
+
+  /**
+   * Configure webhooks to be sent to the AI Engine
+   */
+  private configureWebhooks(): void {
+    try {
+      this.logger.log('Configuring LiveKit webhooks');
+
+      // Get webhook endpoint
+      const webhookEndpoint = `${this.aiEngineUrl}/api/v1/webhooks/livekit`;
+      this.logger.log(`Setting up webhook to endpoint: ${webhookEndpoint}`);
+
+      // Note: This is just logging that we would set up the webhook
+      // In a real implementation, you would use the LiveKit Admin API to set up webhooks
+      // or configure them through the LiveKit Cloud dashboard
+      this.logger.log(`LiveKit webhook would be configured with:
+        - API Key: ${this.apiKey.substring(0, 4)}...
+        - Endpoint: ${webhookEndpoint}
+        - Events: participant_joined, participant_left
+      `);
+
+      // Instructions for manually setting up webhooks
+      this.logger.log(`
+        To configure webhooks in LiveKit Cloud:
+        1. Go to the LiveKit Cloud dashboard
+        2. Navigate to your project's settings
+        3. Add a webhook with the following details:
+           - URL: ${webhookEndpoint}
+           - Events: Select "Participant Joined" and other events of interest
+           - API Key: Use the same API key as your LiveKit config
+      `);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(
+        `Failed to configure webhooks: ${errorMessage}`,
+        errorStack,
+      );
+    }
   }
 
   /**

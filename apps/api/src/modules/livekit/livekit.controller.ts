@@ -1,5 +1,18 @@
-import { Controller, Post, Body, Get, Param, Delete, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { LivekitService } from './livekit.service';
 import { CreateRoomDto, CreateTokenDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -16,7 +29,9 @@ export class LivekitController {
   @ApiResponse({ status: 201, description: 'Token generated successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async createToken(@Body() createTokenDto: CreateTokenDto): Promise<{ token: string }> {
+  async createToken(
+    @Body() createTokenDto: CreateTokenDto,
+  ): Promise<{ token: string }> {
     const token = await this.livekitService.createToken(createTokenDto);
     return { token };
   }

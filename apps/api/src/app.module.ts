@@ -41,6 +41,8 @@ import * as Joi from 'joi';
         LIVEKIT_URL: Joi.string().required(),
         LIVEKIT_API_KEY: Joi.string().required(),
         LIVEKIT_API_SECRET: Joi.string().required(),
+        // AI Engine
+        AI_ENGINE_URL: Joi.string().default('http://ai-engine:8000'),
         // OAuth providers
         GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
         GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
@@ -74,6 +76,9 @@ import * as Joi from 'joi';
             url: process.env.LIVEKIT_URL,
             apiKey: process.env.LIVEKIT_API_KEY,
             apiSecret: process.env.LIVEKIT_API_SECRET,
+          },
+          aiEngine: {
+            url: process.env.AI_ENGINE_URL || 'http://ai-engine:8000',
           },
           google: {
             clientId: process.env.GOOGLE_CLIENT_ID,
