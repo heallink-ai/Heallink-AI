@@ -23,13 +23,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly usersService: UsersService,
   ) {
     // Get the JWT secret directly from environment
-    const jwtSecret = process.env.JWT_SECRET || 'dev-jwt-secret-key';
+    const jwtSecret =
+      configService.get<string>('jwt.secret') || 'dev-jwt-secret';
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });
+
+    console.log({ jwtSecret });
 
     this.logger.log(
       `JWT Strategy initialized with secret: ${jwtSecret ? '[SECRET CONFIGURED]' : 'fallback secret'}`,

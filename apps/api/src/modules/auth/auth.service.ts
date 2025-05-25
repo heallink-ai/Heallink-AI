@@ -156,16 +156,31 @@ export class AuthService {
   ): Promise<{ accessToken: string; refreshToken: string; user: any }> {
     const payload = { sub: user._id, email: user.email, role: user.role };
 
+    const jwtSecret =
+      this.configService.get<string>('jwt.secret') || 'dev-jwt-secret';
+    const jwtExpiresIn =
+      this.configService.get<string>('jwt.expiresIn') || '30m';
+    const jwtRefreshSecret =
+      this.configService.get<string>('jwt.refreshSecret') ||
+      'dev-jwt-refresh-secret';
+    const jwtRefreshExpiresIn =
+      this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
+
+    console.log({
+      jwtSecret,
+      jwtExpiresIn,
+      jwtRefreshSecret,
+      jwtRefreshExpiresIn,
+    });
+
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.secret') || 'dev-jwt-secret',
-      expiresIn: this.configService.get<string>('jwt.expiresIn') || '30m',
+      secret: jwtSecret,
+      expiresIn: jwtExpiresIn,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret:
-        this.configService.get<string>('jwt.refreshSecret') ||
-        'dev-jwt-refresh-secret',
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
+      secret: jwtRefreshSecret,
+      expiresIn: jwtRefreshExpiresIn,
     });
 
     // Store the refresh token in the user document
