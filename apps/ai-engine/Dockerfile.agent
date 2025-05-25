@@ -14,6 +14,9 @@ RUN pip install uv
 # Copy only requirements file first to leverage Docker caching
 COPY ./apps/ai-engine/requirements.txt /app/
 
+# First install a compatible NumPy version (before other requirements)
+RUN pip install "numpy<2.0.0"
+
 # Install dependencies with system option
 RUN uv pip install --system -r requirements.txt
 
@@ -23,6 +26,7 @@ WORKDIR /app/apps/ai-engine
 
 # Expose the agent port (if needed)
 EXPOSE 7880
+
 
 # Use a direct CMD with multiple commands for simplicity
 CMD echo "Starting model download check..." && \
