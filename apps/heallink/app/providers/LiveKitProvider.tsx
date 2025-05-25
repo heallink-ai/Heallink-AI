@@ -133,6 +133,8 @@ interface LiveKitContextType {
   remoteParticipants: RemoteParticipant[];
   connect: (roomName: string) => Promise<void>;
   disconnect: () => void;
+  isMicrophoneEnabled: boolean;
+  toggleMicrophone: () => Promise<void>;
 }
 
 const LiveKitContext = createContext<LiveKitContextType | null>(null);
@@ -156,6 +158,7 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const audioTrackQueueRef = useRef<RemoteTrack[]>([]);
   const isProcessingAudioRef = useRef<boolean>(false);
+  const [isMicrophoneEnabled, setIsMicrophoneEnabled] = useState(false);
 
   // Create the Room instance only once
   const room = useMemo(
@@ -403,7 +406,21 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
     };
   }, [room, updateRemoteParticipants]);
 
-  // Memoize the connect function to avoid recreation on each render
+  // Toggle microphone state
+  const toggleMicrophone = useCallback(async () => {
+    if (!room || !room.localParticipant) return;
+
+    try {
+      const newState = !isMicrophoneEnabled;
+      await room.localParticipant.setMicrophoneEnabled(newState);
+      setIsMicrophoneEnabled(newState);
+      console.log(`Microphone ${newState ? "enabled" : "disabled"}`);
+    } catch (error) {
+      console.error("Error toggling microphone:", error);
+    }
+  }, [room, isMicrophoneEnabled]);
+
+  // After successful connection, enable microphone
   const connect = useCallback(
     async (roomName: string) => {
       if (!session?.user?.id) {
@@ -434,6 +451,11 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
 
         // Connect to the room using the token
         await room.connect(livekitUrl, result.token);
+
+        // Enable microphone after successful connection
+        await room.localParticipant.setMicrophoneEnabled(true);
+        setIsMicrophoneEnabled(true);
+        console.log("Microphone enabled automatically after connection");
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)));
         setIsConnecting(false);
@@ -460,6 +482,8 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
       remoteParticipants,
       connect,
       disconnect,
+      isMicrophoneEnabled,
+      toggleMicrophone,
     }),
     [
       room,
@@ -469,6 +493,8 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
       remoteParticipants,
       connect,
       disconnect,
+      isMicrophoneEnabled,
+      toggleMicrophone,
     ]
   );
 
