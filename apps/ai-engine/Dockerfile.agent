@@ -1,0 +1,38 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for faster package installation
+RUN pip install uv
+
+# Copy only requirements file first to leverage Docker caching
+COPY ./apps/ai-engine/requirements.txt /app/
+
+# Install dependencies with system option
+RUN uv pip install --system -r requirements.txt
+
+# Copy project files
+COPY ./apps/ai-engine /app/apps/ai-engine/
+WORKDIR /app/apps/ai-engine
+
+# Expose the agent port (if needed)
+EXPOSE 7880
+
+# Use a direct CMD with multiple commands for simplicity
+CMD echo "Starting model download check..." && \
+    if [ ! -f ~/.cache/livekit/turn-detector/onnx/model_q8.onnx ] || \
+    [ ! -f ~/.cache/livekit/silero/silero_vad.onnx ] || \
+    [ ! -f ~/.cache/livekit/noise-cancellation/bvccfg.bin ]; then \
+    echo "Downloading model files..." && \
+    python agent.py download-files; \
+    else \
+    echo "Model files already exist, skipping download."; \
+    fi && \
+    echo "Starting Heallink Agent in dev mode..." && \
+    python agent.py dev
