@@ -34,6 +34,7 @@ from livekit.plugins import (
     deepgram,
     noise_cancellation,
     silero,
+    bey,
 )
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
@@ -111,6 +112,17 @@ async def entrypoint(ctx: JobContext):
             ),
             userdata=call_context,
         )
+        
+        # Initialize Beyond Presence avatar
+        avatar = bey.AvatarSession(
+            avatar_id="8c37d173-929f-4a71-9a5f-45840bb2422b",  # Default avatar ID
+            avatar_participant_identity="heallink-avatar",  # Custom identity
+            avatar_participant_name="Heallink Health Assistant",  # Friendly display name
+        )
+        
+        # Start the avatar and wait for it to join
+        await avatar.start(session, room=ctx.room)
+        logger.info("Beyond Presence avatar started and joined the room")
         
         # Start the session with the greeting agent
         await session.start(

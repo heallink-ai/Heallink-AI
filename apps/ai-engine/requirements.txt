@@ -32,6 +32,7 @@ jiter==0.10.0
 livekit==1.0.8
 livekit-agents==1.0.22
 livekit-api==1.0.2
+livekit-plugins-bey==1.0.22
 livekit-plugins-cartesia==1.0.22
 livekit-plugins-deepgram==1.0.22
 livekit-plugins-noise-cancellation==0.2.4
