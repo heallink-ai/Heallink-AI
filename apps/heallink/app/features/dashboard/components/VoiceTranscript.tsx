@@ -3,11 +3,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 
 interface VoiceTranscriptProps {
-  showTranscript: boolean;
   transcript: string;
+  isSpeaking?: boolean;
+  showTranscript?: boolean;
 }
 
-const VoiceTranscript = ({ showTranscript, transcript }: VoiceTranscriptProps) => {
+const VoiceTranscript = ({
+  transcript,
+  isSpeaking = false,
+  showTranscript = true,
+}: VoiceTranscriptProps) => {
   return (
     <AnimatePresence>
       {showTranscript && transcript && (
@@ -17,7 +22,9 @@ const VoiceTranscript = ({ showTranscript, transcript }: VoiceTranscriptProps) =
           exit={{ opacity: 0, y: 20 }}
           className="fixed bottom-28 md:bottom-20 left-4 right-4 md:left-auto md:right-24 md:w-96 z-30 voice-transcript-bubble"
         >
-          <div className="flex items-start gap-3 p-4 bg-card rounded-lg shadow-lg">
+          <div
+            className={`flex items-start gap-3 p-4 bg-card rounded-lg shadow-lg ${isSpeaking ? "speaking-pulse" : ""}`}
+          >
             <div className="bg-gradient-to-tr from-purple-heart to-royal-blue rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-1">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

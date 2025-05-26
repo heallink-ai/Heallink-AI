@@ -19,6 +19,7 @@ import NeumorphicHeader from "@/app/components/dashboard/NeumorphicHeader";
 import Toast from "./Toast";
 import VoiceAssistantButton from "./VoiceAssistantButton";
 import VoiceTranscript from "./VoiceTranscript";
+import VoiceAgentAvatar from "./VoiceAgentAvatar";
 import Skeleton from "./Skeleton";
 
 // Types
@@ -66,7 +67,7 @@ const DashboardPresentation = ({
       {/* Toast Notification */}
       <Toast
         message={toast.message}
-        isVisible={toast.visible}
+        isVisible={toast.isVisible}
         type={toast.type}
       />
 
@@ -360,13 +361,19 @@ const DashboardPresentation = ({
           </motion.div>
         </div>
 
-        {/* Voice Assistant Transcript Popup */}
-        <VoiceTranscript 
-          showTranscript={showTranscript} 
-          transcript={transcript} 
+        {/* Voice Transcript */}
+        {showTranscript && (
+          <VoiceTranscript transcript={transcript} isSpeaking={isSpeaking} />
+        )}
+
+        {/* Voice Avatar - New component */}
+        <VoiceAgentAvatar
+          isVisible={isMicActive && isConnected}
+          isSpeaking={isSpeaking}
+          isListening={isListening}
         />
 
-        {/* AI Assistant Floating Button */}
+        {/* Voice Assistant Button */}
         <VoiceAssistantButton
           isMicActive={isMicActive}
           isSpeaking={isSpeaking}

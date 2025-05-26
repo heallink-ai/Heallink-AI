@@ -24,106 +24,6 @@ import { useSession } from "next-auth/react";
 import "@livekit/components-styles";
 import { useLiveKitToken } from "@/app/hooks/livekit/useLiveKitTokenApi";
 
-// Debug component to show audio controls when needed
-const AudioDebugControls = () => {
-  const [showControls, setShowControls] = useState(false);
-
-  // Only show in development
-  if (process.env.NODE_ENV !== "development") return null;
-
-  // Toggle controls visibility
-  const toggleControls = () => {
-    setShowControls((prev) => !prev);
-  };
-
-  return (
-    <>
-      {/* Small floating button to toggle debug controls */}
-      <button
-        onClick={toggleControls}
-        style={{
-          position: "fixed",
-          bottom: "10px",
-          right: "10px",
-          zIndex: 9999,
-          background: "#5a2dcf",
-          color: "white",
-          border: "none",
-          borderRadius: "50%",
-          width: "24px",
-          height: "24px",
-          fontSize: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          opacity: 0.6,
-        }}
-        title="Toggle audio debug controls"
-      >
-        🔊
-      </button>
-
-      {/* Actual controls panel */}
-      {showControls && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "40px",
-            right: "10px",
-            zIndex: 9999,
-            background: "white",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            padding: "10px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          }}
-        >
-          <h4 style={{ margin: "0 0 5px 0" }}>Audio Debug</h4>
-          <div>
-            <audio
-              id="debug-audio-element"
-              controls
-              style={{ display: "block", marginBottom: "5px" }}
-            />
-            <button
-              onClick={() => {
-                const mainAudio = document.getElementById(
-                  "heallink-agent-audio"
-                ) as HTMLAudioElement;
-                const debugAudio = document.getElementById(
-                  "debug-audio-element"
-                ) as HTMLAudioElement;
-
-                if (mainAudio && debugAudio && mainAudio.srcObject) {
-                  // Clone the audio stream to the debug element
-                  debugAudio.srcObject = mainAudio.srcObject;
-                  debugAudio
-                    .play()
-                    .catch((e) => console.error("Debug audio play failed:", e));
-                } else {
-                  alert("No active audio stream found");
-                }
-              }}
-              style={{
-                background: "#2066e4",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                padding: "5px 10px",
-                cursor: "pointer",
-                fontSize: "12px",
-              }}
-            >
-              Connect to Agent Audio
-            </button>
-          </div>
-        </div>
-      )}
-    </>
-  );
-};
-
 interface LiveKitContextType {
   room: Room | null;
   isConnected: boolean;
@@ -356,11 +256,14 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
         participant.identity
       );
 
-      // Only handle audio tracks
+      // Only handle audio tracks through our queue system
       if (track.kind === Track.Kind.Audio) {
         console.log("Audio track received, adding to queue");
         queueAudioTrack(track);
       }
+
+      // For video tracks, we let the components handle them directly
+      // The VoiceAgentAvatar component will listen for video tracks from the avatar participant
     };
 
     // Handle track unsubscription
@@ -501,7 +404,6 @@ export const LiveKitProvider: React.FC<LiveKitProviderProps> = ({
   return (
     <LiveKitContext.Provider value={contextValue}>
       {children}
-      <AudioDebugControls />
     </LiveKitContext.Provider>
   );
 };

@@ -1,0 +1,310 @@
+/* Voice Agent Avatar Component Styles */
+
+.voice-agent-avatar-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  width: 360px;
+  max-width: 90vw;
+  pointer-events: none; /* Allow clicks to pass through when not interactive */
+}
+
+.voice-agent-avatar-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1.5rem;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 -1px 1px rgba(255, 255, 255, 0.2) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.avatar-speaking {
+  box-shadow:
+    0 8px 32px rgba(90, 45, 207, 0.3),
+    0 0 0 1px rgba(154, 165, 236, 0.2) inset,
+    0 -1px 1px rgba(255, 255, 255, 0.3) inset;
+  border: 1px solid rgba(90, 45, 207, 0.2);
+}
+
+.avatar-listening {
+  box-shadow:
+    0 8px 32px rgba(44, 92, 222, 0.3),
+    0 0 0 1px rgba(101, 120, 228, 0.2) inset,
+    0 -1px 1px rgba(255, 255, 255, 0.3) inset;
+  border: 1px solid rgba(44, 92, 222, 0.2);
+}
+
+.avatar-idle {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 -1px 1px rgba(255, 255, 255, 0.2) inset;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.avatar-video-container {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #2c5cde 0%, #7730ca 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: transparent;
+  position: relative;
+  z-index: 5; /* Make sure video is above the fallback */
+  border-radius: 50%; /* Keep the circular shape */
+  display: block;
+}
+
+/* Remove the empty rule */
+.avatar-video:not([srcObject="null"]) {
+  border-radius: 50%;
+}
+
+.avatar-fallback {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-fallback-image {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3253dc 0%, #5a2dcf 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-fallback-image::before {
+  content: "";
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: url("/heallink-logo.svg") center / contain no-repeat;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.avatar-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+.avatar-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: white;
+  text-align: center;
+}
+
+.avatar-status {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.speaking-indicator,
+.listening-indicator,
+.idle-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.speaking-dot,
+.listening-dot,
+.idle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.speaking-dot {
+  background-color: #bda8e5;
+  box-shadow: 0 0 8px rgba(189, 168, 229, 0.8);
+  animation: speaking-pulse 1.5s ease-in-out infinite;
+}
+
+.listening-dot {
+  background-color: #6578e4;
+  box-shadow: 0 0 8px rgba(101, 120, 228, 0.8);
+  animation: listening-pulse 2s ease-in-out infinite;
+}
+
+.idle-dot {
+  background-color: #9aa5ec;
+  box-shadow: 0 0 4px rgba(154, 165, 236, 0.5);
+}
+
+@keyframes speaking-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes listening-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.avatar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 240px;
+  gap: 1rem;
+}
+
+.avatar-loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  position: relative;
+}
+
+.spinner-segment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #5a2dcf;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-segment:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.spinner-segment:nth-child(2) {
+  width: 75%;
+  height: 75%;
+  border-top-color: #3253dc;
+  animation-delay: -0.3s;
+}
+
+.spinner-segment:nth-child(3) {
+  width: 50%;
+  height: 50%;
+  border-top-color: #9aa5ec;
+  animation-delay: -0.6s;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.avatar-loading-text {
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+  max-width: 80%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .voice-agent-avatar-container {
+    width: 300px;
+  }
+
+  .avatar-video-container {
+    width: 200px;
+    height: 200px;
+  }
+
+  .avatar-loading {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .voice-agent-avatar-container {
+    width: 260px;
+  }
+
+  .avatar-video-container {
+    width: 160px;
+    height: 160px;
+  }
+
+  .avatar-loading {
+    height: 160px;
+  }
+
+  .avatar-name {
+    font-size: 1rem;
+  }
+}
