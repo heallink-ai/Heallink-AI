@@ -51,6 +51,13 @@ export default function AdminListContainer() {
   const totalAdmins = adminResponse?.total || 0;
   const totalPages = adminResponse?.totalPages || 1;
 
+  // Debug logging
+  console.log("AdminListContainer - adminResponse:", adminResponse);
+  console.log("AdminListContainer - admins:", admins);
+  console.log("AdminListContainer - isLoading:", isLoading);
+  console.log("AdminListContainer - isError:", isError);
+  console.log("AdminListContainer - error:", error);
+
   // Filter admins based on status (client-side for now since API doesn't have status filter yet)
   const filteredAdmins = useMemo(() => {
     return admins.filter((admin) => {
@@ -84,19 +91,9 @@ export default function AdminListContainer() {
 
   const handleStatusToggle = (id: string, currentStatus: string) => {
     if (currentStatus.toLowerCase() === "active") {
-      deactivateAdminMutation.mutate(id, {
-        onError: (error) => {
-          console.error("Failed to deactivate admin:", error);
-          // You could show a toast notification here
-        },
-      });
+      deactivateAdminMutation.mutate(id);
     } else {
-      activateAdminMutation.mutate(id, {
-        onError: (error) => {
-          console.error("Failed to activate admin:", error);
-          // You could show a toast notification here
-        },
-      });
+      activateAdminMutation.mutate(id);
     }
   };
 
@@ -105,15 +102,8 @@ export default function AdminListContainer() {
   };
 
   const handleResetPassword = (id: string) => {
-    resetPasswordMutation.mutate(id, {
-      onSuccess: (response) => {
-        alert(response.message || 'Password reset email sent successfully!');
-      },
-      onError: (error) => {
-        console.error("Failed to reset password:", error);
-        alert('Failed to reset password. Please try again.');
-      },
-    });
+    resetPasswordMutation.mutate(id);
+    // Handle success/error in the useResetAdminPassword hook or via global error handling
   };
 
   return (

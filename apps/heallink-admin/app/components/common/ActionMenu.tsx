@@ -104,6 +104,7 @@ export default function ActionMenu({
 
   // Toggle dropdown and calculate position
   const toggleMenu = () => {
+    console.log("ActionMenu toggle clicked, disabled:", disabled, "isOpen:", isOpen);
     if (disabled) return;
 
     if (!isOpen) {
@@ -162,7 +163,7 @@ export default function ActionMenu({
     const style: React.CSSProperties = {
       position: "absolute",
       top: `${menuPosition.top}px`,
-      zIndex: 100,
+      zIndex: 9999,
       width: "192px", // w-48 = 12rem = 192px
       maxWidth: "calc(100vw - 20px)",
       boxShadow:
@@ -177,6 +178,7 @@ export default function ActionMenu({
       style.left = `${menuPosition.left}px`;
     }
 
+    console.log("Menu style:", style);
     return style;
   };
 
@@ -185,7 +187,12 @@ export default function ActionMenu({
       <button
         ref={buttonRef}
         className={triggerClassName}
-        onClick={toggleMenu}
+        onClick={(e) => {
+          console.log("ActionMenu button clicked! Event:", e);
+          e.preventDefault();
+          e.stopPropagation();
+          toggleMenu();
+        }}
         aria-label={triggerLabel}
         aria-expanded={isOpen}
         aria-controls={menuId}
@@ -196,7 +203,8 @@ export default function ActionMenu({
       </button>
 
       {isOpen &&
-        portalContainer &&
+        portalContainer && (
+        console.log("Rendering ActionMenu portal, groups:", groups),
         createPortal(
           <div
             id={menuId}
@@ -225,9 +233,18 @@ export default function ActionMenu({
                             ? "text-red-600 dark:text-red-400"
                             : item.color || ""
                       }`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        console.log("ActionMenu item clicked:", item.label, "disabled:", item.disabled);
+                        e.preventDefault();
+                        e.stopPropagation();
                         if (!item.disabled) {
-                          item.onClick();
+                          console.log("Calling item.onClick for:", item.label);
+                          try {
+                            item.onClick();
+                            console.log("Successfully called onClick for:", item.label);
+                          } catch (error) {
+                            console.error("Error calling onClick for", item.label, ":", error);
+                          }
                           setIsOpen(false);
                         }
                       }}
@@ -245,7 +262,7 @@ export default function ActionMenu({
             ))}
           </div>,
           portalContainer
-        )}
+        ))}
     </div>
   );
 }
