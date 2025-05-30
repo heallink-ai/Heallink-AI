@@ -28,6 +28,7 @@ import {
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiConsumes,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
@@ -411,5 +412,31 @@ export class AdminController {
     }
 
     throw new BadRequestException('Invalid bulk action');
+  }
+
+  @Post(':id/reset-password')
+  @ApiOperation({
+    summary: 'Reset admin password',
+    description: 'Generate a new temporary password for an admin user and send it via email',
+  })
+  @ApiParam({ name: 'id', description: 'Admin user ID' })
+  @ApiOkResponse({ 
+    description: 'Password reset email sent successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Password reset email sent successfully'
+        }
+      }
+    }
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Insufficient permissions' })
+  @ApiNotFoundResponse({ description: 'Admin not found' })
+  async resetAdminPassword(@Param('id') id: string) {
+    await this.adminService.resetAdminPassword(id);
+    return { message: 'Password reset email sent successfully' };
   }
 }

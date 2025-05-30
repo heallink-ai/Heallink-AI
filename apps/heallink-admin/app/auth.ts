@@ -70,6 +70,12 @@ export const authConfig: NextAuthConfig = {
             throw new Error("Access denied. Admin access only.");
           }
 
+          // Check if admin account is suspended
+          if (user.isActive === false) {
+            console.error("Suspended admin user attempted to access admin panel");
+            throw new Error("Your account has been suspended. Please contact the system administrator.");
+          }
+
           // Store the API access and refresh tokens
           if (account.provider === "credentials") {
             token.accessToken = user.accessToken;
@@ -163,6 +169,12 @@ export const authConfig: NextAuthConfig = {
             return null;
           }
 
+          // Check if admin account is suspended
+          if (data.user.isActive === false) {
+            console.error("Suspended admin user attempted to access admin panel");
+            return null;
+          }
+
           console.log("User authorized successfully:", data.user.email);
           // Return user with tokens for JWT callback
           return {
@@ -170,6 +182,7 @@ export const authConfig: NextAuthConfig = {
             name: data.user.name,
             email: data.user.email,
             role: data.user.role,
+            isActive: data.user.isActive,
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
           };

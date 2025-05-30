@@ -34,6 +34,7 @@ export interface User {
   adminRole?: AdminRole;
   permissions?: string[];
   emailVerified?: boolean;
+  isActive?: boolean;
 }
 
 export interface ApiResponse<T> {

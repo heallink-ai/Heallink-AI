@@ -12,6 +12,7 @@ declare module "next-auth" {
       adminRole?: AdminRole;
       permissions?: string[];
       provider?: string;
+      isActive?: boolean;
     };
     accessToken?: string;
     refreshToken?: string;
@@ -27,6 +28,7 @@ declare module "next-auth" {
     permissions?: string[];
     accessToken?: string;
     refreshToken?: string;
+    isActive?: boolean;
   }
 }
 

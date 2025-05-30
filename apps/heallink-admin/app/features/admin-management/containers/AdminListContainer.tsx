@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import AdminListPresentation from "../components/AdminListPresentation";
-import { useAdmins, useDeactivateAdmin, useActivateAdmin } from "../hooks/use-admin-queries";
+import { useAdmins, useDeactivateAdmin, useActivateAdmin, useResetAdminPassword } from "../hooks/use-admin-queries";
 import { AdminQueryParams, UserRole } from "../types/admin.types";
 
 export default function AdminListContainer() {
@@ -44,6 +44,7 @@ export default function AdminListContainer() {
   // Mutation hooks for activating/deactivating admins
   const deactivateAdminMutation = useDeactivateAdmin();
   const activateAdminMutation = useActivateAdmin();
+  const resetPasswordMutation = useResetAdminPassword();
 
   // Get admins from response
   const admins = adminResponse?.admins || [];
@@ -103,6 +104,18 @@ export default function AdminListContainer() {
     refetch();
   };
 
+  const handleResetPassword = (id: string) => {
+    resetPasswordMutation.mutate(id, {
+      onSuccess: (response) => {
+        alert(response.message || 'Password reset email sent successfully!');
+      },
+      onError: (error) => {
+        console.error("Failed to reset password:", error);
+        alert('Failed to reset password. Please try again.');
+      },
+    });
+  };
+
   return (
     <AdminListPresentation
       admins={filteredAdmins}
@@ -121,6 +134,7 @@ export default function AdminListContainer() {
       onStatusFilterChange={handleStatusFilterChange}
       onPageChange={handlePageChange}
       onStatusToggle={handleStatusToggle}
+      onResetPassword={handleResetPassword}
       onRefresh={handleRefresh}
     />
   );

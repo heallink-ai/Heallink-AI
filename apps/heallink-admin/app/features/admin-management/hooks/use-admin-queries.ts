@@ -243,3 +243,17 @@ export const useActivateAdmin = () => {
     mutate: (id: string) => toggleStatus.mutate({ id, status: true }),
   };
 };
+
+/**
+ * Hook to reset admin password
+ */
+export function useResetAdminPassword(): UseMutationResult<{ message: string }, Error, string> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminService.resetAdminPassword(id),
+    onSuccess: () => {
+      // No need to invalidate cache for password reset, just show success message
+    },
+  });
+}

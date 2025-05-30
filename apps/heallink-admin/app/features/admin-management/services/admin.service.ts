@@ -1,127 +1,103 @@
-import { fetchWithAuth } from "../../../api/apiClient";
-import {
-  AdminUser,
-  CreateAdminDto,
-  UpdateAdminDto,
+import apiClient from '../../../api/apiClient';
+import { 
+  AdminUser, 
+  CreateAdminDto, 
+  UpdateAdminDto, 
   UpdateAdminRoleDto,
   AdminQueryParams,
   AdminListResponse,
   AdminStatsResponse,
   BulkActionRequest,
   BulkActionResponse,
-  AvatarUploadResponse,
-  UserStatus,
-} from "../types/admin.types";
+  AvatarUploadResponse
+} from '../types/admin.types';
 
+/**
+ * Admin service for managing admin users
+ */
 class AdminService {
-  /**
-   * Get all admin users with pagination and filtering
-   */
-  async getAllAdmins(params: AdminQueryParams = {}): Promise<AdminListResponse> {
-    const response = await fetchWithAuth<AdminListResponse>("/admin", {
-      method: "GET",
-      params,
-    });
-    
-    // Transform the response to ensure compatibility
-    const transformedAdmins = response.admins.map(admin => ({
-      ...admin,
-      id: admin._id || admin.id,
-      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-    }));
-    
-    return {
-      ...response,
-      admins: transformedAdmins,
-    };
-  }
+  private baseUrl = '/admin';
 
   /**
-   * Get admin statistics
+   * Get list of admin users with pagination and filtering
    */
-  async getAdminStats(): Promise<AdminStatsResponse> {
-    return fetchWithAuth<AdminStatsResponse>("/admin/stats");
+  async getAllAdmins(params?: AdminQueryParams): Promise<AdminListResponse> {
+    const searchParams = new URLSearchParams();
+    
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const url = `${this.baseUrl}?${searchParams.toString()}`;
+    const response = await apiClient.get<AdminListResponse>(url);
+    return response.data;
   }
 
   /**
    * Get a specific admin user by ID
    */
   async getAdminById(id: string): Promise<AdminUser> {
-    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}`);
-    return {
-      ...admin,
-      id: admin._id || admin.id,
-      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-    };
+    const response = await apiClient.get<AdminUser>(`${this.baseUrl}/${id}`);
+    return response.data;
   }
 
   /**
    * Create a new admin user
    */
-  async createAdmin(adminData: CreateAdminDto): Promise<AdminUser> {
-    const admin = await fetchWithAuth<AdminUser>("/admin", {
-      method: "POST",
-      data: adminData,
-    });
-    return {
-      ...admin,
-      id: admin._id || admin.id,
-      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-    };
+  async createAdmin(data: CreateAdminDto): Promise<AdminUser> {
+    const response = await apiClient.post<AdminUser>(this.baseUrl, data);
+    return response.data;
   }
 
   /**
-   * Update an admin user
+   * Update an existing admin user
    */
-  async updateAdmin(id: string, adminData: UpdateAdminDto): Promise<AdminUser> {
-    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}`, {
-      method: "PATCH",
-      data: adminData,
-    });
-    return {
-      ...admin,
-      id: admin._id || admin.id,
-      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-    };
+  async updateAdmin(id: string, data: UpdateAdminDto): Promise<AdminUser> {
+    const response = await apiClient.patch<AdminUser>(`${this.baseUrl}/${id}`, data);
+    return response.data;
   }
 
   /**
-   * Update admin role and permissions
+   * Update an admin user's role and permissions
    */
   async updateAdminRole(id: string, roleData: UpdateAdminRoleDto): Promise<AdminUser> {
-    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}/role`, {
-      method: "PATCH",
-      data: roleData,
-    });
-    return {
-      ...admin,
-      id: admin._id || admin.id,
-      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-    };
+    const response = await apiClient.patch<AdminUser>(`${this.baseUrl}/${id}/role`, roleData);
+    return response.data;
   }
 
   /**
-   * Toggle admin status (activate/deactivate)
+   * Toggle admin user status (activate/deactivate)
    */
   async toggleAdminStatus(id: string, status: boolean): Promise<AdminUser> {
-    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
-      method: "PATCH",
-      data: { status },
-    });
-    return {
-      ...admin,
-      id: admin._id || admin.id,
-      status: status ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-    };
+    const response = await apiClient.patch<AdminUser>(`${this.baseUrl}/${id}/toggle-status`, { status });
+    return response.data;
   }
 
   /**
    * Delete an admin user
    */
   async deleteAdmin(id: string): Promise<void> {
-    return fetchWithAuth<void>(`/admin/${id}`, {
-      method: "DELETE",
-    });
+    await apiClient.delete(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Reset admin password and send email with new temporary password
+   */
+  async resetAdminPassword(id: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>(`${this.baseUrl}/${id}/reset-password`);
+    return response.data;
+  }
+
+  /**
+   * Get admin statistics
+   */
+  async getAdminStats(): Promise<AdminStatsResponse> {
+    const response = await apiClient.get<AdminStatsResponse>(`${this.baseUrl}/stats`);
+    return response.data;
   }
 
   /**
@@ -129,33 +105,29 @@ class AdminService {
    */
   async uploadAdminAvatar(id: string, file: File): Promise<AvatarUploadResponse> {
     const formData = new FormData();
-    formData.append("avatar", file);
+    formData.append('avatar', file);
 
-    return fetchWithAuth<AvatarUploadResponse>(`/admin/${id}/avatar`, {
-      method: "POST",
-      data: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await apiClient.post<AvatarUploadResponse>(
+      `${this.baseUrl}/${id}/avatar`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
   }
 
   /**
-   * Perform bulk actions on multiple admins
+   * Perform bulk actions on multiple admin users
    */
   async bulkAction(data: BulkActionRequest): Promise<BulkActionResponse> {
-    return fetchWithAuth<BulkActionResponse>("/admin/bulk-action", {
-      method: "POST",
-      data,
-    });
-  }
-
-  /**
-   * Test authentication
-   */
-  async testAuth(): Promise<any> {
-    return fetchWithAuth<any>("/admin/auth-test");
+    const response = await apiClient.post<BulkActionResponse>(`${this.baseUrl}/bulk-action`, data);
+    return response.data;
   }
 }
 
+// Export singleton instance
 export const adminService = new AdminService();
+export default adminService;

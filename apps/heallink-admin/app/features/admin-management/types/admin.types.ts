@@ -166,3 +166,24 @@ export interface AdminFormProps {
   isLoading: boolean;
   isEdit?: boolean;
 }
+
+export interface AdminListPresentationProps {
+  admins: AdminUser[];
+  totalAdmins: number;
+  currentPage: number;
+  totalPages: number;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  searchTerm: string;
+  roleFilter: string;
+  statusFilter: string;
+  queryParams?: AdminQueryParams;
+  onSearchChange: (value: string) => void;
+  onRoleFilterChange: (value: string) => void;
+  onStatusFilterChange: (value: string) => void;
+  onPageChange: (page: number) => void;
+  onStatusToggle: (id: string, currentStatus: string) => void;
+  onResetPassword: (id: string) => void;
+  onRefresh: () => void;
+}

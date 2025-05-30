@@ -7,12 +7,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import * as crypto from 'crypto';
 import { User, UserDocument, UserRole } from '../users/schemas/user.schema';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
 import { AdminResponseDto, AdminListResponseDto, AdminStatsResponseDto } from './dto/admin-response.dto';
 import { S3Service } from '../aws/s3.service';
+import { EmailService } from '../emails/email.service';
 
 
 @Injectable()
@@ -20,7 +22,22 @@ export class AdminService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly s3Service: S3Service,
+    private readonly emailService: EmailService,
   ) {}
+
+  private generateTemporaryPassword(): string {
+    // Generate a secure 12-character password with mixed case, numbers, and symbols
+    const length = 12;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    
+    for (let i = 0; i < length; i++) {
+      const randomIndex = crypto.randomInt(0, charset.length);
+      password += charset[randomIndex];
+    }
+    
+    return password;
+  }
 
   private transformToAdminResponse(user: UserDocument | any): AdminResponseDto {
     const userObj = user.toObject ? user.toObject() : user;
@@ -73,14 +90,33 @@ export class AdminService {
       permissions = this.getDefaultPermissionsForRole(createAdminDto.adminRole);
     }
 
+    // Generate temporary password if none provided
+    const tempPassword = createAdminDto.password || this.generateTemporaryPassword();
+
     const adminUser = new this.userModel({
       ...createAdminDto,
+      password: tempPassword, // This will be hashed by the User schema pre-save hook
       emailVerified: true, // Admin users are pre-verified
       isActive: true,
       permissions,
     });
 
     const savedAdmin = await adminUser.save();
+
+    // Send admin creation/invitation email
+    try {
+      if (savedAdmin.email) {
+        await this.emailService.sendAdminCreationEmail(
+          savedAdmin.email,
+          savedAdmin.name || 'Admin User',
+          tempPassword, // Send the plain password in email, it's already hashed in DB
+        );
+      }
+    } catch (error) {
+      console.error('Failed to send admin creation email:', error);
+      // Don't fail the admin creation if email fails, just log the error
+    }
+
     return this.transformToAdminResponse(savedAdmin);
   }
 
@@ -442,5 +478,33 @@ export class AdminService {
     }
 
     return this.transformToAdminResponse(updatedAdmin);
+  }
+
+  async resetAdminPassword(id: string): Promise<void> {
+    const admin = await this.findAdminByIdRaw(id);
+
+    // Generate new temporary password
+    const newTempPassword = this.generateTemporaryPassword();
+
+    // Update admin password in database
+    await this.userModel.findByIdAndUpdate(id, { 
+      password: newTempPassword // This will be hashed by the User schema pre-save hook
+    });
+
+    // Send password reset email
+    try {
+      if (admin.email) {
+        await this.emailService.sendAdminCreationEmail(
+          admin.email,
+          admin.name || 'Admin User',
+          newTempPassword,
+        );
+      } else {
+        throw new Error('Admin email is required to send password reset email.');
+      }
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      throw new Error('Failed to send password reset email. Please try again.');
+    }
   }
 }
