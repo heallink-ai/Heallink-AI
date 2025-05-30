@@ -1,125 +1,245 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseMutationResult,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import { adminService } from "../services/admin.service";
 import {
+  AdminUser,
+  CreateAdminDto,
+  UpdateAdminDto,
+  UpdateAdminRoleDto,
   AdminQueryParams,
-  CreateAdminRequest,
-  UpdateAdminRequest,
+  AdminListResponse,
+  AdminStatsResponse,
   BulkActionRequest,
+  BulkActionResponse,
+  AvatarUploadResponse,
 } from "../types/admin.types";
 
-export const ADMIN_QUERY_KEYS = {
-  all: ["admin"] as const,
-  lists: () => [...ADMIN_QUERY_KEYS.all, "list"] as const,
-  list: (params: AdminQueryParams) =>
-    [...ADMIN_QUERY_KEYS.lists(), params] as const,
-  details: () => [...ADMIN_QUERY_KEYS.all, "detail"] as const,
-  detail: (id: string) => [...ADMIN_QUERY_KEYS.details(), id] as const,
-  stats: () => [...ADMIN_QUERY_KEYS.all, "stats"] as const,
+// Query keys for cache management
+export const adminKeys = {
+  all: ["admins"] as const,
+  lists: () => [...adminKeys.all, "list"] as const,
+  list: (filters: Record<string, any>) => [...adminKeys.lists(), filters] as const,
+  details: () => [...adminKeys.all, "detail"] as const,
+  detail: (id: string) => [...adminKeys.details(), id] as const,
+  stats: () => [...adminKeys.all, "stats"] as const,
 };
 
-export function useAdmins(params: AdminQueryParams = {}) {
+/**
+ * Hook to fetch admin users with pagination and filtering
+ */
+export function useAdmins(
+  params: AdminQueryParams = {}
+): UseQueryResult<AdminListResponse, Error> {
   return useQuery({
-    queryKey: ADMIN_QUERY_KEYS.list(params),
-    queryFn: () => adminService.getAdmins(params),
+    queryKey: adminKeys.list(params),
+    queryFn: () => adminService.getAllAdmins(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
-export function useAdmin(id: string, enabled = true) {
+/**
+ * Hook to fetch admin statistics
+ */
+export function useAdminStats(): UseQueryResult<AdminStatsResponse, Error> {
   return useQuery({
-    queryKey: ADMIN_QUERY_KEYS.detail(id),
-    queryFn: () => adminService.getAdminById(id),
-    enabled: enabled && !!id,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-export function useAdminStats() {
-  return useQuery({
-    queryKey: ADMIN_QUERY_KEYS.stats(),
+    queryKey: adminKeys.stats(),
     queryFn: () => adminService.getAdminStats(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
-export function useCreateAdmin() {
+/**
+ * Hook to fetch a specific admin by ID
+ */
+export function useAdmin(id: string): UseQueryResult<AdminUser, Error> {
+  return useQuery({
+    queryKey: adminKeys.detail(id),
+    queryFn: () => adminService.getAdminById(id),
+    enabled: !!id, // Only run if ID is provided
+  });
+}
+
+/**
+ * Hook to create a new admin user
+ */
+export function useCreateAdmin(): UseMutationResult<
+  AdminUser,
+  Error,
+  CreateAdminDto
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateAdminRequest) => adminService.createAdmin(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.stats() });
+    mutationFn: (data: CreateAdminDto) => adminService.createAdmin(data),
+    onSuccess: (newAdmin) => {
+      // Invalidate all admin list queries
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Invalidate stats
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
+
+      // Set the new admin in cache
+      queryClient.setQueryData(adminKeys.detail(newAdmin.id), newAdmin);
     },
   });
 }
 
-export function useUpdateAdmin() {
+/**
+ * Hook to update an admin user
+ */
+export function useUpdateAdmin(): UseMutationResult<
+  AdminUser,
+  Error,
+  { id: string; data: UpdateAdminDto }
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateAdminRequest }) =>
-      adminService.updateAdmin(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({
-        queryKey: ADMIN_QUERY_KEYS.detail(variables.id),
-      });
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.stats() });
+    mutationFn: ({ id, data }) => adminService.updateAdmin(id, data),
+    onSuccess: (updatedAdmin) => {
+      // Invalidate all admin list queries
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats if role changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
 
-export function useDeleteAdmin() {
+/**
+ * Hook to update an admin's role
+ */
+export function useUpdateAdminRole(): UseMutationResult<
+  AdminUser,
+  Error,
+  { id: string; roleData: UpdateAdminRoleDto }
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, roleData }) => adminService.updateAdminRole(id, roleData),
+    onSuccess: (updatedAdmin) => {
+      // Invalidate all admin list queries since role changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats since role distribution changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
+    },
+  });
+}
+
+/**
+ * Hook to toggle admin status (activate/deactivate)
+ */
+export function useToggleAdminStatus(): UseMutationResult<
+  AdminUser,
+  Error,
+  { id: string; status: boolean }
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }) => adminService.toggleAdminStatus(id, status),
+    onSuccess: (updatedAdmin) => {
+      // Invalidate all admin list queries
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats since active count changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
+    },
+  });
+}
+
+/**
+ * Hook to delete an admin user
+ */
+export function useDeleteAdmin(): UseMutationResult<void, Error, string> {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.stats() });
+    onSuccess: (_, deletedId) => {
+      // Invalidate all admin list queries
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Remove the deleted admin from cache
+      queryClient.removeQueries({ queryKey: adminKeys.detail(deletedId) });
+      
+      // Invalidate stats since total count changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
 
-export function useToggleAdminStatus() {
+/**
+ * Hook to upload admin avatar
+ */
+export function useUploadAdminAvatar(): UseMutationResult<
+  AvatarUploadResponse,
+  Error,
+  { id: string; file: File }
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: boolean }) =>
-      adminService.toggleAdminStatus(id, status),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({
-        queryKey: ADMIN_QUERY_KEYS.detail(variables.id),
-      });
+    mutationFn: ({ id, file }) => adminService.uploadAdminAvatar(id, file),
+    onSuccess: (_, { id }) => {
+      // Invalidate the specific admin's cache
+      queryClient.invalidateQueries({ queryKey: adminKeys.detail(id) });
+      
+      // Invalidate list queries to update avatar in lists
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
     },
   });
 }
 
-export function useUploadAdminAvatar() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, file }: { id: string; file: File }) =>
-      adminService.uploadAdminAvatar(id, file),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ADMIN_QUERY_KEYS.detail(variables.id),
-      });
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lists() });
-    },
-  });
-}
-
-export function useBulkAdminAction() {
+/**
+ * Hook for bulk admin actions
+ */
+export function useBulkAdminAction(): UseMutationResult<
+  BulkActionResponse,
+  Error,
+  BulkActionRequest
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: BulkActionRequest) => adminService.bulkAction(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: ADMIN_QUERY_KEYS.stats() });
+      // Invalidate all admin queries since multiple admins might be affected
+      queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
+
+// Legacy hooks for backward compatibility - these can be removed once pages are updated
+export const useDeactivateAdmin = () => {
+  const toggleStatus = useToggleAdminStatus();
+  return {
+    ...toggleStatus,
+    mutate: (id: string) => toggleStatus.mutate({ id, status: false }),
+  };
+};
+
+export const useActivateAdmin = () => {
+  const toggleStatus = useToggleAdminStatus();
+  return {
+    ...toggleStatus,
+    mutate: (id: string) => toggleStatus.mutate({ id, status: true }),
+  };
+};

@@ -1,11 +1,13 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
-import { AdminFormContainer } from "../../../features/admin-management";
+import { redirect, useParams } from "next/navigation";
+import { AdminViewContainer } from "../../../features/admin-management";
 
-export default function InviteAdminPage() {
+export default function ViewAdminPage() {
   const { data: session, status } = useSession();
+  const params = useParams();
+  const adminId = params.id as string;
 
   if (status === "loading") {
     return (
@@ -24,5 +26,5 @@ export default function InviteAdminPage() {
     redirect("/dashboard");
   }
 
-  return <AdminFormContainer />;
+  return <AdminViewContainer adminId={adminId} />;
 }

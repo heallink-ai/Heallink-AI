@@ -1,6 +1,12 @@
 import { fetchWithAuth } from "./apiClient";
 
-// Type definitions based on backend entities
+// Type definitions matching backend schema
+export enum UserRole {
+  USER = "user",
+  PROVIDER = "provider",
+  ADMIN = "admin",
+}
+
 export enum AdminRole {
   SUPER_ADMIN = "super_admin",
   SYSTEM_ADMIN = "system_admin",
@@ -20,30 +26,68 @@ export enum UserStatus {
 }
 
 export interface AdminUser {
-  id: string;
+  _id: string;
+  id: string; // For compatibility
   email: string;
+  phone?: string;
   name: string;
+  role: UserRole;
   adminRole: AdminRole;
-  status: UserStatus;
+  permissions?: string[];
+  avatarUrl?: string;
+  emailVerified: boolean;
+  phoneVerified?: boolean;
+  isActive: boolean;
   lastLogin?: string;
   createdAt: string;
   updatedAt: string;
+  status: UserStatus; // Computed from isActive
 }
 
 export interface CreateAdminDto {
   email: string;
+  phone?: string;
   name: string;
+  password?: string;
+  role: UserRole;
   adminRole: AdminRole;
+  permissions?: string[];
+  avatarUrl?: string;
 }
 
 export interface UpdateAdminDto {
+  email?: string;
+  phone?: string;
   name?: string;
+  password?: string;
+  role?: UserRole;
   adminRole?: AdminRole;
-  status?: UserStatus;
+  permissions?: string[];
+  avatarUrl?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  isActive?: boolean;
+  lastLogin?: Date;
 }
 
 export interface UpdateAdminRoleDto {
   adminRole: AdminRole;
+  permissions?: string[];
+}
+
+export interface AdminListResponse {
+  admins: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminStatsResponse {
+  totalAdmins: number;
+  activeAdmins: number;
+  recentlyCreated: number;
+  roleDistribution: Record<string, number>;
 }
 
 /**
@@ -51,34 +95,69 @@ export interface UpdateAdminRoleDto {
  */
 export const adminApi = {
   /**
-   * Get all admin users
+   * Get all admin users with pagination
    */
-  getAllAdmins: async (): Promise<AdminUser[]> => {
-    const response = await fetchWithAuth<{
-      admins: AdminUser[];
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    }>("/admin");
-    return response.admins;
+  getAllAdmins: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: UserRole;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<AdminListResponse> => {
+    const response = await fetchWithAuth<AdminListResponse>("/admin", {
+      method: "GET",
+      params,
+    });
+    
+    // Transform the response to ensure compatibility
+    const transformedAdmins = response.admins.map(admin => ({
+      ...admin,
+      id: admin._id || admin.id,
+      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+    }));
+    
+    return {
+      ...response,
+      admins: transformedAdmins,
+    };
+  },
+
+  /**
+   * Get admin statistics
+   */
+  getAdminStats: async (): Promise<AdminStatsResponse> => {
+    return fetchWithAuth<AdminStatsResponse>("/admin/stats");
   },
 
   /**
    * Get a specific admin user by ID
    */
   getAdminById: async (id: string): Promise<AdminUser> => {
-    return fetchWithAuth<AdminUser>(`/admin/${id}`);
+    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}`);
+    return {
+      ...admin,
+      id: admin._id || admin.id,
+      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+    };
   },
 
   /**
    * Create a new admin user
    */
   createAdmin: async (adminData: CreateAdminDto): Promise<AdminUser> => {
-    return fetchWithAuth<AdminUser>("/admin", {
+    const admin = await fetchWithAuth<AdminUser>("/admin", {
       method: "POST",
-      data: adminData,
+      data: {
+        ...adminData,
+        role: adminData.role || UserRole.ADMIN,
+      },
     });
+    return {
+      ...admin,
+      id: admin._id || admin.id,
+      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+    };
   },
 
   /**
@@ -88,10 +167,15 @@ export const adminApi = {
     id: string,
     adminData: UpdateAdminDto
   ): Promise<AdminUser> => {
-    return fetchWithAuth<AdminUser>(`/admin/${id}`, {
-      method: "PUT",
+    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}`, {
+      method: "PATCH",
       data: adminData,
     });
+    return {
+      ...admin,
+      id: admin._id || admin.id,
+      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+    };
   },
 
   /**
@@ -101,30 +185,45 @@ export const adminApi = {
     id: string,
     roleData: UpdateAdminRoleDto
   ): Promise<AdminUser> => {
-    return fetchWithAuth<AdminUser>(`/admin/${id}/role`, {
-      method: "PUT",
+    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}/role`, {
+      method: "PATCH",
       data: roleData,
     });
+    return {
+      ...admin,
+      id: admin._id || admin.id,
+      status: admin.isActive ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+    };
   },
 
   /**
    * Deactivate an admin user
    */
   deactivateAdmin: async (id: string): Promise<AdminUser> => {
-    return fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
+    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
       method: "PATCH",
       data: { status: false },
     });
+    return {
+      ...admin,
+      id: admin._id || admin.id,
+      status: UserStatus.INACTIVE,
+    };
   },
 
   /**
    * Activate an admin user
    */
   activateAdmin: async (id: string): Promise<AdminUser> => {
-    return fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
+    const admin = await fetchWithAuth<AdminUser>(`/admin/${id}/toggle-status`, {
       method: "PATCH",
       data: { status: true },
     });
+    return {
+      ...admin,
+      id: admin._id || admin.id,
+      status: UserStatus.ACTIVE,
+    };
   },
 
   /**

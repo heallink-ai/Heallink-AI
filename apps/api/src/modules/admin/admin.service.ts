@@ -11,22 +11,9 @@ import { User, UserDocument, UserRole } from '../users/schemas/user.schema';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
+import { AdminResponseDto, AdminListResponseDto, AdminStatsResponseDto } from './dto/admin-response.dto';
 import { S3Service } from '../aws/s3.service';
 
-export interface AdminListResponse {
-  admins: UserDocument[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface AdminStatsResponse {
-  totalAdmins: number;
-  activeAdmins: number;
-  recentlyCreated: number;
-  roleDistribution: Record<string, number>;
-}
 
 @Injectable()
 export class AdminService {
@@ -35,7 +22,27 @@ export class AdminService {
     private readonly s3Service: S3Service,
   ) {}
 
-  async createAdmin(createAdminDto: CreateAdminDto): Promise<UserDocument> {
+  private transformToAdminResponse(user: UserDocument | any): AdminResponseDto {
+    const userObj = user.toObject ? user.toObject() : user;
+    return {
+      id: userObj._id?.toString() || userObj.id,
+      email: userObj.email,
+      phone: userObj.phone,
+      name: userObj.name,
+      role: userObj.role,
+      adminRole: userObj.adminRole,
+      permissions: userObj.permissions,
+      avatarUrl: userObj.avatarUrl,
+      emailVerified: userObj.emailVerified,
+      phoneVerified: userObj.phoneVerified,
+      isActive: userObj.isActive,
+      lastLogin: userObj.lastLogin,
+      createdAt: userObj.createdAt || new Date(),
+      updatedAt: userObj.updatedAt || new Date(),
+    };
+  }
+
+  async createAdmin(createAdminDto: CreateAdminDto): Promise<AdminResponseDto> {
     if (createAdminDto.role === UserRole.USER) {
       throw new BadRequestException(
         'Cannot create regular users through admin endpoint',
@@ -60,15 +67,45 @@ export class AdminService {
       }
     }
 
+    // Set default permissions based on admin role if not provided
+    let permissions = createAdminDto.permissions || [];
+    if (permissions.length === 0) {
+      permissions = this.getDefaultPermissionsForRole(createAdminDto.adminRole);
+    }
+
     const adminUser = new this.userModel({
       ...createAdminDto,
       emailVerified: true, // Admin users are pre-verified
+      isActive: true,
+      permissions,
     });
 
-    return adminUser.save();
+    const savedAdmin = await adminUser.save();
+    return this.transformToAdminResponse(savedAdmin);
   }
 
-  async findAllAdmins(query: AdminQueryDto): Promise<AdminListResponse> {
+  private getDefaultPermissionsForRole(adminRole: string): string[] {
+    const permissionMap: Record<string, string[]> = {
+      'super_admin': ['*'], // All permissions
+      'system_admin': [
+        'user_management',
+        'admin_management',
+        'provider_management',
+        'system_configuration',
+        'audit_logs'
+      ],
+      'user_admin': ['user_management', 'user_support'],
+      'provider_admin': ['provider_management', 'provider_support'],
+      'content_admin': ['content_management', 'content_moderation'],
+      'billing_admin': ['billing_management', 'financial_reports'],
+      'support_admin': ['user_support', 'provider_support'],
+      'readonly_admin': ['read_only_access']
+    };
+
+    return permissionMap[adminRole] || ['read_only_access'];
+  }
+
+  async findAllAdmins(query: AdminQueryDto): Promise<AdminListResponseDto> {
     const {
       page = 1,
       limit = 10,
@@ -116,7 +153,7 @@ export class AdminService {
             );
             const adminWithSignedUrl = admin.toObject();
             adminWithSignedUrl.avatarUrl = signedUrl;
-            return adminWithSignedUrl as UserDocument;
+            return this.transformToAdminResponse(adminWithSignedUrl as UserDocument);
           } catch (error) {
             console.error('Error generating presigned URL for avatar:', error);
           }
@@ -125,8 +162,10 @@ export class AdminService {
       }),
     );
 
+    const adminDtos = processedAdmins.map(admin => this.transformToAdminResponse(admin));
+
     return {
-      admins: processedAdmins,
+      admins: adminDtos,
       total,
       page,
       limit,
@@ -134,7 +173,24 @@ export class AdminService {
     };
   }
 
-  async findAdminById(id: string): Promise<UserDocument> {
+  private async findAdminByIdRaw(id: string): Promise<UserDocument> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid admin ID');
+    }
+
+    const admin = await this.userModel.findById(id).exec();
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    if (admin.role === UserRole.USER) {
+      throw new ForbiddenException('Access denied: Not an admin user');
+    }
+
+    return admin;
+  }
+
+  async findAdminById(id: string): Promise<AdminResponseDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid admin ID');
     }
@@ -157,20 +213,20 @@ export class AdminService {
         );
         const adminWithSignedUrl = admin.toObject();
         adminWithSignedUrl.avatarUrl = signedUrl;
-        return adminWithSignedUrl as UserDocument;
+        return this.transformToAdminResponse(adminWithSignedUrl as UserDocument);
       } catch (error) {
         console.error('Error generating presigned URL for avatar:', error);
       }
     }
 
-    return admin;
+    return this.transformToAdminResponse(admin);
   }
 
   async updateAdmin(
     id: string,
     updateAdminDto: UpdateAdminDto,
-  ): Promise<UserDocument> {
-    const admin = await this.findAdminById(id);
+  ): Promise<AdminResponseDto> {
+    const admin = await this.findAdminByIdRaw(id);
 
     // Prevent role downgrade to USER through this endpoint, but only if role is provided
     if (updateAdminDto.role === UserRole.USER) {
@@ -219,17 +275,17 @@ export class AdminService {
         );
         const adminWithSignedUrl = updatedAdmin.toObject();
         adminWithSignedUrl.avatarUrl = signedUrl;
-        return adminWithSignedUrl as UserDocument;
+        return this.transformToAdminResponse(adminWithSignedUrl as UserDocument);
       } catch (error) {
         console.error('Error generating presigned URL for avatar:', error);
       }
     }
 
-    return updatedAdmin;
+    return this.transformToAdminResponse(updatedAdmin);
   }
 
   async deleteAdmin(id: string): Promise<void> {
-    const admin = await this.findAdminById(id);
+    const admin = await this.findAdminByIdRaw(id);
 
     // Prevent deletion of the last admin
     const adminCount = await this.userModel
@@ -245,7 +301,7 @@ export class AdminService {
     }
   }
 
-  async getAdminStats(): Promise<AdminStatsResponse> {
+  async getAdminStats(): Promise<AdminStatsResponseDto> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -289,11 +345,102 @@ export class AdminService {
     };
   }
 
-  async toggleAdminStatus(id: string, status: boolean): Promise<UserDocument> {
-    const admin = await this.findAdminById(id);
+  async toggleAdminStatus(id: string, status: boolean): Promise<AdminResponseDto> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid admin ID');
+    }
 
-    // This could update a status field if we had one, for now we'll just return the admin
-    // In the future, we might add an "active" or "suspended" field to the schema
-    return admin;
+    // Prevent disabling the last active super admin
+    if (!status) {
+      const activeSuperAdmins = await this.userModel
+        .countDocuments({
+          role: UserRole.ADMIN,
+          adminRole: 'super_admin',
+          isActive: true,
+        })
+        .exec();
+      
+      const currentAdmin = await this.userModel.findById(id).exec();
+      if (
+        currentAdmin?.adminRole === 'super_admin' &&
+        activeSuperAdmins <= 1
+      ) {
+        throw new BadRequestException(
+          'Cannot deactivate the last active super admin',
+        );
+      }
+    }
+
+    const updatedAdmin = await this.userModel
+      .findByIdAndUpdate(
+        id,
+        { isActive: status },
+        { new: true }
+      )
+      .exec();
+
+    if (!updatedAdmin) {
+      throw new NotFoundException(`Admin with ID ${id} not found`);
+    }
+
+    // Process avatar URL if needed
+    if (
+      updatedAdmin.avatarUrl &&
+      updatedAdmin.avatarUrl.startsWith('avatars/')
+    ) {
+      try {
+        const signedUrl = await this.s3Service.getSignedUrl(
+          updatedAdmin.avatarUrl,
+          86400,
+        );
+        const adminWithSignedUrl = updatedAdmin.toObject();
+        adminWithSignedUrl.avatarUrl = signedUrl;
+        return this.transformToAdminResponse(adminWithSignedUrl as UserDocument);
+      } catch (error) {
+        console.error('Error generating presigned URL for avatar:', error);
+      }
+    }
+
+    return this.transformToAdminResponse(updatedAdmin);
+  }
+
+  async updateAdminRole(id: string, adminRole: string, permissions?: string[]): Promise<AdminResponseDto> {
+    const admin = await this.findAdminByIdRaw(id);
+
+    // Prevent downgrading the last super admin
+    if (admin.adminRole === 'super_admin' && adminRole !== 'super_admin') {
+      const superAdminCount = await this.userModel
+        .countDocuments({
+          role: UserRole.ADMIN,
+          adminRole: 'super_admin',
+        })
+        .exec();
+      
+      if (superAdminCount <= 1) {
+        throw new BadRequestException(
+          'Cannot downgrade the last super admin',
+        );
+      }
+    }
+
+    // Set permissions based on role if not provided
+    const finalPermissions = permissions || this.getDefaultPermissionsForRole(adminRole);
+
+    const updatedAdmin = await this.userModel
+      .findByIdAndUpdate(
+        id,
+        { 
+          adminRole,
+          permissions: finalPermissions,
+        },
+        { new: true }
+      )
+      .exec();
+
+    if (!updatedAdmin) {
+      throw new NotFoundException(`Admin with ID ${id} not found`);
+    }
+
+    return this.transformToAdminResponse(updatedAdmin);
   }
 }

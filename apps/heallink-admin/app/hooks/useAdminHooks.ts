@@ -11,24 +11,51 @@ import {
   CreateAdminDto,
   UpdateAdminDto,
   UpdateAdminRoleDto,
+  AdminListResponse,
+  AdminStatsResponse,
+  UserRole,
 } from "../api/adminApi";
 
 // Query keys for cache management
 export const adminKeys = {
   all: ["admins"] as const,
   lists: () => [...adminKeys.all, "list"] as const,
-  list: (filters: string) => [...adminKeys.lists(), { filters }] as const,
+  list: (filters: Record<string, any>) => [...adminKeys.lists(), filters] as const,
   details: () => [...adminKeys.all, "detail"] as const,
   detail: (id: string) => [...adminKeys.details(), id] as const,
+  stats: () => [...adminKeys.all, "stats"] as const,
 };
 
+export interface AdminQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: UserRole;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
 /**
- * Hook to fetch all admin users
+ * Hook to fetch admin users with pagination and filtering
  */
-export function useAdmins(): UseQueryResult<AdminUser[], Error> {
+export function useAdmins(
+  params: AdminQueryParams = {}
+): UseQueryResult<AdminListResponse, Error> {
   return useQuery({
-    queryKey: adminKeys.lists(),
-    queryFn: adminApi.getAllAdmins,
+    queryKey: adminKeys.list(params),
+    queryFn: () => adminApi.getAllAdmins(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to fetch admin statistics
+ */
+export function useAdminStats(): UseQueryResult<AdminStatsResponse, Error> {
+  return useQuery({
+    queryKey: adminKeys.stats(),
+    queryFn: adminApi.getAdminStats,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
@@ -56,10 +83,13 @@ export function useCreateAdmin(): UseMutationResult<
   return useMutation({
     mutationFn: adminApi.createAdmin,
     onSuccess: (newAdmin) => {
-      // Invalidate the list query to refetch
+      // Invalidate all admin list queries
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Invalidate stats
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
 
-      // Optionally, update the cache directly
+      // Set the new admin in cache
       queryClient.setQueryData(adminKeys.detail(newAdmin.id), newAdmin);
     },
   });
@@ -78,11 +108,14 @@ export function useUpdateAdmin(): UseMutationResult<
   return useMutation({
     mutationFn: ({ id, data }) => adminApi.updateAdmin(id, data),
     onSuccess: (updatedAdmin) => {
-      // Invalidate both the list and the specific admin's data
+      // Invalidate all admin list queries
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: adminKeys.detail(updatedAdmin.id),
-      });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats if role changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
@@ -93,18 +126,21 @@ export function useUpdateAdmin(): UseMutationResult<
 export function useUpdateAdminRole(): UseMutationResult<
   AdminUser,
   Error,
-  { id: string; role: UpdateAdminRoleDto }
+  { id: string; roleData: UpdateAdminRoleDto }
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, role }) => adminApi.updateAdminRole(id, role),
+    mutationFn: ({ id, roleData }) => adminApi.updateAdminRole(id, roleData),
     onSuccess: (updatedAdmin) => {
-      // Invalidate both the list and the specific admin's data
+      // Invalidate all admin list queries since role changed
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: adminKeys.detail(updatedAdmin.id),
-      });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats since role distribution changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
@@ -122,10 +158,14 @@ export function useDeactivateAdmin(): UseMutationResult<
   return useMutation({
     mutationFn: adminApi.deactivateAdmin,
     onSuccess: (updatedAdmin) => {
+      // Invalidate all admin list queries
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: adminKeys.detail(updatedAdmin.id),
-      });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats since active count changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
@@ -143,10 +183,14 @@ export function useActivateAdmin(): UseMutationResult<
   return useMutation({
     mutationFn: adminApi.activateAdmin,
     onSuccess: (updatedAdmin) => {
+      // Invalidate all admin list queries
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: adminKeys.detail(updatedAdmin.id),
-      });
+      
+      // Update the specific admin's cache
+      queryClient.setQueryData(adminKeys.detail(updatedAdmin.id), updatedAdmin);
+      
+      // Invalidate stats since active count changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }
@@ -160,8 +204,14 @@ export function useDeleteAdmin(): UseMutationResult<void, Error, string> {
   return useMutation({
     mutationFn: adminApi.deleteAdmin,
     onSuccess: (_, deletedId) => {
+      // Invalidate all admin list queries
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
+      
+      // Remove the deleted admin from cache
       queryClient.removeQueries({ queryKey: adminKeys.detail(deletedId) });
+      
+      // Invalidate stats since total count changed
+      queryClient.invalidateQueries({ queryKey: adminKeys.stats() });
     },
   });
 }

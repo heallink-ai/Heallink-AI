@@ -32,8 +32,15 @@ import {
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
-import { UpdateAdminDto } from './dto/update-admin.dto';
+import { UpdateAdminDto, UpdateAdminRoleDto } from './dto/update-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
+import { 
+  AdminResponseDto, 
+  AdminListResponseDto, 
+  AdminStatsResponseDto,
+  BulkActionResponseDto
+} from './dto/admin-response.dto';
+import { AdminPermissions, AdminPermissionsGuard } from './guards/admin-permissions.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -56,7 +63,7 @@ interface MulterFile {
 @ApiTags('admin')
 @ApiBearerAuth('JWT-auth')
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, AdminPermissionsGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);
@@ -84,30 +91,44 @@ export class AdminController {
   }
 
   @Post()
+  @AdminPermissions({ 
+    permissions: ['admin_management', 'user_management'],
+    requireAll: false 
+  })
   @ApiOperation({
     summary: 'Create new admin user',
     description: 'Creates a new admin user with specified details',
   })
-  @ApiCreatedResponse({ description: 'Admin user created successfully' })
+  @ApiCreatedResponse({ 
+    description: 'Admin user created successfully',
+    type: AdminResponseDto
+  })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Insufficient permissions' })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   async createAdmin(
     @Body() createAdminDto: CreateAdminDto,
     @Request() req: any,
-  ) {
+  ): Promise<AdminResponseDto> {
     this.logger.debug(`Creating admin user: ${JSON.stringify(createAdminDto)}`);
     this.logger.debug(`Request user: ${JSON.stringify(req.user)}`);
     return this.adminService.createAdmin(createAdminDto);
   }
 
   @Get()
+  @AdminPermissions({ 
+    permissions: ['admin_management', 'read_only_access'],
+    requireAll: false 
+  })
   @ApiOperation({
     summary: 'Get all admin users',
     description:
       'Retrieve a list of all admin users with pagination and filtering',
   })
-  @ApiOkResponse({ description: 'List of admin users retrieved successfully' })
+  @ApiOkResponse({ 
+    description: 'List of admin users retrieved successfully',
+    type: AdminListResponseDto
+  })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Insufficient permissions' })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -115,7 +136,7 @@ export class AdminController {
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
-  async findAllAdmins(@Query() query: AdminQueryDto, @Request() req: any) {
+  async findAllAdmins(@Query() query: AdminQueryDto, @Request() req: any): Promise<AdminListResponseDto> {
     this.logger.debug(
       `Finding all admins with query: ${JSON.stringify(query)}`,
     );
@@ -166,20 +187,55 @@ export class AdminController {
   }
 
   @Patch(':id')
+  @AdminPermissions({ 
+    permissions: ['admin_management'],
+    requireAll: true 
+  })
   @ApiOperation({
     summary: 'Update admin',
     description: 'Update an existing admin user details',
   })
   @ApiParam({ name: 'id', description: 'Admin user ID' })
-  @ApiOkResponse({ description: 'Admin user updated successfully' })
+  @ApiOkResponse({ 
+    description: 'Admin user updated successfully',
+    type: AdminResponseDto
+  })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Insufficient permissions' })
   @ApiBadRequestResponse({ description: 'Invalid input data or ID' })
   async updateAdmin(
     @Param('id') id: string,
     @Body() updateAdminDto: UpdateAdminDto,
-  ) {
+  ): Promise<AdminResponseDto> {
     return this.adminService.updateAdmin(id, updateAdminDto);
+  }
+
+  @Patch(':id/role')
+  @AdminPermissions({ 
+    permissions: ['admin_management'],
+    requireAll: true 
+  })
+  @ApiOperation({
+    summary: 'Update admin role',
+    description: 'Update an admin user\'s role and permissions',
+  })
+  @ApiParam({ name: 'id', description: 'Admin user ID' })
+  @ApiOkResponse({ 
+    description: 'Admin role updated successfully',
+    type: AdminResponseDto
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Insufficient permissions' })
+  @ApiBadRequestResponse({ description: 'Invalid input data or ID' })
+  async updateAdminRole(
+    @Param('id') id: string,
+    @Body() updateAdminRoleDto: UpdateAdminRoleDto,
+  ): Promise<AdminResponseDto> {
+    return this.adminService.updateAdminRole(
+      id, 
+      updateAdminRoleDto.adminRole,
+      updateAdminRoleDto.permissions
+    );
   }
 
   @Delete(':id')
