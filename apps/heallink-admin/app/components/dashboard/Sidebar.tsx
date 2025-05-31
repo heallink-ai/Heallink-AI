@@ -658,7 +658,7 @@ export default function Sidebar({
                           <div className={`transition-all duration-300 overflow-hidden ${
                             collapsed ? "w-0 opacity-0" : "flex-1 opacity-100"
                           }`}>
-                            <span className="text-sm font-medium truncate block">
+                            <span className="text-sm font-medium text-left truncate block">
                               {item.name}
                             </span>
                           </div>
@@ -700,7 +700,7 @@ export default function Sidebar({
                                 }`}>
                                   {subItem.icon}
                                 </div>
-                                <span className="text-xs font-medium flex-1 truncate">
+                                <span className="text-xs font-medium text-left flex-1 truncate">
                                   {subItem.name}
                                 </span>
                                 {subItem.badge && (
@@ -748,7 +748,7 @@ export default function Sidebar({
                         <div className={`transition-all duration-300 overflow-hidden ${
                           collapsed ? "w-0 opacity-0" : "flex-1 opacity-100"
                         }`}>
-                          <span className="text-sm font-medium truncate">
+                          <span className="text-sm font-medium text-left truncate">
                             {item.name}
                           </span>
                         </div>
