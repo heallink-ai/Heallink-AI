@@ -1,30 +1,30 @@
 services:
-  heallink:
-    build:
-      context: .
-      dockerfile: ./apps/heallink/Dockerfile.dev
-    container_name: heallink
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./apps/heallink:/app/apps/heallink
-      - ./packages:/app/packages
-      - heallink-node-modules:/app/apps/heallink/node_modules
-    environment:
-      - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-      # For browser-side requests (must be accessible from user's browser)
-      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
-      - NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8000/api/v1
-      # For server-side requests (within Docker network)
-      - API_URL=http://api:3003/api/v1
-      - AI_ENGINE_URL=http://ai-engine:8000/api/v1
-    depends_on:
-      - api
-      - ai-engine
-    networks:
-      - heallink-network
-    restart: unless-stopped
+  # heallink:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/heallink/Dockerfile.dev
+  #   container_name: heallink
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./apps/heallink:/app/apps/heallink
+  #     - ./packages:/app/packages
+  #     - heallink-node-modules:/app/apps/heallink/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     # For browser-side requests (must be accessible from user's browser)
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+  #     - NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8000/api/v1
+  #     # For server-side requests (within Docker network)
+  #     - API_URL=http://api:3003/api/v1
+  #     - AI_ENGINE_URL=http://ai-engine:8000/api/v1
+  #   depends_on:
+  #     - api
+  #     - ai-engine
+  #   networks:
+  #     - heallink-network
+  #   restart: unless-stopped
 
   heallink-admin:
     build:
@@ -97,35 +97,73 @@ services:
       - heallink-network
     restart: unless-stopped
 
-  ai-engine:
+  # ai-engine:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/ai-engine/Dockerfile.dev
+  #   container_name: heallink-ai-engine
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ./apps/ai-engine:/app/apps/ai-engine
+  #     - ./logs:/app/logs
+  #     - ai-engine-cache:/root/.cache # Cache for model downloads
+  #   env_file:
+  #     - ./apps/ai-engine/.env
+  #   environment:
+  #     - ENVIRONMENT=development
+  #     - LOG_LEVEL=DEBUG
+  #     - PYTHONPATH=/app
+  #     - PORT=8000
+  #     - HOST=0.0.0.0
+  #     # LiveKit connection settings will come from .env file
+  #   networks:
+  #     - heallink-network
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s # Give more time for model downloads
+
+  avatar-engine:
     build:
       context: .
-      dockerfile: ./apps/ai-engine/Dockerfile.dev
-    container_name: heallink-ai-engine
+      dockerfile: ./apps/avatar-engine/Dockerfile
+    container_name: heallink-avatar-engine
     ports:
-      - "8000:8000"
+      - "8080:8080"
+      - "8443:8443"
     volumes:
-      - ./apps/ai-engine:/app/apps/ai-engine
+      - ./apps/avatar-engine:/app
       - ./logs:/app/logs
-      - ai-engine-cache:/root/.cache # Cache for model downloads
+      - avatar-engine-assets:/app/assets
     env_file:
-      - ./apps/ai-engine/.env
+      - ./apps/avatar-engine/.env
     environment:
       - ENVIRONMENT=development
       - LOG_LEVEL=DEBUG
       - PYTHONPATH=/app
-      - PORT=8000
-      - HOST=0.0.0.0
-      # LiveKit connection settings will come from .env file
+      - AVATAR_ENGINE_HOST=0.0.0.0
+      - AVATAR_ENGINE_PORT=8080
+      # LiveKit connection settings
+      - LIVEKIT_URL=wss://heallink-dev-jvc8ya2i.livekit.cloud
+      - LIVEKIT_API_KEY=APIg4HSyNcniUrh
+      - LIVEKIT_API_SECRET=zOpB6T7Li049CauuJ6UcuAbYHrwJZygj8H9avh0rdkC
+      # Performance settings
+      - GPU_ENABLED=false
+      - MAX_CONCURRENT_AVATARS=5
+      - AVATAR_QUALITY=medium
     networks:
       - heallink-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s # Give more time for model downloads
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   mongodb:
     image: mongo:latest
@@ -189,3 +227,4 @@ volumes:
   api-node-modules:
   localstack-data:
   ai-engine-cache: # Add cache volume for AI engine models
+  avatar-engine-assets: # Add volume for avatar assets
