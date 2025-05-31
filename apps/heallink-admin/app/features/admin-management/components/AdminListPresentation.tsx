@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AdminListPresentationProps, AdminUser } from "../types/admin.types";
 import AdminTable from "../../../components/ui/AdminTable";
+import CustomSelect from "../../../components/ui/CustomSelect";
 
 export default function AdminListPresentation({
   admins,
@@ -37,7 +38,17 @@ export default function AdminListPresentation({
 }: AdminListPresentationProps) {
   const router = useRouter();
 
+  const roleOptions = [
+    { value: "All", label: "All Roles" },
+    { value: "Admin", label: "Admin" },
+    { value: "Provider", label: "Provider" },
+  ];
 
+  const statusOptions = [
+    { value: "All", label: "All Status" },
+    { value: "Active", label: "Active" },
+    { value: "Inactive", label: "Inactive" },
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -80,27 +91,23 @@ export default function AdminListPresentation({
           <div className="flex gap-3">
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-[color:var(--muted-foreground)]" />
-              <select
+              <CustomSelect
+                options={roleOptions}
                 value={roleFilter}
-                onChange={(e) => onRoleFilterChange(e.target.value)}
-                className="px-3 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
-              >
-                <option value="All">All Roles</option>
-                <option value="Admin">Admin</option>
-                <option value="Provider">Provider</option>
-              </select>
+                onChange={onRoleFilterChange}
+                placeholder="All Roles"
+                className="min-w-32"
+              />
             </div>
 
             <div className="flex items-center gap-2">
-              <select
+              <CustomSelect
+                options={statusOptions}
                 value={statusFilter}
-                onChange={(e) => onStatusFilterChange(e.target.value)}
-                className="px-3 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--background)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)]"
-              >
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
+                onChange={onStatusFilterChange}
+                placeholder="All Status"
+                className="min-w-32"
+              />
             </div>
           </div>
         </div>

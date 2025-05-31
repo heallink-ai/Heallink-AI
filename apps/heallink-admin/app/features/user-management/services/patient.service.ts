@@ -42,6 +42,20 @@ class PatientService {
   }
 
   /**
+   * Get patient activity log
+   */
+  async getPatientActivityLog(
+    id: string, 
+    limit: number = 50, 
+    offset: number = 0
+  ): Promise<PatientActivityLog[]> {
+    return fetchWithAuth<PatientActivityLog[]>(`${this.baseUrl}/patients/${id}/activity-log`, {
+      method: 'GET',
+      params: { limit, offset }
+    });
+  }
+
+  /**
    * Get paginated list of patients with filtering
    */
   async getPatients(params: PatientQueryDto = {}): Promise<PatientListResponse> {
@@ -154,21 +168,6 @@ class PatientService {
     );
   }
 
-  /**
-   * Get patient activity log
-   */
-  async getPatientActivityLog(
-    id: string, 
-    limit: number = 50, 
-    offset: number = 0
-  ): Promise<PatientActivityLog[]> {
-    return fetchWithAuth<PatientActivityLog[]>(
-      `${this.baseUrl}/patients/${id}/activity-log`, 
-      {
-        params: { limit, offset }
-      }
-    );
-  }
 
   // ==================== BULK OPERATIONS ====================
 

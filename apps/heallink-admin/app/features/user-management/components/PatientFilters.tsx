@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { 
   Check, 
   X, 
@@ -91,10 +92,49 @@ export default function PatientFilters({ filters, onChange }: PatientFiltersProp
     const isActive = activeSection === filterKey;
     const selectedValues = filters[filterKey] || (allowMultiple ? [] : null);
     const hasSelection = allowMultiple ? selectedValues.length > 0 : selectedValues !== null;
+    const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (buttonRef && !buttonRef.contains(event.target as Node)) {
+          const dropdown = document.querySelector(`[data-filter-dropdown="${filterKey}"]`);
+          if (dropdown && !dropdown.contains(event.target as Node)) {
+            setActiveSection(null);
+          }
+        }
+      };
+
+      if (isActive) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }
+    }, [isActive, buttonRef, filterKey]);
+
+    const calculateDropdownPosition = () => {
+      if (!buttonRef) return { top: 0, left: 0, width: 0 };
+      
+      const rect = buttonRef.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = Math.min(options.length * 56 + 32, 300); // Estimated height
+      
+      // Check if dropdown should open upward
+      const openUpward = rect.bottom + dropdownHeight > viewportHeight && rect.top > dropdownHeight;
+      
+      return {
+        top: openUpward ? rect.top - dropdownHeight - 8 : rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+        openUpward,
+      };
+    };
+
+    const position = isActive ? calculateDropdownPosition() : null;
 
     return (
-      <div className="space-y-3">
+      <div className="relative">
         <button
+          ref={setButtonRef}
           onClick={() => setActiveSection(isActive ? null : filterKey)}
           className={`w-full flex items-center justify-between p-3 rounded-lg border border-[color:var(--border)] transition-colors ${
             hasSelection
@@ -118,60 +158,76 @@ export default function PatientFilters({ filters, onChange }: PatientFiltersProp
           </div>
         </button>
 
-        {isActive && (
-          <div className="bg-[color:var(--card)] rounded-lg border border-[color:var(--border)] p-4 space-y-2">
-            {options.map((option) => {
-              const isSelected = allowMultiple 
-                ? selectedValues.includes(option.value)
-                : selectedValues === option.value;
+        {/* Dropdown Portal */}
+        {isActive && position && typeof document !== 'undefined' && 
+          createPortal(
+            <div
+              data-filter-dropdown={filterKey}
+              className="fixed z-50000 bg-[color:var(--card)] rounded-lg border border-[color:var(--border)] shadow-xl"
+              style={{
+                top: `${position.top}px`,
+                left: `${position.left}px`,
+                width: `${position.width}px`,
+                maxHeight: '300px',
+                overflowY: 'auto',
+              }}
+            >
+              <div className="p-4 space-y-2">
+                {options.map((option) => {
+                  const isSelected = allowMultiple 
+                    ? selectedValues.includes(option.value)
+                    : selectedValues === option.value;
 
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    if (allowMultiple) {
-                      const newValues = isSelected
-                        ? selectedValues.filter((v: string) => v !== option.value)
-                        : [...selectedValues, option.value];
-                      handleFilterChange(filterKey, newValues);
-                    } else {
-                      handleFilterChange(filterKey, isSelected ? null : option.value);
-                    }
-                  }}
-                  className={`w-full flex items-center justify-between p-3 rounded-md border border-[color:var(--border)] transition-colors ${
-                    isSelected
-                      ? 'bg-[color:var(--primary)]/10 text-[color:var(--primary)]'
-                      : 'hover:bg-[color:var(--navbar-item-hover)]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? 'bg-[color:var(--primary)] border-[color:var(--primary)]'
-                        : 'border-[color:var(--border)]'
-                    }`}>
-                      {isSelected && <Check className="w-3 h-3 text-[color:var(--primary-foreground)]" />}
-                    </div>
-                    <span className="font-medium text-[color:var(--foreground)]">{option.label}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {option.count && (
-                      <span className="text-sm text-[color:var(--muted-foreground)]">{option.count}</span>
-                    )}
-                    {option.color && (
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        colorClasses[option.color as keyof typeof colorClasses] || colorClasses.gray
-                      }`}>
-                        {option.label}
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        if (allowMultiple) {
+                          const newValues = isSelected
+                            ? selectedValues.filter((v: string) => v !== option.value)
+                            : [...selectedValues, option.value];
+                          handleFilterChange(filterKey, newValues);
+                        } else {
+                          handleFilterChange(filterKey, isSelected ? null : option.value);
+                          setActiveSection(null); // Close dropdown for single select
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between p-3 rounded-md border border-[color:var(--border)] transition-colors ${
+                        isSelected
+                          ? 'bg-[color:var(--primary)]/10 text-[color:var(--primary)]'
+                          : 'hover:bg-[color:var(--navbar-item-hover)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-[color:var(--primary)] border-[color:var(--primary)]'
+                            : 'border-[color:var(--border)]'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 text-[color:var(--primary-foreground)]" />}
+                        </div>
+                        <span className="font-medium text-[color:var(--foreground)]">{option.label}</span>
                       </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
+                      
+                      <div className="flex items-center gap-2">
+                        {option.count && (
+                          <span className="text-sm text-[color:var(--muted-foreground)]">{option.count}</span>
+                        )}
+                        {option.color && (
+                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            colorClasses[option.color as keyof typeof colorClasses] || colorClasses.gray
+                          }`}>
+                            {option.label}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>,
+            document.body
+          )}
       </div>
     );
   };

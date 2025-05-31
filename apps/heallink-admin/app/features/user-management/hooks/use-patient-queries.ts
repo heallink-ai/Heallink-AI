@@ -54,6 +54,22 @@ export function useGetPatient(
 }
 
 /**
+ * Hook to fetch patient activity log
+ */
+export function useGetPatientActivityLog(
+  patientId: string,
+  limit: number = 50,
+  offset: number = 0
+): UseQueryResult<PatientActivityLog[], Error> {
+  return useQuery({
+    queryKey: [...patientKeys.activityLog(patientId), limit, offset],
+    queryFn: () => patientService.getPatientActivityLog(patientId, limit, offset),
+    enabled: !!patientId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+}
+
+/**
  * Hook to fetch patients with pagination and filtering
  */
 export function usePatients(
@@ -91,21 +107,6 @@ export function usePatient(id: string): UseQueryResult<PatientDetail, Error> {
   });
 }
 
-/**
- * Hook to fetch patient activity log
- */
-export function usePatientActivityLog(
-  id: string,
-  limit: number = 50,
-  offset: number = 0
-): UseQueryResult<PatientActivityLog[], Error> {
-  return useQuery({
-    queryKey: [...patientKeys.activityLog(id), limit, offset],
-    queryFn: () => patientService.getPatientActivityLog(id, limit, offset),
-    enabled: !!id,
-    staleTime: 1 * 60 * 1000, // 1 minute
-  });
-}
 
 /**
  * Hook to get patient suggestions for autocomplete
@@ -327,7 +328,7 @@ export function useBulkPatientAction(): UseMutationResult<
 
   return useMutation({
     mutationFn: (data: BulkPatientActionDto) => patientService.performBulkAction(data),
-    onSuccess: (result, variables) => {
+    onSuccess: (_, variables) => {
       // Invalidate all patient queries since multiple patients might be affected
       queryClient.invalidateQueries({ queryKey: patientKeys.lists() });
       queryClient.invalidateQueries({ queryKey: patientKeys.stats() });
