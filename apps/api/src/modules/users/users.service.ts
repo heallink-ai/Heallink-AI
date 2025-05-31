@@ -435,9 +435,15 @@ export class UsersService {
       searchFields = ['name', 'email', 'phone'],
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      // Client-side parameters (not database fields) - exclude from DB query
+      exportFields,
+      includePII,
       ...filters
     } = query;
 
+    // Note: exportFields and includePII are extracted but not used in DB query
+    // They are client-side parameters for response formatting only
+    
     // Build MongoDB query
     const mongoQuery: any = { role: UserRole.USER };
 
@@ -450,9 +456,32 @@ export class UsersService {
       mongoQuery.$or = searchConditions;
     }
 
-    // Add filters
+    // Add database filters only (exclude client-side parameters)
+    const databaseFields = [
+      'accountStatus',
+      'insuranceStatus', 
+      'subscriptionPlan',
+      'emailVerified',
+      'phoneVerified',
+      'twoFactorEnabled',
+      'createdAfter',
+      'createdBefore',
+      'lastLoginAfter', 
+      'lastLoginBefore',
+      'inactiveDays',
+      'country',
+      'state',
+      'city',
+      'minAge',
+      'maxAge',
+      'insuranceProvider',
+      'hasAppointments',
+      'hasMessages',
+      'invitationStatus'
+    ];
+
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
+      if (value !== undefined && value !== null && databaseFields.includes(key)) {
         mongoQuery[key] = value;
       }
     });
@@ -462,7 +491,6 @@ export class UsersService {
     const sortOptions: any = {};
     sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    console.log({ mongoQuery, sortOptions, skip, limit });
     // Execute queries
     const [patients, total] = await Promise.all([
       this.userModel
