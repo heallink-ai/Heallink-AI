@@ -74,7 +74,7 @@ export default function Breadcrumbs() {
           </Link>
         </li>
 
-        {breadcrumbs.map((breadcrumb, index) => (
+        {breadcrumbs.map((breadcrumb) => (
           <li key={breadcrumb.href} className="flex items-center">
             <ChevronRight size={14} className="mx-1" />
             <Link

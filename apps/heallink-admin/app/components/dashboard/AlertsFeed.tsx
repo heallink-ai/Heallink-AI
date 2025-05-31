@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 
 type AlertType = "error" | "warning" | "info" | "success";
@@ -67,7 +67,7 @@ const sampleAlerts: Alert[] = [
 ];
 
 export default function AlertsFeed() {
-  const [alerts, setAlerts] = useState<Alert[]>(sampleAlerts);
+  const [alerts] = useState<Alert[]>(sampleAlerts);
   const [filter, setFilter] = useState<AlertType | "all">("all");
 
   const filteredAlerts =
