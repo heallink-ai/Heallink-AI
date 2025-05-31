@@ -11,15 +11,23 @@ import {
   Users,
   Crown,
   Shield,
-  Clock,
   Mail,
   Phone,
   Sparkles,
   Calendar,
   Activity,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  FileText,
+  LogOut,
+  UserPlus,
+  CreditCard,
+  Settings,
+  History,
 } from "lucide-react";
 import DropdownMenu from "../../../components/ui/DropdownMenu";
-import { PatientListPresentationProps, AccountStatus } from "../types/user.types";
+import { PatientListPresentationProps, AccountStatus, InsuranceStatus } from "../types/user.types";
 
 export default function PatientTable(props: PatientListPresentationProps) {
   const formatDate = (dateString: string | Date) => {
@@ -41,6 +49,21 @@ export default function PatientTable(props: PatientListPresentationProps) {
         return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400";
       case 'deactivated':
         return "bg-gray-100 text-gray-700 dark:bg-gray-950 dark:text-gray-400";
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-950 dark:text-gray-400";
+    }
+  };
+
+  const getInsuranceStatusColor = (status?: string) => {
+    switch (status) {
+      case 'verified':
+        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400";
+      case 'pending':
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400";
+      case 'rejected':
+      case 'expired':
+        return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400";
+      case 'not_provided':
       default:
         return "bg-gray-100 text-gray-700 dark:bg-gray-950 dark:text-gray-400";
     }
@@ -73,6 +96,22 @@ export default function PatientTable(props: PatientListPresentationProps) {
     }
   };
 
+  const getInsuranceStatusLabel = (status?: string) => {
+    switch (status) {
+      case 'verified':
+        return 'Verified';
+      case 'pending':
+        return 'Pending';
+      case 'rejected':
+        return 'Rejected';
+      case 'expired':
+        return 'Expired';
+      case 'not_provided':
+      default:
+        return 'Not Provided';
+    }
+  };
+
   const buildDropdownGroups = (patient: any) => [
     {
       items: [
@@ -95,6 +134,28 @@ export default function PatientTable(props: PatientListPresentationProps) {
           closeOnClick: true,
         },
         {
+          label: "View Activity Log",
+          icon: <History size={16} />,
+          onClick: () => {
+            console.log("View activity log for:", patient.id);
+            // TODO: Implement activity log view
+          },
+          closeOnClick: true,
+        },
+        {
+          label: "Medical Records",
+          icon: <FileText size={16} />,
+          onClick: () => {
+            console.log("View medical records for:", patient.id);
+            // TODO: Implement medical records view
+          },
+          closeOnClick: true,
+        },
+      ],
+    },
+    {
+      items: [
+        {
           label: "Reset Password",
           icon: <Key size={16} />,
           onClick: () => {
@@ -102,6 +163,24 @@ export default function PatientTable(props: PatientListPresentationProps) {
             if (window.confirm(`Reset password for ${patient.name}? A new temporary password will be sent to ${patient.email}.`)) {
               props.onPasswordReset(patient.id);
             }
+          },
+          closeOnClick: true,
+        },
+        {
+          label: "Manage Insurance",
+          icon: <CreditCard size={16} />,
+          onClick: () => {
+            console.log("Manage insurance for:", patient.id);
+            // TODO: Implement insurance management
+          },
+          closeOnClick: true,
+        },
+        {
+          label: "Account Settings",
+          icon: <Settings size={16} />,
+          onClick: () => {
+            console.log("Account settings for:", patient.id);
+            // TODO: Implement account settings
           },
           closeOnClick: true,
         },
@@ -118,6 +197,30 @@ export default function PatientTable(props: PatientListPresentationProps) {
             props.onStatusChange(patient.id, newStatus as AccountStatus, 'Admin action');
           },
           variant: patient.accountStatus === 'active' ? ("warning" as const) : ("default" as const),
+          closeOnClick: true,
+        },
+        {
+          label: "Impersonate Patient",
+          icon: <UserPlus size={16} />,
+          onClick: () => {
+            console.log("Impersonate patient:", patient.id);
+            if (window.confirm(`Impersonate ${patient.name}? This will log you in as this patient.`)) {
+              props.onImpersonate(patient.id);
+            }
+          },
+          variant: "warning" as const,
+          closeOnClick: true,
+        },
+        {
+          label: "Force Logout",
+          icon: <LogOut size={16} />,
+          onClick: () => {
+            console.log("Terminate sessions for:", patient.id);
+            if (window.confirm(`Force logout all sessions for ${patient.name}?`)) {
+              props.onTerminateSessions(patient.id);
+            }
+          },
+          variant: "destructive" as const,
           closeOnClick: true,
         },
       ],
@@ -170,110 +273,121 @@ export default function PatientTable(props: PatientListPresentationProps) {
           }}
         >
           <div className="flex items-center gap-6">
-            {/* Avatar & Basic Info */}
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+            {/* User ID & Avatar */}
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="text-xs font-mono text-[color:var(--muted-foreground)] min-w-16">
+                #{patient.id.slice(-8).toUpperCase()}
+              </div>
               <div className="relative">
                 {patient.avatarUrl ? (
                   <img
                     src={patient.avatarUrl}
                     alt={patient.name}
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[color:var(--border)] group-hover:border-[color:var(--primary)]/30 transition-colors"
+                    className="w-12 h-12 rounded-xl object-cover border-2 border-[color:var(--border)] group-hover:border-[color:var(--primary)]/30 transition-colors"
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[color:var(--primary)]/20 to-[color:var(--primary)]/5 border-2 border-[color:var(--border)] flex items-center justify-center group-hover:border-[color:var(--primary)]/30 transition-colors">
-                    <Users className="w-6 h-6 text-[color:var(--primary)]" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[color:var(--primary)]/20 to-[color:var(--primary)]/5 border-2 border-[color:var(--border)] flex items-center justify-center group-hover:border-[color:var(--primary)]/30 transition-colors">
+                    <Users className="w-5 h-5 text-[color:var(--primary)]" />
                   </div>
                 )}
                 
                 {/* Online indicator for active patients */}
                 {patient.accountStatus === 'active' && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-[color:var(--card)] rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[color:var(--card)] rounded-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="font-semibold text-[color:var(--foreground)] truncate group-hover:text-[color:var(--primary)] transition-colors">
-                    {patient.name || 'Unknown Patient'}
-                  </h3>
-                  {getPlanIcon(patient.subscriptionPlan || 'free')}
-                  {patient.subscriptionPlan === "premium" && (
-                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
-                  )}
-                  {patient.twoFactorEnabled && (
-                    <Shield className="w-4 h-4 text-green-500" />
-                  )}
+            {/* Basic Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-1">
+                <h3 className="font-semibold text-[color:var(--foreground)] truncate group-hover:text-[color:var(--primary)] transition-colors">
+                  {patient.name || 'Unknown Patient'}
+                </h3>
+                {getPlanIcon(patient.subscriptionPlan || 'free')}
+                {patient.subscriptionPlan === "premium" && (
+                  <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+                )}
+              </div>
+              
+              <div className="flex items-center gap-4 text-sm text-[color:var(--muted-foreground)]">
+                <div className="flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
+                  <span className="truncate max-w-48">{patient.email || 'No email'}</span>
+                  {patient.emailVerified && <CheckCircle className="w-3 h-3 text-green-500" />}
                 </div>
-                
-                <div className="flex items-center gap-4 text-sm text-[color:var(--muted-foreground)]">
+                {patient.phone && (
                   <div className="flex items-center gap-1">
-                    <Mail className="w-3 h-3" />
-                    <span className="truncate max-w-48">{patient.email || 'No email'}</span>
+                    <Phone className="w-3 h-3" />
+                    <span>{patient.phone}</span>
+                    {patient.phoneVerified && <CheckCircle className="w-3 h-3 text-green-500" />}
                   </div>
-                  {patient.phone && (
-                    <div className="flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      <span>{patient.phone}</span>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
 
-            {/* Subscription Plan */}
-            <div className="flex flex-col items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${getPlanBadgeStyle(patient.subscriptionPlan || 'free')}`}>
-                {getPlanIcon(patient.subscriptionPlan || 'free')}
-                {(patient.subscriptionPlan || 'free').charAt(0).toUpperCase() + (patient.subscriptionPlan || 'free').slice(1)}
-              </span>
-            </div>
-
-            {/* Status Badge */}
-            <div className="flex flex-col items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(patient.accountStatus)}`}>
-                <div className={`w-2 h-2 rounded-full ${
+            {/* Account Status */}
+            <div className="flex flex-col items-center gap-1 min-w-24">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(patient.accountStatus)}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${
                   patient.accountStatus === 'active' ? 'bg-emerald-500' : 
                   patient.accountStatus === 'pending_verification' ? 'bg-yellow-500' :
                   'bg-red-500'
                 }`} />
                 {getStatusLabel(patient.accountStatus)}
               </span>
-              {/* Email verification indicator */}
-              <div className="flex items-center gap-1 text-xs">
-                {patient.emailVerified ? (
-                  <span className="text-emerald-600">✓ Verified</span>
-                ) : (
-                  <span className="text-red-600">✗ Unverified</span>
-                )}
-              </div>
             </div>
 
-            {/* Activity Info */}
-            <div className="hidden lg:flex flex-col items-center gap-1 min-w-32">
-              <div className="flex items-center gap-1.5 text-xs text-[color:var(--muted-foreground)]">
-                <Activity className="w-3 h-3" />
-                <span>Last Active</span>
-              </div>
-              <span className="text-sm font-medium text-[color:var(--foreground)]">
-                {patient.lastLogin ? formatDate(patient.lastLogin) : "Never"}
+            {/* Insurance Status */}
+            <div className="flex flex-col items-center gap-1 min-w-20">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getInsuranceStatusColor(patient.insurance?.status)}`}>
+                <CreditCard className="w-3 h-3" />
+                {getInsuranceStatusLabel(patient.insurance?.status)}
               </span>
-              {patient.usageMetrics && (
-                <div className="text-xs text-[color:var(--muted-foreground)]">
-                  {patient.usageMetrics.appointmentsBooked || 0} appointments
-                </div>
-              )}
+            </div>
+
+            {/* Two-Factor Auth */}
+            <div className="flex flex-col items-center gap-1 min-w-16">
+              <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
+                patient.twoFactorEnabled 
+                  ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
+                  : 'bg-gray-100 text-gray-700 dark:bg-gray-950 dark:text-gray-400'
+              }`}>
+                {patient.twoFactorEnabled ? (
+                  <>
+                    <Shield className="w-3 h-3" />
+                    Enabled
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-3 h-3" />
+                    Disabled
+                  </>
+                )}
+              </span>
             </div>
 
             {/* Join Date */}
-            <div className="hidden xl:flex flex-col items-center gap-1 min-w-24">
-              <div className="flex items-center gap-1.5 text-xs text-[color:var(--muted-foreground)]">
+            <div className="hidden lg:flex flex-col items-center gap-1 min-w-20">
+              <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)]">
                 <Calendar className="w-3 h-3" />
                 <span>Joined</span>
               </div>
               <span className="text-sm font-medium text-[color:var(--foreground)]">
                 {formatDate(patient.createdAt)}
+              </span>
+            </div>
+
+            {/* Last Login */}
+            <div className="hidden xl:flex flex-col items-center gap-1 min-w-24">
+              <div className="flex items-center gap-1 text-xs text-[color:var(--muted-foreground)]">
+                <Activity className="w-3 h-3" />
+                <span>Last Active</span>
+              </div>
+              <span className="text-sm font-medium text-[color:var(--foreground)]">
+                {patient.lastLogin ? formatDate(patient.lastLogin) : "Never"}
               </span>
             </div>
 
@@ -292,11 +406,25 @@ export default function PatientTable(props: PatientListPresentationProps) {
           </div>
 
           {/* Mobile Info */}
-          <div className="lg:hidden mt-4 pt-4 border-t border-[color:var(--border)] flex justify-between text-sm">
-            <span className="text-[color:var(--muted-foreground)]">Created: {formatDate(patient.createdAt)}</span>
-            <span className="text-[color:var(--muted-foreground)]">
-              Last Active: {patient.lastLogin ? formatDate(patient.lastLogin) : "Never"}
-            </span>
+          <div className="lg:hidden mt-4 pt-4 border-t border-[color:var(--border)] grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-[color:var(--muted-foreground)]">ID: </span>
+              <span className="font-mono">#{patient.id.slice(-8).toUpperCase()}</span>
+            </div>
+            <div>
+              <span className="text-[color:var(--muted-foreground)]">2FA: </span>
+              <span className={patient.twoFactorEnabled ? 'text-green-600' : 'text-red-600'}>
+                {patient.twoFactorEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <div>
+              <span className="text-[color:var(--muted-foreground)]">Insurance: </span>
+              <span>{getInsuranceStatusLabel(patient.insurance?.status)}</span>
+            </div>
+            <div>
+              <span className="text-[color:var(--muted-foreground)]">Last Active: </span>
+              <span>{patient.lastLogin ? formatDate(patient.lastLogin) : "Never"}</span>
+            </div>
           </div>
         </div>
       ))}

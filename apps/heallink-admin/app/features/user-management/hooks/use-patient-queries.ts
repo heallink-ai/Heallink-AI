@@ -41,6 +41,19 @@ export const patientKeys = {
 // ==================== QUERY HOOKS ====================
 
 /**
+ * Hook to fetch a single patient by ID
+ */
+export function useGetPatient(
+  patientId: string
+): UseQueryResult<Patient, Error> {
+  return useQuery({
+    queryKey: patientKeys.detail(patientId),
+    queryFn: () => patientService.getPatient(patientId),
+    enabled: !!patientId,
+  });
+}
+
+/**
  * Hook to fetch patients with pagination and filtering
  */
 export function usePatients(

@@ -33,6 +33,15 @@ class PatientService {
   }
 
   /**
+   * Get a single patient by ID
+   */
+  async getPatient(id: string): Promise<Patient> {
+    return fetchWithAuth<Patient>(`${this.baseUrl}/patients/${id}`, {
+      method: 'GET',
+    });
+  }
+
+  /**
    * Get paginated list of patients with filtering
    */
   async getPatients(params: PatientQueryDto = {}): Promise<PatientListResponse> {

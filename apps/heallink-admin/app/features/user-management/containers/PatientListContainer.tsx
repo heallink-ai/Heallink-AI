@@ -53,10 +53,6 @@ export default function PatientListContainer() {
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
 
   // UI state
-  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
-    null
-  );
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -194,9 +190,8 @@ export default function PatientListContainer() {
   }, []);
 
   const handlePatientView = useCallback((id: string) => {
-    setSelectedPatientId(id);
-    setShowDetailDrawer(true);
-  }, []);
+    router.push(`/dashboard/users/${id}`);
+  }, [router]);
 
   const handlePatientEdit = useCallback(
     (id: string) => {

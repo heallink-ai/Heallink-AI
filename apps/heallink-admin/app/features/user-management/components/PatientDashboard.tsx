@@ -208,6 +208,7 @@ export default function PatientDashboard(props: PatientListPresentationProps) {
           </div>
         )}
       </div>
+
     </div>
   );
 }
