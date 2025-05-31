@@ -6,20 +6,25 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User, AuthProvider, UserDocument, AccountStatus } from './schemas/user.schema';
+import {
+  User,
+  AuthProvider,
+  UserDocument,
+  AccountStatus,
+} from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
-import { 
-  UpdatePatientDto, 
+import {
+  UpdatePatientDto,
   PatientStatusChangeDto,
   ChangePatientPasswordDto,
   AddAdminNoteDto,
 } from './dto/update-patient.dto';
 import { PatientQueryDto } from './dto/patient-query.dto';
-import { 
-  BulkPatientActionDto, 
-  BulkPatientImportDto, 
+import {
+  BulkPatientActionDto,
+  BulkPatientImportDto,
   BulkActionResultDto,
 } from './dto/bulk-patient.dto';
 import {
@@ -390,10 +395,15 @@ export class UsersService {
   /**
    * Create a new patient
    */
-  async createPatient(createPatientDto: CreatePatientDto, adminId: string): Promise<PatientResponseDto> {
+  async createPatient(
+    createPatientDto: CreatePatientDto,
+    adminId: string,
+  ): Promise<PatientResponseDto> {
     // Check if email already exists
     if (createPatientDto.email) {
-      const existingUser = await this.userModel.findOne({ email: createPatientDto.email }).exec();
+      const existingUser = await this.userModel
+        .findOne({ email: createPatientDto.email })
+        .exec();
       if (existingUser) {
         throw new ConflictException('User with this email already exists');
       }
@@ -434,8 +444,8 @@ export class UsersService {
     // Add search functionality
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      const searchConditions = searchFields.map(field => ({
-        [field]: searchRegex
+      const searchConditions = searchFields.map((field) => ({
+        [field]: searchRegex,
       }));
       mongoQuery.$or = searchConditions;
     }
@@ -452,6 +462,7 @@ export class UsersService {
     const sortOptions: any = {};
     sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
+    console.log({ mongoQuery, sortOptions, skip, limit });
     // Execute queries
     const [patients, total] = await Promise.all([
       this.userModel
@@ -463,8 +474,12 @@ export class UsersService {
       this.userModel.countDocuments(mongoQuery).exec(),
     ]);
 
+    console.log({ patients, total });
+
     return {
-      patients: patients.map(patient => this.mapUserToPatientResponse(patient)),
+      patients: patients.map((patient) =>
+        this.mapUserToPatientResponse(patient),
+      ),
       total,
       page,
       limit,
@@ -476,36 +491,50 @@ export class UsersService {
    * Get patient statistics
    */
   async getPatientStats(): Promise<PatientStatsResponseDto> {
-    const totalPatients = await this.userModel.countDocuments({ role: UserRole.USER }).exec();
-    const activePatients = await this.userModel.countDocuments({ 
-      role: UserRole.USER, 
-      accountStatus: AccountStatus.ACTIVE 
-    }).exec();
-    const suspendedPatients = await this.userModel.countDocuments({ 
-      role: UserRole.USER, 
-      accountStatus: AccountStatus.SUSPENDED 
-    }).exec();
-    const deactivatedPatients = await this.userModel.countDocuments({ 
-      role: UserRole.USER, 
-      accountStatus: AccountStatus.DEACTIVATED 
-    }).exec();
-    const pendingVerificationPatients = await this.userModel.countDocuments({ 
-      role: UserRole.USER, 
-      accountStatus: AccountStatus.PENDING_VERIFICATION 
-    }).exec();
+    const totalPatients = await this.userModel
+      .countDocuments({ role: UserRole.USER })
+      .exec();
+    const activePatients = await this.userModel
+      .countDocuments({
+        role: UserRole.USER,
+        accountStatus: AccountStatus.ACTIVE,
+      })
+      .exec();
+    const suspendedPatients = await this.userModel
+      .countDocuments({
+        role: UserRole.USER,
+        accountStatus: AccountStatus.SUSPENDED,
+      })
+      .exec();
+    const deactivatedPatients = await this.userModel
+      .countDocuments({
+        role: UserRole.USER,
+        accountStatus: AccountStatus.DEACTIVATED,
+      })
+      .exec();
+    const pendingVerificationPatients = await this.userModel
+      .countDocuments({
+        role: UserRole.USER,
+        accountStatus: AccountStatus.PENDING_VERIFICATION,
+      })
+      .exec();
 
     // Calculate recently created (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentlyCreated = await this.userModel.countDocuments({
-      role: UserRole.USER,
-      createdAt: { $gte: thirtyDaysAgo }
-    }).exec();
+    const recentlyCreated = await this.userModel
+      .countDocuments({
+        role: UserRole.USER,
+        createdAt: { $gte: thirtyDaysAgo },
+      })
+      .exec();
 
-    const recentlyActive = await this.userModel.countDocuments({
-      role: UserRole.USER,
-      lastLogin: { $gte: thirtyDaysAgo }
-    }).exec();
+    const recentlyActive = await this.userModel
+      .countDocuments({
+        role: UserRole.USER,
+        lastLogin: { $gte: thirtyDaysAgo },
+      })
+      .exec();
 
     return {
       totalPatients,
@@ -532,7 +561,11 @@ export class UsersService {
   /**
    * Update patient information
    */
-  async updatePatient(patientId: string, updatePatientDto: UpdatePatientDto, adminId: string): Promise<PatientResponseDto> {
+  async updatePatient(
+    patientId: string,
+    updatePatientDto: UpdatePatientDto,
+    adminId: string,
+  ): Promise<PatientResponseDto> {
     const updatedPatient = await this.update(patientId, updatePatientDto);
     return this.mapUserToPatientResponse(updatedPatient);
   }
@@ -541,9 +574,9 @@ export class UsersService {
    * Change patient account status
    */
   async changePatientStatus(
-    patientId: string, 
-    statusChangeDto: PatientStatusChangeDto, 
-    adminId: string
+    patientId: string,
+    statusChangeDto: PatientStatusChangeDto,
+    adminId: string,
   ): Promise<PatientResponseDto> {
     const updateData: any = {
       accountStatus: statusChangeDto.accountStatus,
@@ -566,13 +599,13 @@ export class UsersService {
    * Reset patient password
    */
   async resetPatientPassword(
-    patientId: string, 
-    passwordResetDto: ChangePatientPasswordDto
+    patientId: string,
+    passwordResetDto: ChangePatientPasswordDto,
   ): Promise<{ success: boolean; message: string }> {
     // For now, just return success - password reset logic would be implemented here
     return {
       success: true,
-      message: passwordResetDto.sendResetEmail 
+      message: passwordResetDto.sendResetEmail
         ? 'Password reset email sent successfully'
         : 'Password updated successfully',
     };
@@ -581,7 +614,10 @@ export class UsersService {
   /**
    * Start admin impersonation session
    */
-  async startImpersonation(patientId: string, adminId: string): Promise<{ impersonationToken: string; expiresAt: Date }> {
+  async startImpersonation(
+    patientId: string,
+    adminId: string,
+  ): Promise<{ impersonationToken: string; expiresAt: Date }> {
     const impersonationToken = randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
@@ -595,7 +631,9 @@ export class UsersService {
   /**
    * Terminate all patient sessions
    */
-  async terminatePatientSessions(patientId: string): Promise<{ success: boolean; terminatedSessions: number }> {
+  async terminatePatientSessions(
+    patientId: string,
+  ): Promise<{ success: boolean; terminatedSessions: number }> {
     // For now, return mock data - actual session termination would be implemented here
     return {
       success: true,
@@ -607,12 +645,12 @@ export class UsersService {
    * Add admin note to patient
    */
   async addAdminNote(
-    patientId: string, 
-    noteDto: AddAdminNoteDto, 
-    adminId: string
+    patientId: string,
+    noteDto: AddAdminNoteDto,
+    adminId: string,
   ): Promise<{ success: boolean; noteId: string }> {
     const noteId = new Types.ObjectId().toString();
-    
+
     const adminNote = {
       _id: noteId,
       note: noteDto.note,
@@ -622,10 +660,9 @@ export class UsersService {
       createdAt: new Date(),
     };
 
-    await this.userModel.updateOne(
-      { _id: patientId },
-      { $push: { adminNotes: adminNote } }
-    ).exec();
+    await this.userModel
+      .updateOne({ _id: patientId }, { $push: { adminNotes: adminNote } })
+      .exec();
 
     return {
       success: true,
@@ -637,8 +674,8 @@ export class UsersService {
    * Perform bulk action on patients
    */
   async performBulkAction(
-    bulkActionDto: BulkPatientActionDto, 
-    adminId: string
+    bulkActionDto: BulkPatientActionDto,
+    adminId: string,
   ): Promise<BulkActionResultDto> {
     const { action, patientIds, reason } = bulkActionDto;
     let successCount = 0;
@@ -650,23 +687,23 @@ export class UsersService {
         switch (action) {
           case 'activate':
             await this.changePatientStatus(
-              patientId, 
-              { accountStatus: AccountStatus.ACTIVE, reason }, 
-              adminId
+              patientId,
+              { accountStatus: AccountStatus.ACTIVE, reason },
+              adminId,
             );
             break;
           case 'suspend':
             await this.changePatientStatus(
-              patientId, 
-              { accountStatus: AccountStatus.SUSPENDED, reason }, 
-              adminId
+              patientId,
+              { accountStatus: AccountStatus.SUSPENDED, reason },
+              adminId,
             );
             break;
           case 'deactivate':
             await this.changePatientStatus(
-              patientId, 
-              { accountStatus: AccountStatus.DEACTIVATED, reason }, 
-              adminId
+              patientId,
+              { accountStatus: AccountStatus.DEACTIVATED, reason },
+              adminId,
             );
             break;
           case 'verify_email':
@@ -699,8 +736,8 @@ export class UsersService {
    * Import patients from bulk data
    */
   async importPatients(
-    importDto: BulkPatientImportDto, 
-    adminId: string
+    importDto: BulkPatientImportDto,
+    adminId: string,
   ): Promise<BulkActionResultDto> {
     let imported = 0;
     let skipped = 0;
@@ -711,7 +748,9 @@ export class UsersService {
       try {
         // Check for duplicates based on email
         if (patientData.email) {
-          const existing = await this.userModel.findOne({ email: patientData.email }).exec();
+          const existing = await this.userModel
+            .findOne({ email: patientData.email })
+            .exec();
           if (existing) {
             if (importDto.duplicateHandling === 'skip') {
               skipped++;
@@ -741,11 +780,14 @@ export class UsersService {
             provider: patientData.insuranceProvider,
             policyNumber: patientData.insurancePolicyNumber,
           },
-          emergencyContact: patientData.emergencyContactName ? {
-            name: patientData.emergencyContactName,
-            phone: patientData.emergencyContactPhone || '',
-            relationship: patientData.emergencyContactRelationship || 'Unknown',
-          } : undefined,
+          emergencyContact: patientData.emergencyContactName
+            ? {
+                name: patientData.emergencyContactName,
+                phone: patientData.emergencyContactPhone || '',
+                relationship:
+                  patientData.emergencyContactRelationship || 'Unknown',
+              }
+            : undefined,
         };
 
         await this.createPatient(patientCreationData, adminId);
