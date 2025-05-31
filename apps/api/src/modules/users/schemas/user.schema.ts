@@ -8,6 +8,28 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
+export enum AccountStatus {
+  ACTIVE = 'active',
+  PENDING_VERIFICATION = 'pending_verification',
+  SUSPENDED = 'suspended',
+  DEACTIVATED = 'deactivated',
+  PENDING_SIGNUP = 'pending_signup',
+}
+
+export enum InsuranceStatus {
+  VERIFIED = 'verified',
+  UNVERIFIED = 'unverified',
+  PENDING = 'pending',
+  EXPIRED = 'expired',
+}
+
+export enum SubscriptionPlan {
+  FREE = 'free',
+  BASIC = 'basic',
+  PREMIUM = 'premium',
+  FAMILY = 'family',
+}
+
 export enum AdminRole {
   SUPER_ADMIN = 'super_admin',
   SYSTEM_ADMIN = 'system_admin',
@@ -94,8 +116,30 @@ export class User {
   @Prop({ default: true })
   isActive?: boolean;
 
+  @Prop({
+    type: String,
+    enum: Object.values(AccountStatus),
+    default: AccountStatus.PENDING_VERIFICATION,
+  })
+  accountStatus?: AccountStatus;
+
   @Prop({ type: Date })
   lastLogin?: Date;
+
+  @Prop()
+  suspensionReason?: string;
+
+  @Prop({ type: Date })
+  suspendedAt?: Date;
+
+  @Prop()
+  suspendedBy?: string; // Admin ID who suspended
+
+  @Prop({ type: Date })
+  deactivatedAt?: Date;
+
+  @Prop()
+  deactivatedBy?: string; // Admin ID who deactivated
 
   @Prop({ type: [String], default: [] })
   refreshTokens?: string[];
@@ -139,6 +183,52 @@ export class User {
 
   @Prop({ type: Date })
   otpExpiry?: Date;
+
+  // Two-Factor Authentication
+  @Prop({ default: false })
+  twoFactorEnabled?: boolean;
+
+  @Prop()
+  twoFactorSecret?: string;
+
+  @Prop({ type: [String], default: [] })
+  twoFactorRecoveryCodes?: string[];
+
+  @Prop({ type: Date })
+  twoFactorEnabledAt?: Date;
+
+  // Invitation and Signup Tracking
+  @Prop()
+  invitedBy?: string; // Admin ID who sent invitation
+
+  @Prop({ type: Date })
+  invitedAt?: Date;
+
+  @Prop()
+  invitationToken?: string;
+
+  @Prop({ type: Date })
+  invitationExpiry?: Date;
+
+  @Prop({ type: Date })
+  signupCompletedAt?: Date;
+
+  // Subscription and Plans
+  @Prop({
+    type: String,
+    enum: Object.values(SubscriptionPlan),
+    default: SubscriptionPlan.FREE,
+  })
+  subscriptionPlan?: SubscriptionPlan;
+
+  @Prop({ type: Date })
+  subscriptionStartDate?: Date;
+
+  @Prop({ type: Date })
+  subscriptionEndDate?: Date;
+
+  @Prop()
+  subscriptionStatus?: string; // active, canceled, expired, past_due
 
   @Prop()
   dateOfBirth?: string;
@@ -207,6 +297,14 @@ export class User {
       groupNumber: String,
       primaryInsured: String,
       relationship: String,
+      status: {
+        type: String,
+        enum: Object.values(InsuranceStatus),
+        default: InsuranceStatus.UNVERIFIED,
+      },
+      verifiedAt: Date,
+      verifiedBy: String, // Admin ID who verified
+      lastVerificationCheck: Date,
     },
   })
   insurance?: {
@@ -215,6 +313,10 @@ export class User {
     groupNumber?: string;
     primaryInsured?: string;
     relationship?: string;
+    status?: InsuranceStatus;
+    verifiedAt?: Date;
+    verifiedBy?: string;
+    lastVerificationCheck?: Date;
   };
 
   @Prop({
@@ -230,6 +332,130 @@ export class User {
     push: boolean;
   };
 
+  // Emergency Access
+  @Prop({
+    type: [
+      {
+        name: String,
+        relationship: String,
+        phone: String,
+        email: String,
+        permissions: [String], // What they can access
+        isActive: { type: Boolean, default: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  })
+  emergencyContacts?: Array<{
+    name: string;
+    relationship: string;
+    phone: string;
+    email?: string;
+    permissions: string[];
+    isActive: boolean;
+    createdAt: Date;
+  }>;
+
+  @Prop({
+    type: [
+      {
+        token: String,
+        purpose: String, // emergency_access, one_time_login, etc.
+        expiresAt: Date,
+        isActive: { type: Boolean, default: true },
+        createdAt: { type: Date, default: Date.now },
+        usedAt: Date,
+        createdBy: String, // Admin ID
+      },
+    ],
+    default: [],
+  })
+  emergencyTokens?: Array<{
+    token: string;
+    purpose: string;
+    expiresAt: Date;
+    isActive: boolean;
+    createdAt: Date;
+    usedAt?: Date;
+    createdBy: string;
+  }>;
+
+  // Session Management
+  @Prop({
+    type: [
+      {
+        sessionId: String,
+        deviceInfo: String,
+        ipAddress: String,
+        userAgent: String,
+        lastActivity: { type: Date, default: Date.now },
+        createdAt: { type: Date, default: Date.now },
+        isActive: { type: Boolean, default: true },
+      },
+    ],
+    default: [],
+  })
+  activeSessions?: Array<{
+    sessionId: string;
+    deviceInfo: string;
+    ipAddress: string;
+    userAgent: string;
+    lastActivity: Date;
+    createdAt: Date;
+    isActive: boolean;
+  }>;
+
+  // Activity and Usage Tracking
+  @Prop({
+    type: {
+      appointmentsBooked: { type: Number, default: 0 },
+      lastAppointmentDate: Date,
+      messagesSent: { type: Number, default: 0 },
+      lastMessageDate: Date,
+      vitalsLogged: { type: Number, default: 0 },
+      lastVitalsDate: Date,
+      aiInteractions: { type: Number, default: 0 },
+      lastAiInteractionDate: Date,
+      lastAppAccess: Date,
+      totalLoginCount: { type: Number, default: 0 },
+    },
+    default: {},
+  })
+  usageMetrics?: {
+    appointmentsBooked: number;
+    lastAppointmentDate?: Date;
+    messagesSent: number;
+    lastMessageDate?: Date;
+    vitalsLogged: number;
+    lastVitalsDate?: Date;
+    aiInteractions: number;
+    lastAiInteractionDate?: Date;
+    lastAppAccess?: Date;
+    totalLoginCount: number;
+  };
+
+  // Admin Notes (Internal Use Only)
+  @Prop({
+    type: [
+      {
+        note: String,
+        createdBy: String, // Admin ID
+        createdAt: { type: Date, default: Date.now },
+        isPrivate: { type: Boolean, default: true },
+        category: String, // general, medical, billing, support
+      },
+    ],
+    default: [],
+  })
+  adminNotes?: Array<{
+    note: string;
+    createdBy: string;
+    createdAt: Date;
+    isPrivate: boolean;
+    category: string;
+  }>;
+
   @Prop({
     type: MongooseSchema.Types.Mixed,
     default: {},
@@ -238,6 +464,9 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Enable timestamps
+UserSchema.set('timestamps', true);
 
 // Pre-save hook to hash password
 UserSchema.pre('save', function (next) {

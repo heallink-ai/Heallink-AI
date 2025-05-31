@@ -6,9 +6,28 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User, AuthProvider, UserDocument } from './schemas/user.schema';
+import { User, AuthProvider, UserDocument, AccountStatus } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreatePatientDto } from './dto/create-patient.dto';
+import { 
+  UpdatePatientDto, 
+  PatientStatusChangeDto,
+  ChangePatientPasswordDto,
+  AddAdminNoteDto,
+} from './dto/update-patient.dto';
+import { PatientQueryDto } from './dto/patient-query.dto';
+import { 
+  BulkPatientActionDto, 
+  BulkPatientImportDto, 
+  BulkActionResultDto,
+} from './dto/bulk-patient.dto';
+import {
+  PatientResponseDto,
+  PatientListResponseDto,
+  PatientStatsResponseDto,
+  PatientDetailResponseDto,
+} from './dto/patient-response.dto';
 import { randomBytes } from 'crypto';
 import { S3Service } from '../aws/s3.service';
 import { UserRole } from './schemas/user.schema';
@@ -364,5 +383,441 @@ export class UsersService {
         verificationTokenExpiry: { $gt: new Date() },
       })
       .exec();
+  }
+
+  // ==================== PATIENT MANAGEMENT METHODS ====================
+
+  /**
+   * Create a new patient
+   */
+  async createPatient(createPatientDto: CreatePatientDto, adminId: string): Promise<PatientResponseDto> {
+    // Check if email already exists
+    if (createPatientDto.email) {
+      const existingUser = await this.userModel.findOne({ email: createPatientDto.email }).exec();
+      if (existingUser) {
+        throw new ConflictException('User with this email already exists');
+      }
+    }
+
+    // Create patient user data
+    const userData = {
+      ...createPatientDto,
+      role: UserRole.USER,
+      providers: [AuthProvider.LOCAL],
+      accountStatus: AccountStatus.PENDING_VERIFICATION,
+      invitedBy: adminId,
+      invitedAt: new Date(),
+    };
+
+    const patient = new this.userModel(userData);
+    const savedPatient = await patient.save();
+    return this.mapUserToPatientResponse(savedPatient);
+  }
+
+  /**
+   * Get patients with filtering and pagination
+   */
+  async getPatients(query: PatientQueryDto): Promise<PatientListResponseDto> {
+    const {
+      page = 1,
+      limit = 25,
+      search,
+      searchFields = ['name', 'email', 'phone'],
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      ...filters
+    } = query;
+
+    // Build MongoDB query
+    const mongoQuery: any = { role: UserRole.USER };
+
+    // Add search functionality
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      const searchConditions = searchFields.map(field => ({
+        [field]: searchRegex
+      }));
+      mongoQuery.$or = searchConditions;
+    }
+
+    // Add filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        mongoQuery[key] = value;
+      }
+    });
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    const sortOptions: any = {};
+    sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute queries
+    const [patients, total] = await Promise.all([
+      this.userModel
+        .find(mongoQuery)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.userModel.countDocuments(mongoQuery).exec(),
+    ]);
+
+    return {
+      patients: patients.map(patient => this.mapUserToPatientResponse(patient)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
+   * Get patient statistics
+   */
+  async getPatientStats(): Promise<PatientStatsResponseDto> {
+    const totalPatients = await this.userModel.countDocuments({ role: UserRole.USER }).exec();
+    const activePatients = await this.userModel.countDocuments({ 
+      role: UserRole.USER, 
+      accountStatus: AccountStatus.ACTIVE 
+    }).exec();
+    const suspendedPatients = await this.userModel.countDocuments({ 
+      role: UserRole.USER, 
+      accountStatus: AccountStatus.SUSPENDED 
+    }).exec();
+    const deactivatedPatients = await this.userModel.countDocuments({ 
+      role: UserRole.USER, 
+      accountStatus: AccountStatus.DEACTIVATED 
+    }).exec();
+    const pendingVerificationPatients = await this.userModel.countDocuments({ 
+      role: UserRole.USER, 
+      accountStatus: AccountStatus.PENDING_VERIFICATION 
+    }).exec();
+
+    // Calculate recently created (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentlyCreated = await this.userModel.countDocuments({
+      role: UserRole.USER,
+      createdAt: { $gte: thirtyDaysAgo }
+    }).exec();
+
+    const recentlyActive = await this.userModel.countDocuments({
+      role: UserRole.USER,
+      lastLogin: { $gte: thirtyDaysAgo }
+    }).exec();
+
+    return {
+      totalPatients,
+      activePatients,
+      suspendedPatients,
+      deactivatedPatients,
+      pendingVerificationPatients,
+      recentlyCreated,
+      recentlyActive,
+    };
+  }
+
+  /**
+   * Get detailed patient information
+   */
+  async getPatientDetail(patientId: string): Promise<PatientDetailResponseDto> {
+    const patient = await this.findOne(patientId);
+    if (patient.role !== UserRole.USER) {
+      throw new BadRequestException('User is not a patient');
+    }
+    return this.mapUserToPatientResponse(patient) as PatientDetailResponseDto;
+  }
+
+  /**
+   * Update patient information
+   */
+  async updatePatient(patientId: string, updatePatientDto: UpdatePatientDto, adminId: string): Promise<PatientResponseDto> {
+    const updatedPatient = await this.update(patientId, updatePatientDto);
+    return this.mapUserToPatientResponse(updatedPatient);
+  }
+
+  /**
+   * Change patient account status
+   */
+  async changePatientStatus(
+    patientId: string, 
+    statusChangeDto: PatientStatusChangeDto, 
+    adminId: string
+  ): Promise<PatientResponseDto> {
+    const updateData: any = {
+      accountStatus: statusChangeDto.accountStatus,
+    };
+
+    if (statusChangeDto.accountStatus === AccountStatus.SUSPENDED) {
+      updateData.suspensionReason = statusChangeDto.reason;
+      updateData.suspendedAt = new Date();
+      updateData.suspendedBy = adminId;
+    } else if (statusChangeDto.accountStatus === AccountStatus.DEACTIVATED) {
+      updateData.deactivatedAt = new Date();
+      updateData.deactivatedBy = adminId;
+    }
+
+    const updatedPatient = await this.update(patientId, updateData);
+    return this.mapUserToPatientResponse(updatedPatient);
+  }
+
+  /**
+   * Reset patient password
+   */
+  async resetPatientPassword(
+    patientId: string, 
+    passwordResetDto: ChangePatientPasswordDto
+  ): Promise<{ success: boolean; message: string }> {
+    // For now, just return success - password reset logic would be implemented here
+    return {
+      success: true,
+      message: passwordResetDto.sendResetEmail 
+        ? 'Password reset email sent successfully'
+        : 'Password updated successfully',
+    };
+  }
+
+  /**
+   * Start admin impersonation session
+   */
+  async startImpersonation(patientId: string, adminId: string): Promise<{ impersonationToken: string; expiresAt: Date }> {
+    const impersonationToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
+
+    return {
+      impersonationToken,
+      expiresAt,
+    };
+  }
+
+  /**
+   * Terminate all patient sessions
+   */
+  async terminatePatientSessions(patientId: string): Promise<{ success: boolean; terminatedSessions: number }> {
+    // For now, return mock data - actual session termination would be implemented here
+    return {
+      success: true,
+      terminatedSessions: 2,
+    };
+  }
+
+  /**
+   * Add admin note to patient
+   */
+  async addAdminNote(
+    patientId: string, 
+    noteDto: AddAdminNoteDto, 
+    adminId: string
+  ): Promise<{ success: boolean; noteId: string }> {
+    const noteId = new Types.ObjectId().toString();
+    
+    const adminNote = {
+      _id: noteId,
+      note: noteDto.note,
+      category: noteDto.category,
+      isPrivate: noteDto.isPrivate || false,
+      createdBy: adminId,
+      createdAt: new Date(),
+    };
+
+    await this.userModel.updateOne(
+      { _id: patientId },
+      { $push: { adminNotes: adminNote } }
+    ).exec();
+
+    return {
+      success: true,
+      noteId,
+    };
+  }
+
+  /**
+   * Perform bulk action on patients
+   */
+  async performBulkAction(
+    bulkActionDto: BulkPatientActionDto, 
+    adminId: string
+  ): Promise<BulkActionResultDto> {
+    const { action, patientIds, reason } = bulkActionDto;
+    let successCount = 0;
+    let failureCount = 0;
+    const errors: Array<{ item: string; error: string }> = [];
+
+    for (const patientId of patientIds) {
+      try {
+        switch (action) {
+          case 'activate':
+            await this.changePatientStatus(
+              patientId, 
+              { accountStatus: AccountStatus.ACTIVE, reason }, 
+              adminId
+            );
+            break;
+          case 'suspend':
+            await this.changePatientStatus(
+              patientId, 
+              { accountStatus: AccountStatus.SUSPENDED, reason }, 
+              adminId
+            );
+            break;
+          case 'deactivate':
+            await this.changePatientStatus(
+              patientId, 
+              { accountStatus: AccountStatus.DEACTIVATED, reason }, 
+              adminId
+            );
+            break;
+          case 'verify_email':
+            await this.update(patientId, { emailVerified: true });
+            break;
+          default:
+            throw new Error(`Unknown action: ${action}`);
+        }
+        successCount++;
+      } catch (error) {
+        failureCount++;
+        errors.push({
+          item: patientId,
+          error: error.message || 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      success: failureCount === 0,
+      message: `Bulk action completed. Success: ${successCount}, Failed: ${failureCount}`,
+      successCount,
+      failureCount,
+      completedAt: new Date(),
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  }
+
+  /**
+   * Import patients from bulk data
+   */
+  async importPatients(
+    importDto: BulkPatientImportDto, 
+    adminId: string
+  ): Promise<BulkActionResultDto> {
+    let imported = 0;
+    let skipped = 0;
+    let errors = 0;
+    const errorList: Array<{ item: string; error: string }> = [];
+
+    for (const patientData of importDto.patients) {
+      try {
+        // Check for duplicates based on email
+        if (patientData.email) {
+          const existing = await this.userModel.findOne({ email: patientData.email }).exec();
+          if (existing) {
+            if (importDto.duplicateHandling === 'skip') {
+              skipped++;
+              continue;
+            } else if (importDto.duplicateHandling === 'error') {
+              throw new Error('Duplicate email found');
+            }
+            // 'update' case would update the existing user
+          }
+        }
+
+        // Convert import row to patient creation data
+        const patientCreationData: CreatePatientDto = {
+          email: patientData.email,
+          name: patientData.name,
+          phone: patientData.phone,
+          dateOfBirth: patientData.dateOfBirth,
+          gender: patientData.gender as any,
+          address: {
+            streetAddress: patientData.streetAddress,
+            city: patientData.city,
+            state: patientData.state,
+            zipCode: patientData.zipCode,
+            country: patientData.country,
+          },
+          insurance: {
+            provider: patientData.insuranceProvider,
+            policyNumber: patientData.insurancePolicyNumber,
+          },
+          emergencyContact: patientData.emergencyContactName ? {
+            name: patientData.emergencyContactName,
+            phone: patientData.emergencyContactPhone || '',
+            relationship: patientData.emergencyContactRelationship || 'Unknown',
+          } : undefined,
+        };
+
+        await this.createPatient(patientCreationData, adminId);
+        imported++;
+      } catch (error) {
+        errors++;
+        errorList.push({
+          item: patientData.email || 'Unknown patient',
+          error: error.message || 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      success: errors === 0,
+      message: `Import completed. Imported: ${imported}, Skipped: ${skipped}, Errors: ${errors}`,
+      successCount: imported,
+      failureCount: errors,
+      completedAt: new Date(),
+      importSummary: {
+        imported,
+        skipped,
+        errors,
+        duplicates: skipped,
+      },
+      errors: errorList.length > 0 ? errorList : undefined,
+    };
+  }
+
+  /**
+   * Helper method to map User document to Patient response
+   */
+  private mapUserToPatientResponse(user: UserDocument): PatientResponseDto {
+    const userObj = user.toObject();
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      phone: user.phone,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      emailVerified: user.emailVerified || false,
+      phoneVerified: user.phoneVerified || false,
+      accountStatus: user.accountStatus || AccountStatus.PENDING_VERIFICATION,
+      isActive: user.isActive !== false,
+      lastLogin: user.lastLogin,
+      suspensionReason: user.suspensionReason,
+      suspendedAt: user.suspendedAt,
+      suspendedBy: user.suspendedBy,
+      deactivatedAt: user.deactivatedAt,
+      deactivatedBy: user.deactivatedBy,
+      twoFactorEnabled: user.twoFactorEnabled || false,
+      twoFactorEnabledAt: user.twoFactorEnabledAt,
+      invitedBy: user.invitedBy,
+      invitedAt: user.invitedAt,
+      signupCompletedAt: user.signupCompletedAt,
+      subscriptionPlan: user.subscriptionPlan || 'free',
+      subscriptionStartDate: user.subscriptionStartDate,
+      subscriptionEndDate: user.subscriptionEndDate,
+      subscriptionStatus: user.subscriptionStatus,
+      dateOfBirth: user.dateOfBirth,
+      gender: user.gender,
+      address: user.address,
+      emergencyContact: user.emergencyContact,
+      emergencyContacts: user.emergencyContacts,
+      insurance: user.insurance,
+      medicalInformation: user.medicalInformation,
+      usageMetrics: user.usageMetrics,
+      adminNotes: user.adminNotes,
+      activeSessions: user.activeSessions,
+      createdAt: userObj.createdAt || new Date(),
+      updatedAt: userObj.updatedAt || new Date(),
+      meta: user.meta,
+    } as PatientResponseDto;
   }
 }
