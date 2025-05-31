@@ -443,7 +443,7 @@ export class UsersService {
 
     // Note: exportFields and includePII are extracted but not used in DB query
     // They are client-side parameters for response formatting only
-    
+
     // Build MongoDB query
     const mongoQuery: any = { role: UserRole.USER };
 
@@ -459,14 +459,14 @@ export class UsersService {
     // Add database filters only (exclude client-side parameters)
     const databaseFields = [
       'accountStatus',
-      'insuranceStatus', 
+      'insuranceStatus',
       'subscriptionPlan',
       'emailVerified',
       'phoneVerified',
       'twoFactorEnabled',
       'createdAfter',
       'createdBefore',
-      'lastLoginAfter', 
+      'lastLoginAfter',
       'lastLoginBefore',
       'inactiveDays',
       'country',
@@ -477,11 +477,15 @@ export class UsersService {
       'insuranceProvider',
       'hasAppointments',
       'hasMessages',
-      'invitationStatus'
+      'invitationStatus',
     ];
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && databaseFields.includes(key)) {
+      if (
+        value !== undefined &&
+        value !== null &&
+        databaseFields.includes(key)
+      ) {
         mongoQuery[key] = value;
       }
     });
