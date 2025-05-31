@@ -3,13 +3,19 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import AdminListPresentation from "../components/AdminListPresentation";
-import { useAdmins, useDeactivateAdmin, useActivateAdmin, useResetAdminPassword } from "../hooks/use-admin-queries";
+import {
+  useAdmins,
+  useDeactivateAdmin,
+  useActivateAdmin,
+  useResetAdminPassword,
+} from "../hooks/use-admin-queries";
 import { AdminQueryParams, UserRole } from "../types/admin.types";
 
 export default function AdminListContainer() {
   const router = useRouter();
-  
+
   // Search and filter state
+
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -39,8 +45,14 @@ export default function AdminListContainer() {
   }, [currentPage, pageSize, searchTerm, roleFilter]);
 
   // Fetch admins using our custom hook with pagination
-  const { data: adminResponse, isLoading, isError, error, refetch } = useAdmins(queryParams);
-  
+  const {
+    data: adminResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAdmins(queryParams);
+
   // Mutation hooks for activating/deactivating admins
   const deactivateAdminMutation = useDeactivateAdmin();
   const activateAdminMutation = useActivateAdmin();

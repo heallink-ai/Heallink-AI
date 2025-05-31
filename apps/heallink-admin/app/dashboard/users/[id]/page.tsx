@@ -48,6 +48,17 @@ import {
   Eye,
   Search,
   Filter,
+  UserCheck2,
+  IdCard,
+  Languages,
+  Wifi,
+  WifiOff,
+  MessageCircle,
+  UserCog,
+  Baby,
+  GraduationCap,
+  Briefcase,
+  Home,
 } from "lucide-react";
 import { useGetPatient, useGetPatientActivityLog } from "../../../features/user-management/hooks/use-patient-queries";
 import { AccountStatus } from "../../../features/user-management/types/user.types";
@@ -447,13 +458,26 @@ export default function PatientDetailPage() {
                 <div className="card-admin">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-[color:var(--primary)]/10 rounded-lg">
-                      <Mail className="w-5 h-5 text-[color:var(--primary)]" />
+                      <UserCheck2 className="w-5 h-5 text-[color:var(--primary)]" />
                     </div>
-                    <h3 className="text-xl font-semibold text-[color:var(--foreground)]">Contact Information</h3>
+                    <h3 className="text-xl font-semibold text-[color:var(--foreground)]">Personal & Contact Information</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Column 1 - Basic Contact */}
                     <div className="space-y-4">
+                      {/* Full Name */}
+                      <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <User className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                        <div className="flex-1">
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Full Name</p>
+                          <p className="font-medium text-[color:var(--foreground)]">
+                            {patient.name || 'Not provided'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Email */}
                       <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
                         <Mail className="w-5 h-5 text-[color:var(--muted-foreground)]" />
                         <div className="flex-1">
@@ -469,113 +493,347 @@ export default function PatientDetailPage() {
                         </div>
                       </div>
                       
-                      {patient.phone && (
-                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
-                          <Phone className="w-5 h-5 text-[color:var(--muted-foreground)]" />
-                          <div className="flex-1">
-                            <p className="text-sm text-[color:var(--muted-foreground)]">Phone Number</p>
-                            <p className="font-medium text-[color:var(--foreground)] flex items-center gap-2">
-                              {patient.phone}
-                              {patient.phoneVerified ? (
+                      {/* Phone */}
+                      <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <Phone className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                        <div className="flex-1">
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Phone Number</p>
+                          <p className="font-medium text-[color:var(--foreground)] flex items-center gap-2">
+                            {patient.phone || 'Not provided'}
+                            {patient.phone && (patient.phoneVerified ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-500" />
+                            ))}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Column 2 - Demographics */}
+                    <div className="space-y-4">
+                      {/* Date of Birth */}
+                      <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <Baby className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                        <div>
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Date of Birth</p>
+                          <p className="font-medium text-[color:var(--foreground)]">
+                            {patient.dateOfBirth ? formatDateShort(patient.dateOfBirth) : 'Not provided'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Gender */}
+                      <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <User className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                        <div>
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Gender</p>
+                          <p className="font-medium text-[color:var(--foreground)] capitalize">
+                            {patient.gender ? patient.gender.replace('_', ' ').replace('-', ' ') : 'Not specified'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Patient ID */}
+                      <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <IdCard className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                        <div>
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Patient ID</p>
+                          <p className="font-medium text-[color:var(--foreground)] font-mono text-sm">
+                            {patient.id}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column 3 - Communication Preferences */}
+                    <div className="space-y-4">
+                      {/* Communication Preferences */}
+                      <div className="p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <MessageCircle className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Communication Preferences</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-[color:var(--foreground)]">Email Notifications</span>
+                            <div className="flex items-center gap-1">
+                              {patient.communicationPreferences?.email !== false ? (
                                 <CheckCircle className="w-4 h-4 text-green-500" />
                               ) : (
                                 <XCircle className="w-4 h-4 text-red-500" />
                               )}
-                            </p>
+                              <span className="text-xs text-[color:var(--muted-foreground)]">
+                                {patient.communicationPreferences?.email !== false ? 'Enabled' : 'Disabled'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-[color:var(--foreground)]">SMS Notifications</span>
+                            <div className="flex items-center gap-1">
+                              {patient.communicationPreferences?.sms !== false ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500" />
+                              )}
+                              <span className="text-xs text-[color:var(--muted-foreground)]">
+                                {patient.communicationPreferences?.sms !== false ? 'Enabled' : 'Disabled'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-[color:var(--foreground)]">Push Notifications</span>
+                            <div className="flex items-center gap-1">
+                              {patient.communicationPreferences?.push !== false ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500" />
+                              )}
+                              <span className="text-xs text-[color:var(--muted-foreground)]">
+                                {patient.communicationPreferences?.push !== false ? 'Enabled' : 'Disabled'}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {patient.dateOfBirth && (
-                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
-                          <Calendar className="w-5 h-5 text-[color:var(--muted-foreground)]" />
-                          <div>
-                            <p className="text-sm text-[color:var(--muted-foreground)]">Date of Birth</p>
-                            <p className="font-medium text-[color:var(--foreground)]">{patient.dateOfBirth}</p>
-                          </div>
+                      </div>
+
+                      {/* Account Created */}
+                      <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                        <Calendar className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                        <div>
+                          <p className="text-sm text-[color:var(--muted-foreground)]">Member Since</p>
+                          <p className="font-medium text-[color:var(--foreground)]">
+                            {formatDateShort(patient.createdAt)}
+                          </p>
                         </div>
-                      )}
-                      
-                      {patient.gender && (
-                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
-                          <User className="w-5 h-5 text-[color:var(--muted-foreground)]" />
-                          <div>
-                            <p className="text-sm text-[color:var(--muted-foreground)]">Gender</p>
-                            <p className="font-medium text-[color:var(--foreground)] capitalize">{patient.gender}</p>
-                          </div>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Address */}
-                {patient.address && (
-                  <div className="card-admin">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 bg-[color:var(--primary)]/10 rounded-lg">
-                        <MapPin className="w-5 h-5 text-[color:var(--primary)]" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-[color:var(--foreground)]">Address</h3>
+                {/* Address Information */}
+                <div className="card-admin">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-[color:var(--primary)]/10 rounded-lg">
+                      <Home className="w-5 h-5 text-[color:var(--primary)]" />
                     </div>
-                    
-                    <div className="p-4 bg-[color:var(--muted)]/20 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-[color:var(--muted-foreground)] mt-0.5" />
-                        <div>
-                          {patient.address.streetAddress && (
-                            <p className="text-[color:var(--foreground)] font-medium">{patient.address.streetAddress}</p>
-                          )}
-                          <p className="text-[color:var(--foreground)]">
-                            {[patient.address.city, patient.address.state, patient.address.zipCode]
-                              .filter(Boolean)
-                              .join(', ')}
-                          </p>
-                          {patient.address.country && (
-                            <p className="text-[color:var(--muted-foreground)]">{patient.address.country}</p>
-                          )}
+                    <h3 className="text-xl font-semibold text-[color:var(--foreground)]">Address Information</h3>
+                  </div>
+                  
+                  {patient.address ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Street Address */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                          <Home className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                          <div className="flex-1">
+                            <p className="text-sm text-[color:var(--muted-foreground)]">Street Address</p>
+                            <p className="font-medium text-[color:var(--foreground)]">
+                              {patient.address.streetAddress || 'Not provided'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                          <MapPin className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                          <div className="flex-1">
+                            <p className="text-sm text-[color:var(--muted-foreground)]">City</p>
+                            <p className="font-medium text-[color:var(--foreground)]">
+                              {patient.address.city || 'Not provided'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                          <MapPin className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                          <div className="flex-1">
+                            <p className="text-sm text-[color:var(--muted-foreground)]">State/Province</p>
+                            <p className="font-medium text-[color:var(--foreground)]">
+                              {patient.address.state || 'Not provided'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-4 bg-[color:var(--muted)]/20 rounded-lg">
+                          <Globe className="w-5 h-5 text-[color:var(--muted-foreground)]" />
+                          <div className="flex-1">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <p className="text-sm text-[color:var(--muted-foreground)]">ZIP/Postal Code</p>
+                                <p className="font-medium text-[color:var(--foreground)]">
+                                  {patient.address.zipCode || 'Not provided'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-[color:var(--muted-foreground)]">Country</p>
+                                <p className="font-medium text-[color:var(--foreground)]">
+                                  {patient.address.country || 'Not provided'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="p-3 bg-[color:var(--muted)]/20 rounded-full w-fit mx-auto mb-3">
+                        <Home className="w-8 h-8 text-[color:var(--muted-foreground)]" />
+                      </div>
+                      <p className="text-[color:var(--muted-foreground)]">No address information provided</p>
+                      <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-[color:var(--primary)] text-[color:var(--primary-foreground)] rounded-lg hover:bg-[color:var(--primary)]/90 transition-colors mx-auto">
+                        <Plus className="w-4 h-4" />
+                        Add Address
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                {/* Emergency Contact */}
-                {patient.emergencyContact && (
-                  <div className="card-admin">
-                    <div className="flex items-center gap-3 mb-6">
+                {/* Emergency Contacts */}
+                <div className="card-admin">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
                       <div className="p-2 bg-red-100 dark:bg-red-950 rounded-lg">
                         <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
-                      <h3 className="text-xl font-semibold text-[color:var(--foreground)]">Emergency Contact</h3>
+                      <h3 className="text-xl font-semibold text-[color:var(--foreground)]">Emergency Contacts</h3>
                     </div>
-                    
-                    <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-red-600 dark:text-red-400">Name</p>
-                          <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-red-600 dark:text-red-400">Relationship</p>
-                          <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.relationship}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-red-600 dark:text-red-400">Phone</p>
-                          <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.phone}</p>
-                        </div>
-                        {patient.emergencyContact.email && (
-                          <div>
-                            <p className="text-sm text-red-600 dark:text-red-400">Email</p>
-                            <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.email}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <button className="flex items-center gap-2 px-3 py-2 bg-[color:var(--muted)] hover:bg-[color:var(--accent)] rounded-lg transition-colors text-sm">
+                      <Plus className="w-4 h-4" />
+                      Add Contact
+                    </button>
                   </div>
-                )}
+                  
+                  {(patient.emergencyContact || (patient.emergencyContacts && patient.emergencyContacts.length > 0)) ? (
+                    <div className="space-y-4">
+                      {/* Primary Emergency Contact */}
+                      {patient.emergencyContact && (
+                        <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-red-600 dark:text-red-400 flex items-center gap-2">
+                              <Crown className="w-4 h-4" />
+                              Primary Emergency Contact
+                            </span>
+                            <span className="px-2 py-1 bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 rounded-full text-xs font-medium">
+                              Active
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3">
+                              <User className="w-4 h-4 text-red-500" />
+                              <div>
+                                <p className="text-xs text-red-600 dark:text-red-400">Name</p>
+                                <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.name}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Users className="w-4 h-4 text-red-500" />
+                              <div>
+                                <p className="text-xs text-red-600 dark:text-red-400">Relationship</p>
+                                <p className="font-semibold text-[color:var(--foreground)] capitalize">{patient.emergencyContact.relationship}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Phone className="w-4 h-4 text-red-500" />
+                              <div>
+                                <p className="text-xs text-red-600 dark:text-red-400">Phone</p>
+                                <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.phone}</p>
+                              </div>
+                            </div>
+                            {patient.emergencyContact.email && (
+                              <div className="flex items-center gap-3">
+                                <Mail className="w-4 h-4 text-red-500" />
+                                <div>
+                                  <p className="text-xs text-red-600 dark:text-red-400">Email</p>
+                                  <p className="font-semibold text-[color:var(--foreground)]">{patient.emergencyContact.email}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Additional Emergency Contacts */}
+                      {patient.emergencyContacts && patient.emergencyContacts.length > 0 && (
+                        <div className="space-y-3">
+                          {patient.emergencyContacts.map((contact, index) => (
+                            <div key={index} className="p-4 bg-[color:var(--muted)]/20 rounded-lg border border-[color:var(--border)]">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-medium text-[color:var(--foreground)]">
+                                  Emergency Contact #{index + 1}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  contact.isActive ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400' : 
+                                  'bg-gray-100 text-gray-700 dark:bg-gray-950 dark:text-gray-400'
+                                }`}>
+                                  {contact.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="flex items-center gap-3">
+                                  <User className="w-4 h-4 text-[color:var(--muted-foreground)]" />
+                                  <div>
+                                    <p className="text-xs text-[color:var(--muted-foreground)]">Name</p>
+                                    <p className="font-medium text-[color:var(--foreground)]">{contact.name}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Users className="w-4 h-4 text-[color:var(--muted-foreground)]" />
+                                  <div>
+                                    <p className="text-xs text-[color:var(--muted-foreground)]">Relationship</p>
+                                    <p className="font-medium text-[color:var(--foreground)] capitalize">{contact.relationship}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Phone className="w-4 h-4 text-[color:var(--muted-foreground)]" />
+                                  <div>
+                                    <p className="text-xs text-[color:var(--muted-foreground)]">Phone</p>
+                                    <p className="font-medium text-[color:var(--foreground)]">{contact.phone}</p>
+                                  </div>
+                                </div>
+                                {contact.email && (
+                                  <div className="flex items-center gap-3">
+                                    <Mail className="w-4 h-4 text-[color:var(--muted-foreground)]" />
+                                    <div>
+                                      <p className="text-xs text-[color:var(--muted-foreground)]">Email</p>
+                                      <p className="font-medium text-[color:var(--foreground)]">{contact.email}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                {contact.permissions && contact.permissions.length > 0 && (
+                                  <div className="md:col-span-2">
+                                    <p className="text-xs text-[color:var(--muted-foreground)] mb-1">Permissions</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {contact.permissions.map((permission, idx) => (
+                                        <span key={idx} className="px-2 py-1 bg-[color:var(--muted)]/30 rounded text-xs">
+                                          {permission}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="p-3 bg-red-100 dark:bg-red-950/20 rounded-full w-fit mx-auto mb-3">
+                        <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-[color:var(--foreground)] mb-1">No Emergency Contacts</h4>
+                      <p className="text-[color:var(--muted-foreground)] mb-4">It's important to have emergency contacts on file for patient safety.</p>
+                      <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mx-auto">
+                        <Plus className="w-4 h-4" />
+                        Add Emergency Contact
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Right Column - Sidebar */}
