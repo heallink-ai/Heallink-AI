@@ -20,6 +20,17 @@ export { default as PatientStatusBadge } from "./components/PatientStatusBadge";
 
 // Container Components
 export { default as PatientListContainer } from "./containers/PatientListContainer";
+export { default as PatientDetailContainer } from "./containers/PatientDetailContainer";
 
-// Utils (to be added later)
-// export * from "./utils";
+// Patient Detail Components
+export { default as PatientDetailPresentation } from "./components/PatientDetailPresentation";
+export { default as PatientDetailHeader } from "./components/PatientDetailHeader";
+export { default as PatientContactInfo } from "./components/PatientContactInfo";
+export { default as PatientAddressInfo } from "./components/PatientAddressInfo";
+export { default as PatientEmergencyContacts } from "./components/PatientEmergencyContacts";
+
+// Export container types
+export type { PatientDetailTab } from "./containers/PatientDetailContainer";
+
+// Utils
+export * from "./utils/patient-utils";
