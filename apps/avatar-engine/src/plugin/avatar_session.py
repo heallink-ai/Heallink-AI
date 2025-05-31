@@ -29,11 +29,11 @@ except ImportError:
     LIVEKIT_AVAILABLE = False
     logger.warning("LiveKit not available - running in standalone mode")
 
-from ..config.settings import AvatarConfig
-from ..renderer.avatar_renderer import AvatarRenderer
-from ..lipsync.lip_sync_engine import LipSyncEngine
-from ..animation.facial_animation import FacialAnimationEngine
-from ..streaming.webrtc_streamer import WebRTCStreamer
+from config.settings import AvatarConfig
+from renderer.avatar_renderer import AvatarRenderer
+from lipsync.lip_sync_engine import LipSyncEngine
+from animation.facial_animation import FacialAnimationEngine
+from streaming.webrtc_streamer import WebRTCStreamer
 
 
 @dataclass

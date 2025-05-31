@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealLink Avatar Renderer</title>
+    <meta name="description" content="Real-time 3D avatar rendering with lip sync and facial expressions">
+</head>
+<body>
+    <div id="avatar-container"></div>
+    
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <span>Loading Avatar...</span>
+    </div>
+    
+    <!-- Control panel -->
+    <div class="control-panel">
+        <h3>Avatar Controls</h3>
+        <button onclick="setAvatarEmotion('happy')" class="emotion">😊 Happy</button>
+        <button onclick="setAvatarEmotion('sad')" class="emotion">😢 Sad</button>
+        <button onclick="setAvatarEmotion('surprised')" class="emotion">😲 Surprised</button>
+        <button onclick="testLipSync()">🗣️ Test Lip Sync</button>
+        <button onclick="window.avatarRenderer.createFallbackAvatar()">👤 Reset Avatar</button>
+    </div>
+    
+    <!-- Info panel -->
+    <div class="info-panel">
+        <strong>HealLink Avatar Engine</strong><br>
+        Status: <span id="status">Initializing...</span><br>
+        Mode: <span id="mode">Fallback</span><br>
+        FPS: <span id="fps">--</span>
+    </div>
+
+    <script>
+        // Update status indicators
+        function updateStatus(status, mode = null) {
+            document.getElementById('status').textContent = status;
+            if (mode) {
+                document.getElementById('mode').textContent = mode;
+            }
+        }
+        
+        // FPS counter
+        let frameCount = 0;
+        let lastTime = performance.now();
+        
+        function updateFPS() {
+            frameCount++;
+            const currentTime = performance.now();
+            
+            if (currentTime - lastTime >= 1000) {
+                const fps = Math.round(frameCount * 1000 / (currentTime - lastTime));
+                document.getElementById('fps').textContent = fps;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+            
+            requestAnimationFrame(updateFPS);
+        }
+        
+        // Start FPS counter
+        updateFPS();
+        
+        // Update status when renderer is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('Ready', 'Fallback Avatar');
+            
+            // Hide loading overlay
+            setTimeout(() => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }, 1000);
+        });
+        
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            switch(event.key) {
+                case '1':
+                    setAvatarEmotion('happy');
+                    break;
+                case '2':
+                    setAvatarEmotion('sad');
+                    break;
+                case '3':
+                    setAvatarEmotion('surprised');
+                    break;
+                case ' ':
+                    event.preventDefault();
+                    testLipSync();
+                    break;
+            }
+        });
+        
+        // Log WebGL capabilities
+        console.log('WebGL Support Check:');
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            console.log('✅ WebGL supported');
+            console.log('Renderer:', gl.getParameter(gl.RENDERER));
+            console.log('Vendor:', gl.getParameter(gl.VENDOR));
+        } else {
+            console.warn('❌ WebGL not supported');
+            updateStatus('WebGL not supported', 'Error');
+        }
+    </script>
+</body>
+</html>

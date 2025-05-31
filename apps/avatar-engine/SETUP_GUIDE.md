@@ -251,13 +251,13 @@ python src/main.py --dev --host 0.0.0.0 --port 8080 --log-level DEBUG
 ### Option B: Docker Mode
 ```bash
 # Build and run with Docker
-docker-compose up avatar-engine
+docker compose up avatar-engine
 
 # Or run in detached mode
-docker-compose up -d avatar-engine
+docker compose up -d avatar-engine
 
 # View logs
-docker-compose logs -f avatar-engine
+docker compose logs -f avatar-engine
 ```
 
 ### Option C: Production Mode
@@ -509,7 +509,16 @@ async def entrypoint(ctx: agents.JobContext):
 
 ### Common Issues
 
-1. **Port Already in Use**
+1. **Import Errors in Docker**
+   ```bash
+   # Check Python path is set correctly
+   docker compose logs avatar-engine
+   
+   # Restart container
+   docker compose restart avatar-engine
+   ```
+
+2. **Port Already in Use**
    ```bash
    # Find process using port 8080
    lsof -i :8080
@@ -518,21 +527,22 @@ async def entrypoint(ctx: agents.JobContext):
    python src/main.py --port 8081
    ```
 
-2. **Missing Dependencies**
+3. **Missing Dependencies**
    ```bash
    # Reinstall dependencies
    uv pip install --force-reinstall -r requirements.txt
    ```
 
-3. **Rhubarb Not Found**
+4. **Docker Build Failures**
    ```bash
-   # Check Rhubarb installation
-   which rhubarb
+   # Clean Docker cache
+   docker system prune -f
    
-   # If not found, reinstall following Step 2
+   # Rebuild with no cache
+   docker compose build --no-cache avatar-engine
    ```
 
-4. **Avatar Model Not Loading**
+5. **Avatar Model Not Loading**
    ```bash
    # Check file exists and permissions
    ls -la assets/models/
@@ -541,20 +551,13 @@ async def entrypoint(ctx: agents.JobContext):
    file assets/models/doctor_avatar_1.glb
    ```
 
-5. **Memory Issues**
-   ```bash
-   # Reduce quality settings
-   echo "AVATAR_QUALITY=low" >> .env
-   echo "VIDEO_RESOLUTION=720p" >> .env
-   ```
-
 ### Debug Mode
 ```bash
 # Run with maximum debugging
 python src/main.py --dev --log-level DEBUG --verbose
 
-# Check logs
-tail -f logs/avatar_engine.log
+# Check Docker logs
+docker compose logs -f avatar-engine
 ```
 
 ## Next Steps

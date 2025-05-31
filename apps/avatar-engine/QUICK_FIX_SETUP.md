@@ -12,7 +12,7 @@ cd apps/avatar-engine
 uv venv
 source .venv/bin/activate  # macOS/Linux
 
-# 3. Install dependencies directly (WORKING METHOD)
+# 3. Install dependencies with specific LiveKit versions
 uv pip install -r requirements.txt
 
 # 4. Test installation
@@ -59,8 +59,12 @@ uv pip install pytest black isort flake8 mypy
 ## 📦 What Gets Installed
 
 **Core Dependencies (from requirements.txt):**
-- ✅ livekit>=0.14.0
-- ✅ livekit-agents>=0.8.0  
+- ✅ livekit==1.0.8
+- ✅ livekit-agents==1.0.22
+- ✅ livekit-api==1.0.2
+- ✅ livekit-plugins-bey==1.0.22 (BeyondPresence avatar integration)
+- ✅ livekit-plugins-cartesia==1.0.22 (TTS)
+- ✅ livekit-plugins-deepgram==1.0.22 (STT)
 - ✅ librosa>=0.10.0 (audio processing)
 - ✅ opencv-python>=4.8.0 (computer vision)
 - ✅ torch>=2.0.0 (machine learning)

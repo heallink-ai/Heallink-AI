@@ -1,0 +1,68 @@
+# Simple Dockerfile without Node.js renderer build
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    # Build tools
+    gcc g++ make \
+    # System libraries
+    libffi-dev libssl-dev \
+    # Audio/Video processing
+    ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+    libsndfile1-dev libasound2-dev \
+    # Graphics libraries
+    libgl1-mesa-glx libglib2.0-0 \
+    # WebRTC dependencies
+    libopus-dev libvpx-dev libx264-dev \
+    # Utilities
+    curl \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/*
+
+# Install UV for Python package management
+RUN pip install uv
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python dependencies
+COPY pyproject.toml requirements.txt ./
+
+# Install Python dependencies with UV
+RUN uv venv && \
+    . .venv/bin/activate && \
+    uv pip install -r requirements.txt
+
+# Copy application source
+COPY src/ /app/src/
+COPY assets/ /app/assets/
+COPY config/ /app/config/
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash avatar && \
+    chown -R avatar:avatar /app
+
+USER avatar
+
+# Activate virtual environment and set Python path
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/src"
+
+# Expose ports
+EXPOSE 8080 8443
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)"
+
+# Set working directory to src
+WORKDIR /app/src
+
+# Default command
+CMD ["python", "main.py", "--dev", "--host", "0.0.0.0", "--port", "8080"]

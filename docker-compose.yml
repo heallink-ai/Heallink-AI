@@ -129,16 +129,16 @@ services:
 
   avatar-engine:
     build:
-      context: .
-      dockerfile: ./apps/avatar-engine/Dockerfile
+      context: ./apps/avatar-engine
+      dockerfile: Dockerfile.simple
     container_name: heallink-avatar-engine
     ports:
       - "8080:8080"
       - "8443:8443"
     volumes:
-      - ./apps/avatar-engine:/app
+      - ./apps/avatar-engine/assets:/app/assets
       - ./logs:/app/logs
-      - avatar-engine-assets:/app/assets
+      - avatar-engine-assets:/app/data
     env_file:
       - ./apps/avatar-engine/.env
     environment:

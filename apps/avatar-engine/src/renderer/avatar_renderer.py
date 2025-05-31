@@ -18,7 +18,7 @@ import numpy as np
 import cv2
 from loguru import logger
 
-from ..config.settings import AvatarConfig
+from config.settings import AvatarConfig
 
 
 class BlendShapeData:
@@ -160,12 +160,12 @@ class AvatarRenderer:
         self.frame_count = 0
         self.render_times: List[float] = []
         
-        logger.info(f"AvatarRenderer initialized for avatar: {avatar_id}")
+        logger.info(f"AvatarRenderer initialized for avatar: {self.avatar_id}")
     
     async def initialize(self) -> None:
         """Initialize the avatar renderer."""
         try:
-            logger.info(f"Initializing avatar renderer: {avatar_id}")
+            logger.info(f"Initializing avatar renderer: {self.avatar_id}")
             
             # Load avatar model
             await self._load_avatar_model()

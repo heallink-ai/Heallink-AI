@@ -52,14 +52,19 @@ async def run_standalone_server(config: AvatarConfig) -> None:
 
 async def run_livekit_plugin(config: AvatarConfig) -> None:
     """Run as a LiveKit plugin worker."""
-    from livekit import agents
-    from plugin.avatar_worker import AvatarWorker
-    
-    logger.info("Starting Avatar Engine as LiveKit plugin")
-    
-    # Create and start the agent worker
-    worker = AvatarWorker(config)
-    await worker.start()
+    try:
+        from livekit import agents
+        from plugin.avatar_worker import AvatarWorker
+        
+        logger.info("Starting Avatar Engine as LiveKit plugin")
+        
+        # Create and start the agent worker
+        worker = AvatarWorker(config)
+        await worker.start()
+    except ImportError:
+        logger.error("LiveKit not available - cannot run as plugin")
+        logger.info("Try running in standalone mode instead")
+        await run_standalone_server(config)
 
 
 def main() -> None:
@@ -121,7 +126,7 @@ def main() -> None:
         config.debug = True
         args.mode = "dev"
     if args.gpu:
-        config.gpu_enabled = True
+        config.performance.gpu_enabled = True
     
     # Setup logging
     setup_logging(
@@ -133,7 +138,7 @@ def main() -> None:
     logger.info(f"Starting Avatar Engine v{config.version}")
     logger.info(f"Mode: {args.mode}")
     logger.info(f"Host: {config.host}:{config.port}")
-    logger.info(f"GPU Enabled: {config.gpu_enabled}")
+    logger.info(f"GPU Enabled: {config.performance.gpu_enabled}")
     logger.info(f"Debug: {config.debug}")
     
     try:

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import numpy as np
 from loguru import logger
 
-from ..config.settings import AvatarConfig
+from config.settings import AvatarConfig
 
 
 @dataclass

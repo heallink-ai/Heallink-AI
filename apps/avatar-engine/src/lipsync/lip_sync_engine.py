@@ -16,7 +16,7 @@ import numpy as np
 import librosa
 from loguru import logger
 
-from ..config.settings import AvatarConfig
+from config.settings import AvatarConfig
 
 
 class VisemeData:

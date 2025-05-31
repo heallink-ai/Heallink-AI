@@ -12,13 +12,14 @@ import json
 import uuid
 from datetime import datetime
 
-from aiohttp import web, WebSocketResponse
+from aiohttp import web
 from aiohttp.web_request import Request
+from aiohttp.web_ws import WebSocketResponse
 from loguru import logger
 import aiofiles
 
-from ..config.settings import AvatarConfig
-from ..renderer.avatar_renderer import AvatarRenderer
+from config.settings import AvatarConfig
+from renderer.avatar_renderer import AvatarRenderer
 from .avatar_session import AvatarSession
 
 
