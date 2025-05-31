@@ -507,4 +507,28 @@ export class AdminService {
       throw new Error('Failed to send password reset email. Please try again.');
     }
   }
+
+  async changeAdminPassword(
+    adminId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const admin = await this.findAdminByIdRaw(adminId);
+
+    // Verify current password
+    const isCurrentPasswordValid = await admin.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // Prevent setting the same password
+    const isSamePassword = await admin.comparePassword(newPassword);
+    if (isSamePassword) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    // Update password - will be hashed by the User schema pre-save hook
+    admin.password = newPassword;
+    await admin.save();
+  }
 }

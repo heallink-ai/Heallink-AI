@@ -35,6 +35,8 @@ import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto, UpdateAdminRoleDto } from './dto/update-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ProfileUpdateDto } from './dto/profile-update.dto';
 import { 
   AdminResponseDto, 
   AdminListResponseDto, 
@@ -89,6 +91,189 @@ export class AdminController {
         authorization: req.headers.authorization ? 'Present' : 'Missing',
       },
     };
+  }
+
+  // Profile management endpoints
+  @Get('profile')
+  @ApiOperation({
+    summary: 'Get current admin profile',
+    description: 'Retrieve the authenticated admin user profile',
+  })
+  @ApiOkResponse({ 
+    description: 'Profile retrieved successfully',
+    type: AdminResponseDto
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async getCurrentProfile(@Request() req: any): Promise<AdminResponseDto> {
+    this.logger.debug(`Getting profile for admin: ${req.user.id}`);
+    return this.adminService.findAdminById(req.user.id);
+  }
+
+  @Patch('profile')
+  @ApiOperation({
+    summary: 'Update current admin profile',
+    description: 'Update the authenticated admin user profile',
+  })
+  @ApiOkResponse({ 
+    description: 'Profile updated successfully',
+    type: AdminResponseDto
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  async updateCurrentProfile(
+    @Request() req: any,
+    @Body() profileUpdateDto: ProfileUpdateDto,
+  ): Promise<AdminResponseDto> {
+    this.logger.debug(`Updating profile for admin: ${req.user.id}`);
+    return this.adminService.updateAdmin(req.user.id, profileUpdateDto);
+  }
+
+  @Post('change-password')
+  @ApiOperation({
+    summary: 'Change admin password',
+    description: 'Change the authenticated admin password',
+  })
+  @ApiOkResponse({ 
+    description: 'Password changed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Password changed successfully' }
+      }
+    }
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({ description: 'Invalid current password or weak new password' })
+  async changePassword(
+    @Request() req: any,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    this.logger.debug(`Changing password for admin: ${req.user.id}`);
+    await this.adminService.changeAdminPassword(
+      req.user.id, 
+      changePasswordDto.currentPassword, 
+      changePasswordDto.newPassword
+    );
+    return { 
+      success: true, 
+      message: 'Password changed successfully' 
+    };
+  }
+
+  @Post('profile/avatar')
+  @ApiOperation({
+    summary: 'Upload current admin avatar',
+    description: 'Upload a profile image for the authenticated admin user',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        avatar: {
+          type: 'string',
+          format: 'binary',
+          description: 'Avatar image file (JPG, PNG, GIF only)',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({ 
+    description: 'Avatar uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        avatarUrl: { type: 'string', example: 'avatars/user123/abc-123.jpg' },
+        message: { type: 'string', example: 'Avatar uploaded successfully' }
+      }
+    }
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({ description: 'Invalid file' })
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+      },
+    }),
+  )
+  async uploadCurrentAdminAvatar(
+    @Request() req: any,
+    @UploadedFile() file: MulterFile,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+      throw new UnsupportedMediaTypeException('Only image files are allowed');
+    }
+
+    try {
+      const adminId = req.user.id;
+      const fileExtension = extname(file.originalname);
+      const fileName = `${uuidv4()}${fileExtension}`;
+      const s3Key = `avatars/${adminId}/${fileName}`;
+
+      await this.s3Service.uploadFile(s3Key, file.buffer, file.mimetype);
+      
+      const updateData = { avatarUrl: s3Key } as ProfileUpdateDto;
+      await this.adminService.updateAdmin(adminId, updateData);
+
+      return { 
+        success: true,
+        avatarUrl: s3Key,
+        message: 'Avatar uploaded successfully' 
+      };
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to upload avatar';
+      throw new InternalServerErrorException(
+        `Failed to upload avatar: ${errorMessage}`,
+      );
+    }
+  }
+
+  @Get('avatar/*')
+  @ApiOperation({
+    summary: 'Get avatar signed URL',
+    description: 'Get a signed URL for an avatar image stored in S3',
+  })
+  @ApiParam({ 
+    name: 'key', 
+    description: 'S3 key for the avatar image (path after /avatar/)',
+    example: 'avatars/user123/abc-123.jpg'
+  })
+  @ApiOkResponse({ 
+    description: 'Signed URL retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        url: { 
+          type: 'string', 
+          example: 'https://s3.amazonaws.com/bucket/avatars/user123/abc-123.jpg?signature=...' 
+        }
+      }
+    }
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiNotFoundResponse({ description: 'Avatar not found' })
+  async getAvatarSignedUrl(@Request() req: any) {
+    try {
+      // Extract the key from the path after /avatar/
+      const key = req.path.replace('/api/v1/admin/avatar/', '');
+      const signedUrl = await this.s3Service.getSignedUrl(key, 3600); // 1 hour expiry
+      return { url: signedUrl };
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to get avatar URL';
+      throw new InternalServerErrorException(
+        `Failed to get avatar URL: ${errorMessage}`,
+      );
+    }
   }
 
   @Post()

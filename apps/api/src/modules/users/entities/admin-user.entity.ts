@@ -70,6 +70,18 @@ export class AdminUser extends Document {
   @Prop({ type: [String], default: [] })
   refreshTokens: string[];
 
+  @Prop({ type: String, default: null })
+  phone: string;
+
+  @Prop({ type: String, default: null })
+  department: string;
+
+  @Prop({ type: String, default: null })
+  bio: string;
+
+  @Prop({ type: String, default: null })
+  avatarUrl: string;
+
   // Method to compare password
   async comparePassword(candidatePassword: string): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
