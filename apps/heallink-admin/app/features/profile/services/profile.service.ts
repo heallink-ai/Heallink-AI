@@ -50,6 +50,7 @@ export const profileService = {
         },
       });
       
+      console.log('Avatar upload response:', response.data);
       return response.data.avatarUrl;
     } catch (error) {
       console.error('Error uploading avatar:', error);

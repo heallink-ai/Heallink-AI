@@ -73,6 +73,15 @@ export class S3Service {
       const signedUrl = await getSignedUrl(this.s3Client, command, {
         expiresIn,
       });
+
+      // If using LocalStack, replace the internal Docker hostname with localhost
+      // for client-side access
+      if (this.awsConfigService.useLocalstack) {
+        const clientUrl = signedUrl.replace('localstack:4566', 'localhost:4566');
+        this.logger.debug(`Converted LocalStack URL: ${signedUrl} -> ${clientUrl}`);
+        return clientUrl;
+      }
+
       return signedUrl;
     } catch (error) {
       this.logger.error(
