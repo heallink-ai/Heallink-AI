@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import PatientListPresentation from "../components/PatientListPresentation";
+import PatientDashboard from "../components/PatientDashboard";
 import {
   usePatients,
   usePatientStats,
@@ -412,7 +412,7 @@ export default function PatientListContainer() {
   // ==================== RENDER ====================
 
   return (
-    <PatientListPresentation
+    <PatientDashboard
       patients={patients}
       totalPatients={totalPatients}
       currentPage={currentPage}
@@ -433,10 +433,19 @@ export default function PatientListContainer() {
       onPatientView={handlePatientView}
       onPatientEdit={handlePatientEdit}
       onResetPassword={handleResetPassword}
+      onPasswordReset={handleResetPassword}
       onImpersonate={handleImpersonate}
       onTerminateSessions={handleTerminateSessions}
-      onExport={handleExport}
-      onImport={handleImport}
+      onExport={(format?: string, patientIds?: string[]) => {
+        if (format) {
+          return handleExport(format, patientIds);
+        }
+      }}
+      onImport={(file?: File) => {
+        if (file) {
+          return handleImport(file);
+        }
+      }}
       onRefresh={handleRefresh}
     />
   );

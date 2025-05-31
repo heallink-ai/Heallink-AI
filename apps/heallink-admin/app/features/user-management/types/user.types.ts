@@ -468,10 +468,11 @@ export interface PatientListPresentationProps {
   onPatientView: (id: string) => void;
   onPatientEdit: (id: string) => void;
   onResetPassword: (id: string) => void;
+  onPasswordReset: (id: string) => void;
   onImpersonate: (id: string) => void;
   onTerminateSessions: (id: string) => void;
-  onExport: (format: string, patientIds?: string[]) => void;
-  onImport: (file: File) => void;
+  onExport: (format?: string, patientIds?: string[]) => Promise<void> | void;
+  onImport: (file?: File) => Promise<void> | void;
   onRefresh: () => void;
 }
 
