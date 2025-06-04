@@ -1,26 +1,217 @@
+@tailwind base;
 @import "tailwindcss";
 
+/* Configure theme variables */
+@theme {
+  /* Colors */
+  --color-biloba-flower: #bda8e5;
+  --color-purple-heart: #5a2dcf;
+  --color-purple-heart-600: #7730ca;
+  --color-royal-blue: #2066e4;
+  --color-royal-blue-500: #2c5cde;
+  --color-royal-blue-600: #3253dc;
+  --color-royal-blue-700: #3c4cdb;
+  --color-royal-blue-800: #4144dc;
+  --color-portage: #9aa5ec;
+  --color-havelock-blue: #6578e4;
+
+  /* Font family */
+  --font-sans:
+    "Mona Sans", MonaSansFallback, -apple-system, system-ui, "Segoe UI",
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Theme colors */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 10%;
+  --primary: 262 73% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 79% 58%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 5% 90%;
+  --muted-foreground: 240 4% 30%;
+  --accent: 262 73% 84%;
+  --accent-foreground: 240 75% 10%;
+  --border: 240 5% 84%;
+  --input: 240 5% 90%;
+  --ring: 262 73% 50%;
+
+  /* Dark mode colors */
+  --dark-background: 0 0% 7%;
+  --dark-foreground: 0 0% 98%;
+  --dark-card: 0 0% 10%;
+  --dark-card-foreground: 0 0% 98%;
+  --dark-primary: 262 73% 50%;
+  --dark-primary-foreground: 0 0% 100%;
+  --dark-secondary: 240 79% 58%;
+  --dark-secondary-foreground: 0 0% 100%;
+  --dark-muted: 240 5% 20%;
+  --dark-muted-foreground: 240 5% 65%;
+  --dark-accent: 262 73% 30%;
+  --dark-accent-foreground: 0 0% 100%;
+  --dark-border: 240 5% 26%;
+  --dark-input: 240 5% 20%;
+  --dark-ring: 262 73% 50%;
+}
+
+/* Default root variables - Light theme with improved contrast */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 10%);
+  --card: hsl(0 0% 98%);
+  --card-foreground: hsl(0 0% 10%);
+  --primary: hsl(262 73% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 79% 58%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 5% 90%);
+  --muted-foreground: hsl(240 4% 30%);
+  --accent: hsl(262 73% 84%);
+  --accent-foreground: hsl(240 75% 10%);
+  --border: hsl(240 5% 84%);
+  --input: hsl(240 5% 90%);
+  --ring: hsl(262 73% 50%);
+
+  /* Nav colors - improved contrast for light mode */
+  --nav-text: hsl(225 14% 25%);
+  --nav-text-hover: hsl(262 73% 50%);
+  --button-outline-text: hsl(262 73% 45%);
+
+  /* Added for better contrast in light mode */
+  --header-btn-text-light: hsl(262 73% 45%);
+  --header-btn-bg-light: hsl(0 0% 100%);
+  --hero-text-light: hsl(225 14% 25%);
+  --app-store-btn-text-light: hsl(0 0% 100%);
+  --app-store-btn-bg-light: hsl(262 73% 45%);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Dark mode class selector - applied by default */
+.dark {
+  --background: hsl(0 0% 7%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 10%);
+  --card-foreground: hsl(0 0% 98%);
+  --primary: hsl(262 73% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 79% 58%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 5% 20%);
+  --muted-foreground: hsl(240 5% 65%);
+  --accent: hsl(262 73% 30%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(240 5% 26%);
+  --input: hsl(240 5% 20%);
+  --ring: hsl(262 73% 50%);
+
+  /* Nav colors - maintained for dark mode */
+  --nav-text: hsl(0 0% 85%);
+  --nav-text-hover: hsl(0 0% 100%);
+  --button-outline-text: hsl(0 0% 100%);
+
+  /* Match added variables for dark mode */
+  --header-btn-text-light: hsl(0 0% 100%);
+  --header-btn-bg-light: transparent;
+  --hero-text-light: hsl(0 0% 85%);
+  --app-store-btn-text-light: hsl(0 0% 100%);
+  --app-store-btn-bg-light: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Light mode class selector with improved contrast */
+.light {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 10%);
+  --card: hsl(0 0% 98%);
+  --card-foreground: hsl(0 0% 10%);
+  --primary: hsl(262 73% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 79% 58%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 5% 90%);
+  --muted-foreground: hsl(240 4% 30%);
+  --accent: hsl(262 73% 84%);
+  --accent-foreground: hsl(240 75% 10%);
+  --border: hsl(240 5% 84%);
+  --input: hsl(240 5% 90%);
+  --ring: hsl(262 73% 50%);
+
+  /* Nav colors - improved contrast for light mode */
+  --nav-text: hsl(225 14% 25%);
+  --nav-text-hover: hsl(262 73% 50%);
+  --button-outline-text: hsl(262 73% 45%);
+
+  /* Better contrast in light mode for specific components */
+  --header-btn-text-light: hsl(262 73% 45%);
+  --header-btn-bg-light: hsl(0 0% 100%);
+  --hero-text-light: hsl(225 14% 25%);
+  --app-store-btn-text-light: hsl(0 0% 100%);
+  --app-store-btn-bg-light: hsl(262 73% 45%);
+}
+
+/* Custom utilities */
+@layer utilities {
+  /* Neumorphic design classes */
+  .neumorph-flat {
+    @apply dark:shadow-[6px_6px_12px_#101010,_-6px_-6px_12px_#303030] shadow-[6px_6px_12px_#cacaca,_-6px_-6px_12px_#ffffff] bg-transparent;
+  }
+
+  .neumorph-pressed {
+    @apply dark:shadow-[inset_6px_6px_12px_#101010,_inset_-6px_-6px_12px_#303030] shadow-[inset_6px_6px_12px_#cacaca,_inset_-6px_-6px_12px_#ffffff] bg-transparent;
+  }
+
+  /* Gradient text utility */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-heart to-royal-blue;
+  }
+
+  /* Improved light mode text classes for better contrast */
+  .light-nav-link {
+    @apply text-[color:var(--nav-text)] hover:text-[color:var(--nav-text-hover)];
+  }
+
+  /* We need darker text on light backgrounds for sufficient contrast */
+  .light-text-contrast {
+    @apply dark:text-gray-300 text-gray-700;
+  }
+
+  /* Specific button styles for better contrast */
+  .header-btn-light {
+    @apply text-[color:var(--header-btn-text-light)] bg-[color:var(--header-btn-bg-light)];
+  }
+
+  .hero-text-light {
+    @apply text-[color:var(--hero-text-light)];
+  }
+
+  .app-store-btn-light {
+    @apply text-[color:var(--app-store-btn-text-light)] bg-[color:var(--app-store-btn-bg-light)];
   }
 }
 
+* {
+  border-color: hsl(var(--border));
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
 }

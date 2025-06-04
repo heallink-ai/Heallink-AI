@@ -14,6 +14,7 @@ import { EmailModule } from './modules/emails/email.module';
 import { AwsModule } from './modules/aws';
 import { LivekitModule } from './modules/livekit/livekit.module';
 import * as Joi from 'joi';
+import { ProvidersModule } from './modules/providers/providers.module';
 
 @Module({
   imports: [
@@ -134,6 +135,7 @@ import * as Joi from 'joi';
     EmailModule,
     AwsModule,
     LivekitModule,
+    ProvidersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
