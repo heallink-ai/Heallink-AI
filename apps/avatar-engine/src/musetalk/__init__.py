@@ -1,0 +1,1 @@
+"""MuseTalk integration for real-time lip-sync."""

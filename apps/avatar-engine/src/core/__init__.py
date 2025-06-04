@@ -1,0 +1,1 @@
+"""Core avatar engine components."""

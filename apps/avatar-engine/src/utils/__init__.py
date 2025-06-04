@@ -1,1 +1,1 @@
-"""Utility modules for Avatar Engine."""
+"""Utility functions for Avatar Engine."""

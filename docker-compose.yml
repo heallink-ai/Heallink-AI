@@ -130,36 +130,39 @@ services:
   avatar-engine:
     build:
       context: ./apps/avatar-engine
-      dockerfile: Dockerfile.simple
-    container_name: heallink-avatar-engine
+      dockerfile: Dockerfile
+      target: development
+    container_name: heallink-avatar-engine-v2
     ports:
       - "8080:8080"
-      - "8443:8443"
     volumes:
-      - ./apps/avatar-engine/assets:/app/assets
+      - ./apps/avatar-engine/src:/app/src:ro
+      - ./apps/avatar-engine/assets:/app/assets:ro
       - ./logs:/app/logs
-      - avatar-engine-assets:/app/data
-    env_file:
-      - ./apps/avatar-engine/.env
+      - avatar-engine-models:/app/models
+      - avatar-engine-temp:/tmp/avatar_engine
     environment:
-      - ENVIRONMENT=development
-      - LOG_LEVEL=DEBUG
-      - PYTHONPATH=/app
-      - AVATAR_ENGINE_HOST=0.0.0.0
-      - AVATAR_ENGINE_PORT=8080
-      # Debug settings for 3D avatar rendering
-      - DEBUG=false
-      - DEBUG_WIREFRAME=false
-      - DEBUG_VERTICES=false
-      - DEBUG_OVERLAY=false
-      # LiveKit connection settings
-      - LIVEKIT_URL=wss://heallink-dev-jvc8ya2i.livekit.cloud
-      - LIVEKIT_API_KEY=APIg4HSyNcniUrh
-      - LIVEKIT_API_SECRET=zOpB6T7Li049CauuJ6UcuAbYHrwJZygj8H9avh0rdkC
-      # Performance settings
-      - GPU_ENABLED=false
-      - MAX_CONCURRENT_AVATARS=5
-      - AVATAR_QUALITY=medium
+      # LiveKit Configuration
+      - AVATAR_LIVEKIT_URL=wss://heallink-dev-jvc8ya2i.livekit.cloud
+      - AVATAR_LIVEKIT_API_KEY=APIg4HSyNcniUrh
+      - AVATAR_LIVEKIT_API_SECRET=zOpB6T7Li049CauuJ6UcuAbYHrwJZygj8H9avh0rdkC
+      
+      # Avatar Engine Configuration
+      - AVATAR_HOST=0.0.0.0
+      - AVATAR_PORT=8080
+      - AVATAR_DEBUG=true
+      - AVATAR_LOG_LEVEL=INFO
+      - AVATAR_DEVICE=cpu  # Use CPU for development
+      - AVATAR_MAX_CONCURRENT_SESSIONS=5
+      - AVATAR_VIDEO_FPS=30
+      - AVATAR_ENABLE_GPU_ACCELERATION=false
+      
+      # Paths
+      - AVATAR_MODELS_PATH=/app/models
+      - AVATAR_ASSETS_PATH=/app/assets
+      - AVATAR_TEMP_PATH=/tmp/avatar_engine
+      - AVATAR_DEFAULT_AVATAR_IMAGE=/app/assets/avatars/default.png
+      - AVATAR_LOG_FILE=/app/logs/avatar-engine-v2.log
     networks:
       - heallink-network
     restart: unless-stopped
@@ -168,7 +171,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s  # More time for model downloads
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
 
   ai-agent:
     build:
@@ -258,4 +267,6 @@ volumes:
   api-node-modules:
   localstack-data:
   ai-engine-cache: # Add cache volume for AI engine models
-  avatar-engine-assets: # Add volume for avatar assets
+  avatar-engine-models: # Add volume for avatar engine models (v2.0)
+  avatar-engine-temp: # Add volume for avatar engine temporary files
+  avatar-engine-assets: # Legacy volume for old avatar assets

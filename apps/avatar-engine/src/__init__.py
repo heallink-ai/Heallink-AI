@@ -1,15 +1,20 @@
 """
-HealLink Avatar Engine - Custom LiveKit Avatar Plugin
-
-A real-time 3D avatar rendering system with lip syncing and facial expressions
-for LiveKit voice agents.
+HealLink Avatar Engine v2.0
+Real-time 2D Avatar Lip-sync Engine powered by MuseTalk
 """
 
-__version__ = "0.1.0"
+__version__ = "2.0.0"
 __author__ = "HealLink Team"
 __email__ = "dev@heallink.com"
 
-from .plugin.avatar_session import AvatarSession
-from .config.settings import AvatarConfig
+from .core.avatar_session import AvatarSession
+from .core.config import AvatarConfig
+from .musetalk.lip_sync_engine import MuseTalkLipSyncEngine
+from .streaming.livekit_streamer import LiveKitStreamer
 
-__all__ = ["AvatarSession", "AvatarConfig"]
+__all__ = [
+    "AvatarSession",
+    "AvatarConfig", 
+    "MuseTalkLipSyncEngine",
+    "LiveKitStreamer",
+]

@@ -1,7 +1,6 @@
 """
-Logging configuration for Avatar Engine.
-
-Uses loguru for structured logging with optional file output.
+Logging configuration for Avatar Engine
+Provides structured logging with performance metrics.
 """
 
 import sys
@@ -10,99 +9,115 @@ from typing import Optional
 
 from loguru import logger
 
+from ..core.config import AvatarConfig
 
-def setup_logging(
-    level: str = "INFO",
-    debug: bool = False,
-    log_file: Optional[str] = None,
-    rotation: str = "100 MB",
-    retention: str = "10 days"
-) -> None:
+
+def setup_logging(config: AvatarConfig) -> None:
     """
-    Setup logging configuration.
+    Setup logging configuration for the avatar engine.
     
     Args:
-        level: Log level (DEBUG, INFO, WARNING, ERROR)
-        debug: Enable debug mode with verbose output
-        log_file: Optional log file path
-        rotation: Log file rotation size
-        retention: Log file retention period
+        config: Avatar engine configuration
     """
     # Remove default handler
     logger.remove()
     
-    # Console handler with color coding
+    # Console logging format
     console_format = (
-        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+        "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
         "<level>{level: <8}</level> | "
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "<level>{message}</level>"
     )
     
-    if debug:
-        console_format = (
-            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-            "<level>{level: <8}</level> | "
-            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-            "<magenta>{extra}</magenta> | "
-            "<level>{message}</level>"
-        )
+    # File logging format (more detailed)
+    file_format = (
+        "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
+        "{level: <8} | "
+        "{name}:{function}:{line} | "
+        "{message} | "
+        "{extra}"
+    )
     
+    # Add console handler
     logger.add(
         sys.stderr,
         format=console_format,
-        level=level,
+        level=config.log_level,
         colorize=True,
-        backtrace=debug,
-        diagnose=debug
+        backtrace=config.debug,
+        diagnose=config.debug,
     )
     
-    # File handler if specified
-    if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        file_format = (
-            "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
-            "{level: <8} | "
-            "{name}:{function}:{line} | "
-            "{extra} | "
-            "{message}"
-        )
+    # Add file handler if specified
+    if config.log_file:
+        log_file = Path(config.log_file)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
         
         logger.add(
             log_file,
             format=file_format,
-            level="DEBUG" if debug else level,
-            rotation=rotation,
-            retention=retention,
+            level=config.log_level,
+            rotation="100 MB",
+            retention="30 days",
             compression="gz",
             backtrace=True,
-            diagnose=True
+            diagnose=True,
         )
     
-    # Set third-party library log levels
-    import logging
+    # Configure specific loggers
+    if not config.debug:
+        # Reduce noise from external libraries in production
+        logger.disable("PIL")
+        logger.disable("urllib3")
+        logger.disable("httpx")
     
-    # Reduce noise from third-party libraries
-    logging.getLogger("uvicorn").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("aiohttp").setLevel(logging.WARNING)
-    logging.getLogger("websockets").setLevel(logging.WARNING)
-    
-    if not debug:
-        logging.getLogger("asyncio").setLevel(logging.WARNING)
-        logging.getLogger("concurrent").setLevel(logging.WARNING)
+    logger.info("Logging configured successfully")
 
 
-def get_logger(name: str) -> logger:
-    """
-    Get a logger instance with the given name.
+class PerformanceLogger:
+    """Context manager for performance logging."""
     
-    Args:
-        name: Logger name (typically __name__)
+    def __init__(self, operation: str, threshold_ms: float = 100.0):
+        """
+        Initialize performance logger.
         
-    Returns:
-        logger: Configured logger instance
-    """
-    return logger.bind(name=name)
+        Args:
+            operation: Name of the operation being timed
+            threshold_ms: Log warning if operation exceeds this threshold
+        """
+        self.operation = operation
+        self.threshold_ms = threshold_ms
+        self.start_time = None
+    
+    def __enter__(self):
+        """Start timing."""
+        import time
+        self.start_time = time.time()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """End timing and log results."""
+        if self.start_time is None:
+            return
+        
+        import time
+        duration_ms = (time.time() - self.start_time) * 1000
+        
+        if exc_type is not None:
+            logger.error(f"{self.operation} failed after {duration_ms:.2f}ms: {exc_val}")
+        elif duration_ms > self.threshold_ms:
+            logger.warning(f"{self.operation} took {duration_ms:.2f}ms (threshold: {self.threshold_ms}ms)")
+        else:
+            logger.debug(f"{self.operation} completed in {duration_ms:.2f}ms")
+
+
+def log_avatar_metrics(session_id: str, metrics: dict) -> None:
+    """Log avatar session metrics in structured format."""
+    logger.info(
+        "Avatar session metrics",
+        extra={
+            "session_id": session_id,
+            "metrics": metrics,
+        }
+    )
