@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import UserTable from "../../components/users/UserTable";
 import ErrorDisplay from "../../components/common/ErrorDisplay";
-import { 
-  useAdmins, 
-  useDeactivateAdmin, 
-  useActivateAdmin 
+import {
+  useAdmins,
+  useDeactivateAdmin,
+  useActivateAdmin,
 } from "../../hooks/useAdminHooks";
 
 export default function AdminsPage() {
@@ -26,12 +26,7 @@ export default function AdminsPage() {
   const [statusFilter, setStatusFilter] = useState("All");
 
   // Fetch admins using our custom hook
-  const { 
-    data: admins = [], 
-    isLoading, 
-    isError, 
-    error 
-  } = useAdmins();
+  const { data: admins = [], isLoading, isError, error } = useAdmins();
 
   // Mutation hooks for activating/deactivating admins
   const { mutate: deactivateAdmin } = useDeactivateAdmin();
@@ -42,29 +37,30 @@ export default function AdminsPage() {
     const matchesSearch =
       admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       admin.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRole = 
-      roleFilter === "All" || 
+
+    const matchesRole =
+      roleFilter === "All" ||
       admin.adminRole.includes(roleFilter.toLowerCase());
-    
+
     const matchesStatus =
-      statusFilter === "All" || 
+      statusFilter === "All" ||
       admin.status.toLowerCase() === statusFilter.toLowerCase();
-    
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   // Transform admin data to match UserTable format
-  const transformedAdmins = filteredAdmins.map(admin => ({
+  const transformedAdmins = filteredAdmins.map((admin) => ({
     id: admin.id,
     name: admin.name,
     email: admin.email,
-    role: admin.adminRole.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' '),
+    role: admin.adminRole
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" "),
     status: admin.status.charAt(0).toUpperCase() + admin.status.slice(1),
     lastLogin: admin.lastLogin || null,
-    created: admin.createdAt
+    created: admin.createdAt,
   }));
 
   return (
@@ -153,13 +149,14 @@ export default function AdminsPage() {
           <div className="text-sm text-[color:var(--muted-foreground)]">
             {isLoading ? (
               <span className="flex items-center">
-                <Loader size={14} className="animate-spin mr-2" /> 
+                <Loader size={14} className="animate-spin mr-2" />
                 Loading administrators...
               </span>
             ) : isError ? (
               <span className="flex items-center text-red-500">
-                <AlertCircle size={14} className="mr-2" /> 
-                Error loading administrators: {error instanceof Error ? error.message : "Unknown error"}
+                <AlertCircle size={14} className="mr-2" />
+                Error loading administrators:{" "}
+                {error instanceof Error ? error.message : "Unknown error"}
               </span>
             ) : (
               `Showing ${filteredAdmins.length} administrators`
@@ -181,21 +178,28 @@ export default function AdminsPage() {
       {/* Admins table */}
       {isLoading ? (
         <div className="bg-[color:var(--card)] rounded-xl p-8 flex justify-center items-center">
-          <Loader size={24} className="animate-spin mr-3 text-[color:var(--primary)]" />
+          <Loader
+            size={24}
+            className="animate-spin mr-3 text-[color:var(--primary)]"
+          />
           <span>Loading administrators...</span>
         </div>
       ) : isError ? (
         <div className="bg-[color:var(--card)] rounded-xl p-8">
-          <ErrorDisplay 
-            message="Failed to load administrators" 
-            details={error instanceof Error ? error.message : "An unknown error occurred"}
+          <ErrorDisplay
+            message="Failed to load administrators"
+            details={
+              error instanceof Error
+                ? error.message
+                : "An unknown error occurred"
+            }
           />
         </div>
       ) : (
-        <UserTable 
-          users={transformedAdmins} 
+        <UserTable
+          users={transformedAdmins}
           onStatusChange={(id: string, status: string) => {
-            if (status.toLowerCase() === 'active') {
+            if (status.toLowerCase() === "active") {
               deactivateAdmin(id);
             } else {
               activateAdmin(id);

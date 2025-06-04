@@ -122,7 +122,8 @@ export class EmailService {
    * Send welcome email to new user
    */
   async sendWelcomeEmail(to: string, name: string): Promise<boolean> {
-    const dashboardUrl = `${this.configService.get('frontend.url')}/dashboard`;
+    const frontendUrl = this.configService.get<string>('app.frontendUrl');
+    const dashboardUrl = `${frontendUrl}/dashboard`;
 
     return this.sendTemplatedEmail(to, 'Welcome to Heallink', 'welcome-email', {
       name,
@@ -138,7 +139,7 @@ export class EmailService {
     name: string,
     verificationToken: string,
   ): Promise<boolean> {
-    const frontendUrl = this.configService.get<string>('frontend.url');
+    const frontendUrl = this.configService.get<string>('app.frontendUrl');
     const verificationLink = `${frontendUrl}/auth/verify-email?token=${verificationToken}`;
 
     return this.sendTemplatedEmail(
@@ -160,7 +161,7 @@ export class EmailService {
     resetToken: string,
     username: string,
   ): Promise<boolean> {
-    const frontendUrl = this.configService.get<string>('frontend.url');
+    const frontendUrl = this.configService.get<string>('app.frontendUrl');
 
     if (!frontendUrl) {
       this.logger.error(
@@ -186,7 +187,8 @@ export class EmailService {
     name: string,
     tempPassword: string,
   ): Promise<boolean> {
-    const loginLink = `${this.configService.get('frontend.adminUrl')}/login`;
+    const adminUrl = this.configService.get<string>('app.adminUrl');
+    const loginLink = `${adminUrl}/login`;
 
     return this.sendTemplatedEmail(
       to,

@@ -1,22 +1,22 @@
-import { fetchApi } from './apiClient';
+import { fetchApi } from "./apiClient";
 
 // Type definitions based on backend entities
 export enum AdminRole {
-  SUPER_ADMIN = 'super_admin',
-  SYSTEM_ADMIN = 'system_admin',
-  USER_ADMIN = 'user_admin',
-  PROVIDER_ADMIN = 'provider_admin',
-  CONTENT_ADMIN = 'content_admin',
-  BILLING_ADMIN = 'billing_admin',
-  SUPPORT_ADMIN = 'support_admin',
-  READONLY_ADMIN = 'readonly_admin',
+  SUPER_ADMIN = "super_admin",
+  SYSTEM_ADMIN = "system_admin",
+  USER_ADMIN = "user_admin",
+  PROVIDER_ADMIN = "provider_admin",
+  CONTENT_ADMIN = "content_admin",
+  BILLING_ADMIN = "billing_admin",
+  SUPPORT_ADMIN = "support_admin",
+  READONLY_ADMIN = "readonly_admin",
 }
 
 export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  PENDING = 'pending',
-  LOCKED = 'locked',
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  PENDING = "pending",
+  LOCKED = "locked",
 }
 
 export interface AdminUser {
@@ -54,7 +54,7 @@ export const adminApi = {
    * Get all admin users
    */
   getAllAdmins: async (): Promise<AdminUser[]> => {
-    return fetchApi<AdminUser[]>('/auth/admin/users');
+    return fetchApi<AdminUser[]>("/auth/admin/users");
   },
 
   /**
@@ -68,8 +68,8 @@ export const adminApi = {
    * Create a new admin user
    */
   createAdmin: async (adminData: CreateAdminDto): Promise<AdminUser> => {
-    return fetchApi<AdminUser>('/auth/admin/register', {
-      method: 'POST',
+    return fetchApi<AdminUser>("/auth/admin/register", {
+      method: "POST",
       body: JSON.stringify(adminData),
     });
   },
@@ -77,9 +77,12 @@ export const adminApi = {
   /**
    * Update an admin user
    */
-  updateAdmin: async (id: string, adminData: UpdateAdminDto): Promise<AdminUser> => {
+  updateAdmin: async (
+    id: string,
+    adminData: UpdateAdminDto
+  ): Promise<AdminUser> => {
     return fetchApi<AdminUser>(`/auth/admin/users/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(adminData),
     });
   },
@@ -87,9 +90,12 @@ export const adminApi = {
   /**
    * Update admin role
    */
-  updateAdminRole: async (id: string, roleData: UpdateAdminRoleDto): Promise<AdminUser> => {
+  updateAdminRole: async (
+    id: string,
+    roleData: UpdateAdminRoleDto
+  ): Promise<AdminUser> => {
     return fetchApi<AdminUser>(`/auth/admin/users/${id}/role`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(roleData),
     });
   },
@@ -99,7 +105,7 @@ export const adminApi = {
    */
   deactivateAdmin: async (id: string): Promise<AdminUser> => {
     return fetchApi<AdminUser>(`/auth/admin/users/${id}/deactivate`, {
-      method: 'PUT',
+      method: "PUT",
     });
   },
 
@@ -108,7 +114,7 @@ export const adminApi = {
    */
   activateAdmin: async (id: string): Promise<AdminUser> => {
     return fetchApi<AdminUser>(`/auth/admin/users/${id}/activate`, {
-      method: 'PUT',
+      method: "PUT",
     });
   },
 
@@ -117,7 +123,7 @@ export const adminApi = {
    */
   deleteAdmin: async (id: string): Promise<void> => {
     return fetchApi<void>(`/auth/admin/users/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };

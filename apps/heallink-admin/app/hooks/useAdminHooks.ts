@@ -1,24 +1,24 @@
-import { 
-  useMutation, 
-  useQuery, 
+import {
+  useMutation,
+  useQuery,
   useQueryClient,
   UseMutationResult,
-  UseQueryResult
-} from '@tanstack/react-query';
-import { 
-  adminApi, 
-  AdminUser, 
-  CreateAdminDto, 
-  UpdateAdminDto, 
-  UpdateAdminRoleDto 
-} from '../api/adminApi';
+  UseQueryResult,
+} from "@tanstack/react-query";
+import {
+  adminApi,
+  AdminUser,
+  CreateAdminDto,
+  UpdateAdminDto,
+  UpdateAdminRoleDto,
+} from "../api/adminApi";
 
 // Query keys for cache management
 export const adminKeys = {
-  all: ['admins'] as const,
-  lists: () => [...adminKeys.all, 'list'] as const,
+  all: ["admins"] as const,
+  lists: () => [...adminKeys.all, "list"] as const,
   list: (filters: string) => [...adminKeys.lists(), { filters }] as const,
-  details: () => [...adminKeys.all, 'detail'] as const,
+  details: () => [...adminKeys.all, "detail"] as const,
   detail: (id: string) => [...adminKeys.details(), id] as const,
 };
 
@@ -47,23 +47,20 @@ export function useAdmin(id: string): UseQueryResult<AdminUser, Error> {
  * Hook to create a new admin user
  */
 export function useCreateAdmin(): UseMutationResult<
-  AdminUser, 
-  Error, 
+  AdminUser,
+  Error,
   CreateAdminDto
 > {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: adminApi.createAdmin,
     onSuccess: (newAdmin) => {
       // Invalidate the list query to refetch
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      
+
       // Optionally, update the cache directly
-      queryClient.setQueryData(
-        adminKeys.detail(newAdmin.id),
-        newAdmin
-      );
+      queryClient.setQueryData(adminKeys.detail(newAdmin.id), newAdmin);
     },
   });
 }
@@ -72,18 +69,20 @@ export function useCreateAdmin(): UseMutationResult<
  * Hook to update an admin user
  */
 export function useUpdateAdmin(): UseMutationResult<
-  AdminUser, 
-  Error, 
+  AdminUser,
+  Error,
   { id: string; data: UpdateAdminDto }
 > {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }) => adminApi.updateAdmin(id, data),
     onSuccess: (updatedAdmin) => {
       // Invalidate both the list and the specific admin's data
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.detail(updatedAdmin.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.detail(updatedAdmin.id),
+      });
     },
   });
 }
@@ -92,18 +91,20 @@ export function useUpdateAdmin(): UseMutationResult<
  * Hook to update an admin's role
  */
 export function useUpdateAdminRole(): UseMutationResult<
-  AdminUser, 
-  Error, 
+  AdminUser,
+  Error,
   { id: string; role: UpdateAdminRoleDto }
 > {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, role }) => adminApi.updateAdminRole(id, role),
     onSuccess: (updatedAdmin) => {
       // Invalidate both the list and the specific admin's data
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.detail(updatedAdmin.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.detail(updatedAdmin.id),
+      });
     },
   });
 }
@@ -112,17 +113,19 @@ export function useUpdateAdminRole(): UseMutationResult<
  * Hook to deactivate an admin user
  */
 export function useDeactivateAdmin(): UseMutationResult<
-  AdminUser, 
-  Error, 
+  AdminUser,
+  Error,
   string
 > {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: adminApi.deactivateAdmin,
     onSuccess: (updatedAdmin) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.detail(updatedAdmin.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.detail(updatedAdmin.id),
+      });
     },
   });
 }
@@ -131,17 +134,19 @@ export function useDeactivateAdmin(): UseMutationResult<
  * Hook to activate an admin user
  */
 export function useActivateAdmin(): UseMutationResult<
-  AdminUser, 
-  Error, 
+  AdminUser,
+  Error,
   string
 > {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: adminApi.activateAdmin,
     onSuccess: (updatedAdmin) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.detail(updatedAdmin.id) });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.detail(updatedAdmin.id),
+      });
     },
   });
 }
@@ -149,13 +154,9 @@ export function useActivateAdmin(): UseMutationResult<
 /**
  * Hook to delete an admin user
  */
-export function useDeleteAdmin(): UseMutationResult<
-  void, 
-  Error, 
-  string
-> {
+export function useDeleteAdmin(): UseMutationResult<void, Error, string> {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: adminApi.deleteAdmin,
     onSuccess: (_, deletedId) => {

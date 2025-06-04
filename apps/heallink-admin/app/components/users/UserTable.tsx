@@ -207,9 +207,9 @@ export default function UserTable({
                   </td>
                   <td className="p-4 text-sm">{formatDate(user.lastLogin)}</td>
                   <td className="p-4 text-center">
-                    <UserActionMenu 
-                      userId={user.id} 
-                      userStatus={user.status} 
+                    <UserActionMenu
+                      userId={user.id}
+                      userStatus={user.status}
                       onStatusChange={onStatusChange}
                     />
                   </td>

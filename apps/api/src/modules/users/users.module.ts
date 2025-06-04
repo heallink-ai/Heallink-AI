@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from './schemas/user.schema';
 import { AdminUser, AdminUserSchema } from './entities/admin-user.entity';
+import { AwsModule } from '../aws';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AdminUser, AdminUserSchema } from './entities/admin-user.entity';
       { name: User.name, schema: UserSchema },
       { name: AdminUser.name, schema: AdminUserSchema },
     ]),
+    AwsModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],
