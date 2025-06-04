@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealLink LiveKit Client - Avatar Engine Test</title>
+    <script src="https://unpkg.com/livekit-client@2.5.9/dist/livekit-client.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.connected {
+            background: #44ff44;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .main-container {
+            flex: 1;
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .video-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .video-container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 1rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            min-height: 300px;
+        }
+        
+        .video-item {
+            background: #000;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .video-placeholder {
+            color: #666;
+            text-align: center;
+        }
+        
+        .video-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.25rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .controls-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .form-group input {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .btn.primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #f44336, #da190b);
+        }
+        
+        .logs {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 0.25rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .log-time {
+            color: #888;
+            flex-shrink: 0;
+        }
+        
+        .log-message {
+            color: #ccc;
+        }
+        
+        .log-success { color: #51cf66; }
+        .log-error { color: #ff6b6b; }
+        .log-info { color: #74c0fc; }
+        
+        .participants {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .participant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .participant-name {
+            font-weight: bold;
+        }
+        
+        .participant-status {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🩺 HealLink LiveKit Client - Avatar Engine</div>
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="video-section">
+            <div class="video-container">
+                <div class="video-header">
+                    <h3>📹 LiveKit Video Streams</h3>
+                    <div id="roomInfo">Not connected</div>
+                </div>
+                <div class="video-grid">
+                    <div class="video-item" id="localVideo">
+                        <div class="video-placeholder">Local Video<br><small>Your camera</small></div>
+                        <div class="video-label">You</div>
+                    </div>
+                    <div class="video-item" id="avatarVideo">
+                        <div class="video-placeholder">Avatar Video<br><small>AI Agent Avatar</small></div>
+                        <div class="video-label">AI Avatar</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>👥 Participants</h3>
+                <div class="participants" id="participantsList">
+                    <div class="participant-item">
+                        <span class="participant-name">No participants</span>
+                        <span class="participant-status">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls-section">
+            <div class="control-group">
+                <h3>🔗 LiveKit Connection</h3>
+                <div class="form-group">
+                    <label>LiveKit URL:</label>
+                    <input type="text" id="livekitUrl" value="wss://heallink-dev-jvc8ya2i.livekit.cloud" placeholder="wss://your-livekit-url">
+                </div>
+                <div class="form-group">
+                    <label>Room Name:</label>
+                    <input type="text" id="roomName" value="avatar-test-room" placeholder="avatar-test-room">
+                </div>
+                <div class="form-group">
+                    <label>Participant Name:</label>
+                    <input type="text" id="participantName" value="TestUser" placeholder="Your name">
+                </div>
+                <button class="btn primary" onclick="connectToRoom()">Connect to Room</button>
+                <button class="btn danger" onclick="disconnectFromRoom()">Disconnect</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>🎭 Avatar Controls</h3>
+                <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 1rem;">
+                    Controls the AI agent's avatar emotions and background
+                </p>
+                <button class="btn" onclick="controlAvatar('happy', 0.8)">😊 Happy</button>
+                <button class="btn" onclick="controlAvatar('concerned', 0.7)">😟 Concerned</button>
+                <button class="btn" onclick="controlAvatar('surprised', 0.9)">😲 Surprised</button>
+                <button class="btn" onclick="controlAvatar('neutral', 0.5)">😐 Neutral</button>
+                <button class="btn" onclick="setAvatarBackground('medical_office')">🏥 Medical Office</button>
+                <button class="btn" onclick="setAvatarBackground('clinic_room')">🩺 Clinic Room</button>
+            </div>
+            
+            <div class="control-group">
+                <h3>📊 System Logs</h3>
+                <div class="logs" id="logs"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables and functions
+        let room = null;
+        let localTracks = [];
+        let currentAvatarSession = null;
+        
+        const AVATAR_ENGINE_URL = 'http://localhost:8080';
+        
+        // UI Elements
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const logsEl = document.getElementById('logs');
+        const participantsList = document.getElementById('participantsList');
+        const roomInfo = document.getElementById('roomInfo');
+        
+        // Logging function (global scope)
+        function log(message, type = 'info') {
+            const now = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">${now}</span>
+                <span class="log-message log-${type}">${message}</span>
+            `;
+            logsEl.appendChild(logEntry);
+            logsEl.scrollTop = logsEl.scrollHeight;
+            
+            // Keep only last 50 log entries
+            while (logsEl.children.length > 50) {
+                logsEl.removeChild(logsEl.firstChild);
+            }
+        }
+        
+        // Update connection status
+        function updateStatus(connected, text) {
+            statusDot.className = `status-dot ${connected ? 'connected' : ''}`;
+            statusText.textContent = text;
+        }
+        
+        // Connect to LiveKit room
+        async function connectToRoom() {
+            const url = document.getElementById('livekitUrl').value;
+            const roomName = document.getElementById('roomName').value;
+            const participantName = document.getElementById('participantName').value;
+            
+            if (!url || !roomName || !participantName) {
+                log('Please fill in all connection fields', 'error');
+                return;
+            }
+            
+            try {
+                log('Connecting to LiveKit room...', 'info');
+                updateStatus(false, 'Connecting...');
+                
+                // Check if LiveKit is available
+                if (typeof LiveKit === 'undefined') {
+                    throw new Error('LiveKit SDK not loaded');
+                }
+                
+                // Create room instance
+                const { Room } = LiveKit;
+                room = new Room();
+                
+                // Set up event listeners
+                setupRoomEventListeners();
+                
+                // Generate token (you'll need to implement this with your backend)
+                const token = await generateAccessToken(roomName, participantName);
+                
+                // Connect to room
+                await room.connect(url, token);
+                
+                log(`Connected to room: ${roomName}`, 'success');
+                updateStatus(true, 'Connected');
+                roomInfo.textContent = `Room: ${roomName}`;
+                
+                // Publish local tracks
+                await publishLocalTracks();
+                
+                // Create avatar session for this room
+                await createAvatarSession(roomName);
+                
+            } catch (error) {
+                log(`Connection failed: ${error.message}`, 'error');
+                updateStatus(false, 'Connection Failed');
+            }
+        }
+        
+        // Disconnect from room
+        async function disconnectFromRoom() {
+            if (!room) {
+                log('Not connected to any room', 'error');
+                return;
+            }
+            
+            try {
+                log('Disconnecting from room...', 'info');
+                
+                // Clean up avatar session
+                if (currentAvatarSession) {
+                    await deleteAvatarSession();
+                }
+                
+                // Disconnect room
+                await room.disconnect();
+                room = null;
+                localTracks = [];
+                
+                // Update UI
+                updateStatus(false, 'Disconnected');
+                roomInfo.textContent = 'Not connected';
+                clearVideoElements();
+                updateParticipantsList([]);
+                
+                log('Disconnected successfully', 'success');
+                
+            } catch (error) {
+                log(`Disconnect error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Setup room event listeners
+        function setupRoomEventListeners() {
+            const { RoomEvent } = LiveKit;
+            
+            // Participant connected
+            room.on(RoomEvent.ParticipantConnected, (participant) => {
+                log(`Participant joined: ${participant.identity}`, 'info');
+                updateParticipantsList(Array.from(room.participants.values()));
+            });
+            
+            // Participant disconnected
+            room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+                log(`Participant left: ${participant.identity}`, 'info');
+                updateParticipantsList(Array.from(room.participants.values()));
+            });
+            
+            // Track subscribed (this is where avatar video will appear!)
+            room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                log(`Track subscribed: ${track.kind} from ${participant.identity}`, 'info');
+                
+                if (track.kind === 'video') {
+                    const element = track.attach();
+                    
+                    // Check if this is the avatar video
+                    if (participant.identity.includes('avatar') || publication.trackName.includes('avatar')) {
+                        // This is the avatar video stream!
+                        const avatarContainer = document.getElementById('avatarVideo');
+                        avatarContainer.innerHTML = '';
+                        avatarContainer.appendChild(element);
+                        
+                        const label = document.createElement('div');
+                        label.className = 'video-label';
+                        label.textContent = 'AI Avatar (Live)';
+                        avatarContainer.appendChild(label);
+                        
+                        log('Avatar video stream connected!', 'success');
+                    } else {
+                        // Regular participant video
+                        log(`Regular video from: ${participant.identity}`, 'info');
+                    }
+                }
+            });
+            
+            // Track unsubscribed
+            room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+                track.detach();
+                log(`Track unsubscribed: ${track.kind} from ${participant.identity}`, 'info');
+            });
+            
+            // Room disconnected
+            room.on(RoomEvent.Disconnected, () => {
+                log('Room disconnected', 'info');
+                updateStatus(false, 'Disconnected');
+            });
+        }
+        
+        // Publish local audio/video tracks
+        async function publishLocalTracks() {
+            try {
+                // Create local tracks
+                const tracks = await room.localParticipant.createTracks({
+                    audio: true,
+                    video: true
+                });
+                
+                // Publish tracks
+                for (const track of tracks) {
+                    await room.localParticipant.publishTrack(track);
+                    localTracks.push(track);
+                    
+                    if (track.kind === 'video') {
+                        // Display local video
+                        const element = track.attach();
+                        const localContainer = document.getElementById('localVideo');
+                        localContainer.innerHTML = '';
+                        localContainer.appendChild(element);
+                        
+                        const label = document.createElement('div');
+                        label.className = 'video-label';
+                        label.textContent = 'You (Local)';
+                        localContainer.appendChild(label);
+                    }
+                }
+                
+                log('Local tracks published', 'success');
+                
+            } catch (error) {
+                log(`Failed to publish tracks: ${error.message}`, 'error');
+            }
+        }
+        
+        // Generate access token (simplified - in production, call your backend)
+        async function generateAccessToken(roomName, participantName) {
+            // In a real app, you'd call your backend API here
+            // For demo, we'll use a placeholder
+            
+            log('⚠️ Token generation not implemented', 'error');
+            log('ℹ️ For now, test Avatar Engine controls directly', 'info');
+            
+            // This is where you'd generate a real token
+            throw new Error('Token generation not implemented - test Avatar Engine directly');
+        }
+        
+        // Create avatar session via Avatar Engine API
+        async function createAvatarSession(roomName) {
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        avatar_id: 'doctor_avatar_1',
+                        session_id: `livekit_${roomName}_${Date.now()}`
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentAvatarSession = data.session_id;
+                    log(`✅ Avatar session created: ${currentAvatarSession}`, 'success');
+                } else {
+                    const errorData = await response.text();
+                    log(`❌ Failed to create avatar session (${response.status}): ${errorData}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Avatar session error: ${error.message}`, 'error');
+                log('ℹ️ Make sure Avatar Engine is running on localhost:8080', 'info');
+            }
+        }
+        
+        // Delete avatar session
+        async function deleteAvatarSession() {
+            if (!currentAvatarSession) return;
+            
+            try {
+                await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentAvatarSession}`, {
+                    method: 'DELETE'
+                });
+                log(`Avatar session deleted: ${currentAvatarSession}`, 'success');
+                currentAvatarSession = null;
+            } catch (error) {
+                log(`Error deleting avatar session: ${error.message}`, 'error');
+            }
+        }
+        
+        // Control avatar emotions
+        async function controlAvatar(emotion, intensity) {
+            if (!currentAvatarSession) {
+                log('No active avatar session', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentAvatarSession}/emotion`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        emotion: emotion,
+                        intensity: intensity
+                    })
+                });
+                
+                if (response.ok) {
+                    log(`Avatar emotion set to: ${emotion} (${intensity})`, 'success');
+                } else {
+                    log('Failed to set avatar emotion', 'error');
+                }
+            } catch (error) {
+                log(`Avatar control error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Set avatar background
+        async function setAvatarBackground(backgroundId) {
+            if (!currentAvatarSession) {
+                log('No active avatar session', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentAvatarSession}/background`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        background_id: backgroundId
+                    })
+                });
+                
+                if (response.ok) {
+                    log(`Avatar background changed to: ${backgroundId}`, 'success');
+                } else {
+                    log('Failed to change avatar background', 'error');
+                }
+            } catch (error) {
+                log(`Background change error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Update participants list
+        function updateParticipantsList(participants) {
+            participantsList.innerHTML = '';
+            
+            if (participants.length === 0) {
+                participantsList.innerHTML = '<div class="participant-item"><span class="participant-name">No participants</span><span class="participant-status">-</span></div>';
+                return;
+            }
+            
+            participants.forEach(participant => {
+                const item = document.createElement('div');
+                item.className = 'participant-item';
+                item.innerHTML = `
+                    <span class="participant-name">${participant.identity}</span>
+                    <span class="participant-status">${participant.tracks.size} tracks</span>
+                `;
+                participantsList.appendChild(item);
+            });
+        }
+        
+        // Clear video elements
+        function clearVideoElements() {
+            document.getElementById('localVideo').innerHTML = '<div class="video-placeholder">Local Video<br><small>Your camera</small></div><div class="video-label">You</div>';
+            document.getElementById('avatarVideo').innerHTML = '<div class="video-placeholder">Avatar Video<br><small>AI Agent Avatar</small></div><div class="video-label">AI Avatar</div>';
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('🚀 HealLink LiveKit Client initialized', 'success');
+            log('ℹ️ Testing Avatar Engine connection...', 'info');
+            
+            // Check if LiveKit is available
+            if (typeof LiveKit === 'undefined') {
+                log('⚠️ LiveKit SDK not loaded. Avatar controls will still work.', 'error');
+            } else {
+                log('✅ LiveKit SDK loaded successfully', 'success');
+                log(`ℹ️ LiveKit version: ${LiveKit.version || 'unknown'}`, 'info');
+            }
+            
+            // Test Avatar Engine connection first
+            await testAvatarEngineConnection();
+            
+            // Auto-create avatar session for testing
+            await createAvatarSession('test-room');
+        });
+        
+        // Test Avatar Engine connection
+        async function testAvatarEngineConnection() {
+            try {
+                log('🔍 Testing Avatar Engine connection...', 'info');
+                const response = await fetch(`${AVATAR_ENGINE_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Avatar Engine is healthy (uptime: ${Math.round(data.uptime_seconds)}s)`, 'success');
+                    return true;
+                } else {
+                    log(`❌ Avatar Engine health check failed: ${response.status}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Cannot connect to Avatar Engine: ${error.message}`, 'error');
+                log('ℹ️ Make sure Avatar Engine is running: docker compose up -d avatar-engine', 'info');
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -15,6 +15,7 @@ from datetime import datetime
 from aiohttp import web
 from aiohttp.web_request import Request
 from aiohttp.web_ws import WebSocketResponse
+from aiohttp_cors import setup as cors_setup, ResourceOptions
 from loguru import logger
 import aiofiles
 
@@ -48,6 +49,16 @@ class AvatarService:
         # Service state
         self.is_running = False
         self.start_time = datetime.now()
+        
+        # Setup CORS
+        self.cors = cors_setup(self.app, defaults={
+            "*": ResourceOptions(
+                allow_credentials=True,
+                expose_headers="*",
+                allow_headers="*",
+                allow_methods="*"
+            )
+        })
         
         # Setup routes
         self._setup_routes()
@@ -95,26 +106,40 @@ class AvatarService:
         logger.info("Avatar Service stopped")
     
     def _setup_routes(self) -> None:
-        """Setup HTTP routes."""
+        """Setup HTTP routes with CORS support."""
         # Health check
-        self.app.router.add_get("/health", self.health_check)
+        health_route = self.app.router.add_get("/health", self.health_check)
+        self.cors.add(health_route)
         
         # Service info
-        self.app.router.add_get("/info", self.service_info)
-        self.app.router.add_get("/metrics", self.get_metrics)
+        info_route = self.app.router.add_get("/info", self.service_info)
+        self.cors.add(info_route)
+        metrics_route = self.app.router.add_get("/metrics", self.get_metrics)
+        self.cors.add(metrics_route)
         
         # Avatar management
-        self.app.router.add_post("/avatars", self.create_avatar_session)
-        self.app.router.add_get("/avatars", self.list_avatar_sessions)
-        self.app.router.add_get("/avatars/{session_id}", self.get_avatar_session)
-        self.app.router.add_delete("/avatars/{session_id}", self.delete_avatar_session)
+        create_route = self.app.router.add_post("/avatars", self.create_avatar_session)
+        self.cors.add(create_route)
+        list_route = self.app.router.add_get("/avatars", self.list_avatar_sessions)
+        self.cors.add(list_route)
+        get_route = self.app.router.add_get("/avatars/{session_id}", self.get_avatar_session)
+        self.cors.add(get_route)
+        delete_route = self.app.router.add_delete("/avatars/{session_id}", self.delete_avatar_session)
+        self.cors.add(delete_route)
         
         # Avatar control
-        self.app.router.add_post("/avatars/{session_id}/emotion", self.set_avatar_emotion)
-        self.app.router.add_post("/avatars/{session_id}/background", self.set_avatar_background)
-        self.app.router.add_post("/avatars/{session_id}/audio", self.process_avatar_audio)
+        emotion_route = self.app.router.add_post("/avatars/{session_id}/emotion", self.set_avatar_emotion)
+        self.cors.add(emotion_route)
+        background_route = self.app.router.add_post("/avatars/{session_id}/background", self.set_avatar_background)
+        self.cors.add(background_route)
+        audio_route = self.app.router.add_post("/avatars/{session_id}/audio", self.process_avatar_audio)
+        self.cors.add(audio_route)
         
-        # WebSocket for real-time communication
+        # LiveKit integration
+        livekit_stream_route = self.app.router.add_post("/avatars/{session_id}/start_livekit_stream", self.start_livekit_stream)
+        self.cors.add(livekit_stream_route)
+        
+        # WebSocket for real-time communication (no CORS needed for WebSocket)
         self.app.router.add_get("/ws/{session_id}", self.websocket_handler)
         
         # Static file serving for avatar assets
@@ -371,6 +396,52 @@ class AvatarService:
             logger.error(f"Failed to process audio: {e}")
             return web.json_response(
                 {"error": f"Failed to process audio: {str(e)}"},
+                status=500
+            )
+    
+    async def start_livekit_stream(self, request: Request) -> web.Response:
+        """Start LiveKit video streaming for avatar session."""
+        session_id = request.match_info["session_id"]
+        
+        if session_id not in self.sessions:
+            return web.json_response(
+                {"error": f"Session {session_id} not found"},
+                status=404
+            )
+        
+        try:
+            data = await request.json()
+            livekit_url = data.get("livekit_url")
+            livekit_token = data.get("livekit_token")
+            room_name = data.get("room_name")
+            
+            if not all([livekit_url, livekit_token, room_name]):
+                return web.json_response(
+                    {"error": "Missing required fields: livekit_url, livekit_token, room_name"},
+                    status=400
+                )
+            
+            session = self.sessions[session_id]
+            
+            # Start LiveKit video streaming
+            await session.start_livekit_streaming(
+                livekit_url=livekit_url,
+                livekit_token=livekit_token,
+                room_name=room_name
+            )
+            
+            logger.info(f"Started LiveKit streaming for session {session_id} in room {room_name}")
+            
+            return web.json_response({
+                "session_id": session_id,
+                "room_name": room_name,
+                "status": "streaming_started"
+            })
+            
+        except Exception as e:
+            logger.error(f"Failed to start LiveKit streaming: {e}")
+            return web.json_response(
+                {"error": f"Failed to start LiveKit streaming: {str(e)}"},
                 status=500
             )
     

@@ -55,7 +55,7 @@
 .avatar-video-container {
   width: 240px;
   height: 240px;
-  border-radius: 50%;
+  border-radius: 16px; /* Changed from 50% to rounded rectangle to show more of the 3D avatar */
   overflow: hidden;
   position: relative;
   margin-bottom: 1rem;
@@ -68,17 +68,17 @@
 .avatar-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Changed from cover to contain to show full 3D avatar */
   background: transparent;
   position: relative;
   z-index: 5; /* Make sure video is above the fallback */
-  border-radius: 50%; /* Keep the circular shape */
+  border-radius: 16px; /* Match container radius */
   display: block;
 }
 
-/* Remove the empty rule */
+/* Remove the circular override */
 .avatar-video:not([srcObject="null"]) {
-  border-radius: 50%;
+  border-radius: 16px;
 }
 
 .avatar-fallback {

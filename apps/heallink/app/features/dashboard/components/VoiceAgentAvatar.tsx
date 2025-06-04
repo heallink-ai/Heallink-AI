@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLiveKit } from "@/app/providers/LiveKitProvider";
 import { Track } from "livekit-client";
@@ -19,7 +19,15 @@ const VoiceAgentAvatar = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasVideoTrack, setHasVideoTrack] = useState(false);
+  const [videoElementReady, setVideoElementReady] = useState(false);
   const { remoteParticipants } = useLiveKit();
+
+  // Track when video element is available
+  const videoRefCallback = useCallback((element: HTMLVideoElement | null) => {
+    videoRef.current = element;
+    setVideoElementReady(!!element);
+    console.log("📺 Video element ref updated, ready:", !!element);
+  }, []);
 
   // Helper function to get avatar state class
   const getAvatarStateClass = () => {
@@ -32,7 +40,7 @@ const VoiceAgentAvatar = ({
   useEffect(() => {
     if (!isVisible) return;
 
-    const avatarIdentity = "heallink-avatar";
+    const avatarIdentity = "Heallink Health Assistant";
     let videoAttached = false;
     const cleanupFunctions: Array<() => void> = [];
 
@@ -53,13 +61,100 @@ const VoiceAgentAvatar = ({
       }
     };
 
+    // Function to attach a video track
+    const attachVideoTrack = (track: Track) => {
+      console.log(
+        "🔧 attachVideoTrack called - videoRef.current:",
+        !!videoRef.current,
+        "videoAttached:",
+        videoAttached,
+        "videoElementReady:",
+        videoElementReady
+      );
+      if (!videoRef.current) {
+        console.log("❌ No video ref available, will retry in 100ms");
+        // Retry after a short delay
+        setTimeout(() => {
+          if (videoRef.current && !videoAttached) {
+            console.log("🔄 Retrying video track attachment");
+            attachVideoTrack(track);
+          }
+        }, 100);
+        return false;
+      }
+      if (videoAttached) {
+        console.log("❌ Video already attached");
+        return false;
+      }
+
+      try {
+        console.log("🎬 Attempting to attach video track");
+
+        // First detach from any elements
+        track.detach();
+
+        // Then attach to our video element
+        track.attach(videoRef.current);
+        console.log("✅ Video track attached to video element");
+
+        // Force video to be visible and play
+        if (videoRef.current) {
+          videoRef.current.style.display = "block";
+          videoRef.current.style.visibility = "visible";
+
+          // Add event listeners for debugging
+          videoRef.current.onloadeddata = () =>
+            console.log("🎬 Video data loaded");
+          videoRef.current.oncanplay = () => console.log("🎬 Video can play");
+          videoRef.current.onplaying = () => console.log("🎬 Video is playing");
+
+          videoRef.current
+            .play()
+            .then(() => console.log("🎬 Video play() succeeded"))
+            .catch((e) => console.error("❌ Error playing video:", e));
+        }
+
+        videoAttached = true;
+        setHasVideoTrack(true);
+        setIsLoaded(true);
+        console.log("✅ Avatar video track setup complete");
+
+        // Add cleanup for this track
+        cleanupFunctions.push(() => {
+          if (videoRef.current) {
+            track.detach(videoRef.current);
+          }
+        });
+
+        return true;
+      } catch (error) {
+        console.error("❌ Error attaching video track:", error);
+        return false;
+      }
+    };
+
     // Reset video element at the start
     resetVideoElement();
+
+    // Debug: Log all participants
+    console.log(
+      "All remote participants:",
+      remoteParticipants.map((p) => ({
+        identity: p.identity,
+        videoTracks: p.videoTrackPublications.size,
+        hasVideo: Array.from(p.videoTrackPublications.values()).some(
+          (pub) => pub.track
+        ),
+      }))
+    );
 
     // Find the avatar participant by identity
     const avatarParticipant = remoteParticipants.find(
       (p) => p.identity === avatarIdentity
     );
+
+    console.log("Looking for avatar identity:", avatarIdentity);
+    console.log("Avatar participant found:", !!avatarParticipant);
 
     if (avatarParticipant) {
       // Process all track publications, prioritizing video
@@ -67,78 +162,35 @@ const VoiceAgentAvatar = ({
         avatarParticipant.trackPublications.values()
       ).filter((pub) => pub.kind === Track.Kind.Video);
 
-      if (videoPublications.length > 0) {
-        const videoPublication = videoPublications[0];
+      console.log("🔍 Found video publications:", videoPublications.length);
 
-        if (videoPublication.track && videoRef.current) {
-          try {
-            // Detach from any existing elements first
-            videoPublication.track.detach();
-
-            // Then attach to our video element
-            videoPublication.track.attach(videoRef.current);
-
-            // Force video to be visible and play
-            if (videoRef.current) {
-              videoRef.current.style.display = "block";
-              videoRef.current.style.visibility = "visible";
-              videoRef.current
-                .play()
-                .catch((e) => console.error("Error playing video:", e));
-            }
-
-            videoAttached = true;
-            setHasVideoTrack(true);
-            setIsLoaded(true);
-
-            // Add cleanup for this track
-            cleanupFunctions.push(() => {
-              if (videoRef.current) {
-                videoPublication.track?.detach(videoRef.current);
-              }
-            });
-          } catch (error) {
-            console.error("Error attaching video track:", error);
+      // Try to attach existing video tracks
+      for (const videoPublication of videoPublications) {
+        if (videoPublication.track) {
+          console.log("📹 Found existing video track, attempting to attach");
+          if (attachVideoTrack(videoPublication.track)) {
+            break; // Successfully attached, stop looking
           }
+        } else {
+          console.log(
+            "📹 Video publication found but no track yet (isSubscribed:",
+            videoPublication.isSubscribed,
+            ")"
+          );
         }
       }
 
       // Set up event listener for new video tracks
       const handleTrackSubscribed = (track: Track) => {
-        if (
-          track.kind === Track.Kind.Video &&
-          !videoAttached &&
-          videoRef.current
-        ) {
-          try {
-            // First detach from any elements
-            track.detach();
-
-            // Then attach to our video element
-            track.attach(videoRef.current);
-
-            // Force video to be visible and play
-            if (videoRef.current) {
-              videoRef.current.style.display = "block";
-              videoRef.current.style.visibility = "visible";
-              videoRef.current
-                .play()
-                .catch((e) => console.error("Error playing video:", e));
-            }
-
-            videoAttached = true;
-            setHasVideoTrack(true);
-            setIsLoaded(true);
-
-            // Add cleanup for this track
-            cleanupFunctions.push(() => {
-              if (videoRef.current) {
-                track.detach(videoRef.current);
-              }
-            });
-          } catch (error) {
-            console.error("Error attaching new video track:", error);
-          }
+        console.log(
+          "🎵 Track subscribed event:",
+          track.kind,
+          "videoAttached:",
+          videoAttached
+        );
+        if (track.kind === Track.Kind.Video && !videoAttached) {
+          console.log("🎬 Processing new video track subscription");
+          attachVideoTrack(track);
         }
       };
 
@@ -160,8 +212,20 @@ const VoiceAgentAvatar = ({
           trackName: pub.trackName,
           isSubscribed: pub.isSubscribed,
           hasTrack: !!pub.track,
+          trackSid: pub.trackSid,
         }));
       console.log("Available video tracks:", videoTracks);
+
+      // Also log all track publications for debugging
+      const allTracks = Array.from(
+        avatarParticipant.trackPublications.values()
+      ).map((pub) => ({
+        kind: pub.kind,
+        trackName: pub.trackName,
+        isSubscribed: pub.isSubscribed,
+        hasTrack: !!pub.track,
+      }));
+      console.log("All tracks from avatar participant:", allTracks);
     }
 
     // Force isLoaded to true after 1.5 seconds, even if no video track is found
@@ -178,7 +242,7 @@ const VoiceAgentAvatar = ({
       // Ensure video is properly cleaned up
       resetVideoElement();
     };
-  }, [isVisible, remoteParticipants]);
+  }, [isVisible, remoteParticipants, videoElementReady]);
 
   return (
     <AnimatePresence>
@@ -216,12 +280,33 @@ const VoiceAgentAvatar = ({
 
                   {/* Video element for the avatar */}
                   <video
-                    ref={videoRef}
+                    ref={videoRefCallback}
                     autoPlay
                     playsInline
                     muted={true}
                     className="avatar-video"
+                    style={{
+                      display: hasVideoTrack ? 'block' : 'none',
+                      backgroundColor: 'transparent'
+                    }}
                   />
+                  
+                  {/* Debug info - remove in production */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '5px',
+                      left: '5px',
+                      background: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      fontSize: '10px',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      zIndex: 10
+                    }}>
+                      Video: {hasVideoTrack ? 'ON' : 'OFF'}
+                    </div>
+                  )}
                 </div>
 
                 <div className="avatar-name">Heallink Health Assistant</div>

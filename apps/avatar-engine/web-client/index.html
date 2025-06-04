@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealLink Avatar Engine - Live Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.connected {
+            background: #44ff44;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .main-container {
+            flex: 1;
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .avatar-section {
+            flex: 2;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .avatar-viewer {
+            flex: 1;
+            background: #000;
+            border-radius: 15px;
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .avatar-placeholder {
+            color: #666;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .avatar-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .controls-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+        
+        .control-group h3 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn.primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #f44336, #da190b);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .input-group label {
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .input-group input,
+        .input-group select {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .logs {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        
+        .log-entry {
+            margin-bottom: 0.25rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .log-time {
+            color: #888;
+            flex-shrink: 0;
+        }
+        
+        .log-message {
+            color: #ccc;
+        }
+        
+        .log-error {
+            color: #ff6b6b;
+        }
+        
+        .log-success {
+            color: #51cf66;
+        }
+        
+        .log-info {
+            color: #74c0fc;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+        
+        .metric-value {
+            color: white;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🩺 HealLink Avatar Engine</div>
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="avatar-section">
+            <div class="avatar-viewer" id="avatarViewer">
+                <div class="avatar-placeholder">
+                    Avatar will appear here<br>
+                    <small>3D rendering coming soon...</small>
+                </div>
+            </div>
+            <div class="avatar-info">
+                <div class="metric-item">
+                    <span class="metric-label">Session ID:</span>
+                    <span class="metric-value" id="sessionId">None</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Avatar ID:</span>
+                    <span class="metric-value" id="avatarId">None</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Current Emotion:</span>
+                    <span class="metric-value" id="currentEmotion">neutral</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Is Speaking:</span>
+                    <span class="metric-value" id="isSpeaking">false</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls-section">
+            <div class="control-group">
+                <h3>🎭 Avatar Session</h3>
+                <div class="input-group">
+                    <label>Avatar ID:</label>
+                    <select id="avatarSelect">
+                        <option value="doctor_avatar_1">Dr. Sarah Chen</option>
+                        <option value="doctor_avatar_2">Dr. Michael Roberts</option>
+                        <option value="nurse_avatar_1">Nurse Emily Johnson</option>
+                    </select>
+                </div>
+                <div class="button-grid">
+                    <button class="btn primary" onclick="createSession()">Create Session</button>
+                    <button class="btn danger" onclick="deleteSession()">Stop Session</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>😊 Emotions</h3>
+                <div class="button-grid">
+                    <button class="btn" onclick="setEmotion('happy', 0.8)">Happy</button>
+                    <button class="btn" onclick="setEmotion('sad', 0.7)">Sad</button>
+                    <button class="btn" onclick="setEmotion('surprised', 0.9)">Surprised</button>
+                    <button class="btn" onclick="setEmotion('concerned', 0.6)">Concerned</button>
+                    <button class="btn" onclick="setEmotion('angry', 0.5)">Angry</button>
+                    <button class="btn" onclick="setEmotion('neutral', 0.5)">Neutral</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>🏥 Backgrounds</h3>
+                <div class="button-grid">
+                    <button class="btn" onclick="setBackground('medical_office')">Medical Office</button>
+                    <button class="btn" onclick="setBackground('clinic_room')">Clinic Room</button>
+                    <button class="btn" onclick="setBackground('hospital_room')">Hospital Room</button>
+                    <button class="btn" onclick="setBackground('consultation_room')">Consultation</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>📊 System Logs</h3>
+                <div class="logs" id="logs"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AVATAR_ENGINE_URL = 'http://localhost:8080';
+        let currentSessionId = null;
+        let ws = null;
+        
+        // UI Elements
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const sessionIdEl = document.getElementById('sessionId');
+        const avatarIdEl = document.getElementById('avatarId');
+        const currentEmotionEl = document.getElementById('currentEmotion');
+        const isSpeakingEl = document.getElementById('isSpeaking');
+        const logsEl = document.getElementById('logs');
+        
+        // Logging function
+        function log(message, type = 'info') {
+            const now = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">${now}</span>
+                <span class="log-message log-${type}">${message}</span>
+            `;
+            logsEl.appendChild(logEntry);
+            logsEl.scrollTop = logsEl.scrollHeight;
+            
+            // Keep only last 50 log entries
+            while (logsEl.children.length > 50) {
+                logsEl.removeChild(logsEl.firstChild);
+            }
+        }
+        
+        // Check Avatar Engine health
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus(true, 'Connected');
+                    log(`Avatar Engine healthy - uptime: ${data.uptime_seconds}s`, 'success');
+                    return true;
+                } else {
+                    updateStatus(false, 'Service Error');
+                    log(`Health check failed: ${response.status}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                updateStatus(false, 'Disconnected');
+                log(`Cannot connect to Avatar Engine: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        // Update connection status
+        function updateStatus(connected, text) {
+            statusDot.className = `status-dot ${connected ? 'connected' : ''}`;
+            statusText.textContent = text;
+        }
+        
+        // Create avatar session
+        async function createSession() {
+            const avatarId = document.getElementById('avatarSelect').value;
+            
+            try {
+                log(`Creating session with avatar: ${avatarId}`, 'info');
+                
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        avatar_id: avatarId,
+                        session_id: `web_test_${Date.now()}`
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentSessionId = data.session_id;
+                    
+                    // Update UI
+                    sessionIdEl.textContent = currentSessionId;
+                    avatarIdEl.textContent = data.avatar_id;
+                    
+                    log(`Session created successfully: ${currentSessionId}`, 'success');
+                    
+                    // Connect WebSocket
+                    connectWebSocket();
+                    
+                    // Start session monitoring
+                    startSessionMonitoring();
+                    
+                } else {
+                    const error = await response.json();
+                    log(`Failed to create session: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                log(`Error creating session: ${error.message}`, 'error');
+            }
+        }
+        
+        // Delete avatar session
+        async function deleteSession() {
+            if (!currentSessionId) {
+                log('No active session to delete', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentSessionId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    log(`Session deleted: ${currentSessionId}`, 'success');
+                    
+                    // Reset UI
+                    currentSessionId = null;
+                    sessionIdEl.textContent = 'None';
+                    avatarIdEl.textContent = 'None';
+                    currentEmotionEl.textContent = 'neutral';
+                    isSpeakingEl.textContent = 'false';
+                    
+                    // Close WebSocket
+                    if (ws) {
+                        ws.close();
+                        ws = null;
+                    }
+                    
+                } else {
+                    const error = await response.json();
+                    log(`Failed to delete session: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                log(`Error deleting session: ${error.message}`, 'error');
+            }
+        }
+        
+        // Set avatar emotion
+        async function setEmotion(emotion, intensity) {
+            if (!currentSessionId) {
+                log('No active session', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentSessionId}/emotion`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        emotion: emotion,
+                        intensity: intensity
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentEmotionEl.textContent = `${emotion} (${intensity})`;
+                    log(`Emotion set to: ${emotion} (${intensity})`, 'success');
+                } else {
+                    const error = await response.json();
+                    log(`Failed to set emotion: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                log(`Error setting emotion: ${error.message}`, 'error');
+            }
+        }
+        
+        // Set avatar background
+        async function setBackground(backgroundId) {
+            if (!currentSessionId) {
+                log('No active session', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentSessionId}/background`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        background_id: backgroundId
+                    })
+                });
+                
+                if (response.ok) {
+                    log(`Background changed to: ${backgroundId}`, 'success');
+                } else {
+                    const error = await response.json();
+                    log(`Failed to set background: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                log(`Error setting background: ${error.message}`, 'error');
+            }
+        }
+        
+        // Connect WebSocket for real-time updates
+        function connectWebSocket() {
+            if (!currentSessionId) return;
+            
+            const wsUrl = `ws://localhost:8080/ws/${currentSessionId}`;
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                log('WebSocket connected', 'success');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                } catch (error) {
+                    log(`WebSocket message error: ${error.message}`, 'error');
+                }
+            };
+            
+            ws.onclose = () => {
+                log('WebSocket disconnected', 'info');
+            };
+            
+            ws.onerror = (error) => {
+                log(`WebSocket error: ${error}`, 'error');
+            };
+        }
+        
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'state':
+                    updateAvatarState(data.data.state);
+                    log(`Avatar state updated`, 'info');
+                    break;
+                case 'emotion_updated':
+                    currentEmotionEl.textContent = `${data.data.emotion} (${data.data.intensity})`;
+                    break;
+                case 'metrics':
+                    log(`Metrics: ${JSON.stringify(data.data)}`, 'info');
+                    break;
+                case 'error':
+                    log(`WebSocket error: ${data.message}`, 'error');
+                    break;
+            }
+        }
+        
+        // Update avatar state display
+        function updateAvatarState(state) {
+            if (state.current_emotion) {
+                currentEmotionEl.textContent = state.current_emotion;
+            }
+            if (state.is_speaking !== undefined) {
+                isSpeakingEl.textContent = state.is_speaking;
+            }
+        }
+        
+        // Start session monitoring
+        function startSessionMonitoring() {
+            if (!currentSessionId) return;
+            
+            setInterval(async () => {
+                if (!currentSessionId) return;
+                
+                try {
+                    const response = await fetch(`${AVATAR_ENGINE_URL}/avatars/${currentSessionId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateAvatarState(data.state);
+                    }
+                } catch (error) {
+                    // Silent error for monitoring
+                }
+            }, 5000); // Update every 5 seconds
+        }
+        
+        // Initialize app
+        async function init() {
+            log('HealLink Avatar Engine Test Client Started', 'success');
+            
+            // Check health every 30 seconds
+            setInterval(checkHealth, 30000);
+            
+            // Initial health check
+            await checkHealth();
+        }
+        
+        // Start the app
+        init();
+    </script>
+</body>
+</html>

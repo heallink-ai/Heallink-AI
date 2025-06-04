@@ -1,55 +1,55 @@
 services:
-  # heallink:
-  #   build:
-  #     context: .
-  #     dockerfile: ./apps/heallink/Dockerfile.dev
-  #   container_name: heallink
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./apps/heallink:/app/apps/heallink
-  #     - ./packages:/app/packages
-  #     - heallink-node-modules:/app/apps/heallink/node_modules
-  #   environment:
-  #     - NODE_ENV=development
-  #     - NEXT_TELEMETRY_DISABLED=1
-  #     # For browser-side requests (must be accessible from user's browser)
-  #     - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
-  #     - NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8000/api/v1
-  #     # For server-side requests (within Docker network)
-  #     - API_URL=http://api:3003/api/v1
-  #     - AI_ENGINE_URL=http://ai-engine:8000/api/v1
-  #   depends_on:
-  #     - api
-  #     - ai-engine
-  #   networks:
-  #     - heallink-network
-  #   restart: unless-stopped
-
-  heallink-admin:
+  heallink:
     build:
       context: .
-      dockerfile: ./apps/heallink-admin/Dockerfile.dev
-    container_name: heallink-admin
+      dockerfile: ./apps/heallink/Dockerfile.dev
+    container_name: heallink
     ports:
-      - "3001:3001"
+      - "3000:3000"
     volumes:
-      - ./apps/heallink-admin:/app/apps/heallink-admin
+      - ./apps/heallink:/app/apps/heallink
       - ./packages:/app/packages
-      - heallink-admin-node-modules:/app/apps/heallink-admin/node_modules
+      - heallink-node-modules:/app/apps/heallink/node_modules
     environment:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
-      - PORT=3001
+      # For browser-side requests (must be accessible from user's browser)
       - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+      - NEXT_PUBLIC_AI_ENGINE_URL=http://localhost:8000/api/v1
+      # For server-side requests (within Docker network)
       - API_URL=http://api:3003/api/v1
-      - NEXTAUTH_URL=http://localhost:3001
-      - NEXTAUTH_SECRET=heallink-admin-dev-auth-secret-key-123
+      - AI_ENGINE_URL=http://ai-engine:8000/api/v1
     depends_on:
       - api
+      # - ai-engine
     networks:
       - heallink-network
     restart: unless-stopped
+
+  # heallink-admin:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/heallink-admin/Dockerfile.dev
+  #   container_name: heallink-admin
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #     - ./apps/heallink-admin:/app/apps/heallink-admin
+  #     - ./packages:/app/packages
+  #     - heallink-admin-node-modules:/app/apps/heallink-admin/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     - PORT=3001
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+  #     - API_URL=http://api:3003/api/v1
+  #     - NEXTAUTH_URL=http://localhost:3001
+  #     - NEXTAUTH_SECRET=heallink-admin-dev-auth-secret-key-123
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - heallink-network
+  #   restart: unless-stopped
 
   # heallink-providers:
   #   build:
@@ -147,6 +147,11 @@ services:
       - PYTHONPATH=/app
       - AVATAR_ENGINE_HOST=0.0.0.0
       - AVATAR_ENGINE_PORT=8080
+      # Debug settings for 3D avatar rendering
+      - DEBUG=false
+      - DEBUG_WIREFRAME=false
+      - DEBUG_VERTICES=false
+      - DEBUG_OVERLAY=false
       # LiveKit connection settings
       - LIVEKIT_URL=wss://heallink-dev-jvc8ya2i.livekit.cloud
       - LIVEKIT_API_KEY=APIg4HSyNcniUrh
@@ -164,6 +169,32 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  ai-agent:
+    build:
+      context: .
+      dockerfile: ./apps/ai-engine/Dockerfile.agent
+    container_name: heallink-ai-agent
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./apps/ai-engine:/app/apps/ai-engine
+      - ./logs:/app/logs
+      - ai-engine-cache:/root/.cache # Cache for model downloads
+    env_file:
+      - ./apps/ai-engine/.env
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app
+      - PORT=8001
+      - HOST=0.0.0.0
+      # LiveKit connection settings will come from .env file
+    networks:
+      - heallink-network
+    depends_on:
+      - avatar-engine
+    restart: unless-stopped
 
   mongodb:
     image: mongo:latest

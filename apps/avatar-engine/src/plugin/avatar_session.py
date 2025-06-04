@@ -14,11 +14,16 @@ from loguru import logger
 
 # Optional LiveKit imports for when LiveKit is available
 try:
-    from livekit import Room, RemoteAudioTrack, LocalVideoTrack, LocalAudioTrack
+    from livekit import rtc
     from livekit.agents import AgentSession
     from livekit.agents.job import JobContext
+    Room = rtc.Room
+    RemoteAudioTrack = rtc.RemoteAudioTrack
+    LocalVideoTrack = rtc.LocalVideoTrack
+    LocalAudioTrack = rtc.LocalAudioTrack
     LIVEKIT_AVAILABLE = True
-except ImportError:
+    logger.info("LiveKit SDK loaded successfully")
+except ImportError as e:
     # Create mock classes for standalone mode
     Room = None
     RemoteAudioTrack = None
@@ -27,7 +32,7 @@ except ImportError:
     AgentSession = None
     JobContext = None
     LIVEKIT_AVAILABLE = False
-    logger.warning("LiveKit not available - running in standalone mode")
+    logger.warning(f"LiveKit not available - running in standalone mode: {e}")
 
 from config.settings import AvatarConfig
 from renderer.avatar_renderer import AvatarRenderer
@@ -258,24 +263,34 @@ class AvatarSession:
         """Start video streaming to room."""
         logger.debug("Starting video streaming")
         
-        # Create video track
-        self.video_track = LocalVideoTrack.create_video_track()
-        
-        # Start rendering loop
-        asyncio.create_task(self._render_loop())
-        
-        # Publish video track to room
-        if self.room:
-            await self.room.local_participant.publish_track(
-                self.video_track,
-                options={
-                    "name": f"avatar_{self.avatar_id}",
-                    "source": "camera"
-                }
-            )
-        
-        self.is_streaming = True
-        logger.debug("Video streaming started")
+        try:
+            from livekit import rtc
+            
+            # Create a custom video track for the avatar
+            self.video_source = rtc.VideoSource(1920, 1080)
+            self.video_track = rtc.LocalVideoTrack.create_video_track("avatar-video", self.video_source)
+            
+            # Publish video track to room
+            if self.room:
+                publish_options = rtc.TrackPublishOptions()
+                publish_options.source = rtc.TrackSource.SOURCE_CAMERA
+                
+                await self.room.local_participant.publish_track(
+                    self.video_track,
+                    publish_options
+                )
+                logger.info(f"Published avatar video track: avatar_{self.avatar_id}")
+            
+            # Set streaming flag BEFORE starting render loop
+            self.is_streaming = True
+            logger.debug("Video streaming started")
+            
+            # Start rendering loop that will feed frames to the track
+            asyncio.create_task(self._render_loop())
+            
+        except Exception as e:
+            logger.error(f"Failed to start video streaming: {e}")
+            raise
     
     async def _subscribe_to_agent_audio(self) -> None:
         """Subscribe to agent audio output for lip syncing."""
@@ -318,7 +333,7 @@ class AvatarSession:
     
     async def _render_loop(self) -> None:
         """Main rendering loop."""
-        logger.debug("Starting render loop")
+        logger.info("🎬 Starting render loop for 3D avatar")
         
         frame_interval = 1.0 / self.config.video.fps
         
@@ -329,10 +344,29 @@ class AvatarSession:
                 # Render frame
                 if self.renderer:
                     frame = await self.renderer.render_frame()
+                    logger.info(f"🎨 Rendered frame: {frame.shape if frame is not None else 'None'}")
                     
                     # Send frame to video track
                     if self.video_track and frame is not None:
-                        await self.video_track.capture_frame(frame)
+                        # Convert numpy frame to LiveKit VideoFrame
+                        from livekit import rtc
+                        import cv2
+                        
+                        # Convert BGR to RGB (OpenCV uses BGR, LiveKit expects RGB)
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        
+                        # Create VideoFrame from numpy array
+                        # Frame should be in RGB format, shape (height, width, 3)
+                        video_frame = rtc.VideoFrame(
+                            width=frame_rgb.shape[1],
+                            height=frame_rgb.shape[0],
+                            type=rtc.VideoBufferType.RGB24,
+                            data=frame_rgb.tobytes()
+                        )
+                        
+                        # Publish frame to the video source
+                        self.video_source.capture_frame(video_frame)
+                        logger.info(f"📤 Published video frame {self.metrics['frames_rendered']}")
                     
                     self.metrics["frames_rendered"] += 1
                 
@@ -373,6 +407,52 @@ class AvatarSession:
         
         except Exception as e:
             logger.error(f"Error processing audio: {e}")
+    
+    async def start_livekit_streaming(self, livekit_url: str, livekit_token: str, room_name: str) -> None:
+        """
+        Start LiveKit video streaming by connecting to a LiveKit room.
+        
+        Args:
+            livekit_url: LiveKit server URL
+            livekit_token: JWT token for authentication
+            room_name: Name of the room to join
+        """
+        try:
+            logger.info(f"Starting LiveKit streaming to room: {room_name}")
+            
+            # Import LiveKit components (only when needed)
+            from livekit import rtc
+            
+            # Connect to LiveKit room as the avatar
+            self.room = rtc.Room()
+            
+            # Set up event handlers for the room
+            @self.room.on("participant_connected")
+            def on_participant_connected(participant):
+                logger.info(f"Participant connected: {participant.identity}")
+            
+            @self.room.on("participant_disconnected")
+            def on_participant_disconnected(participant):
+                logger.info(f"Participant disconnected: {participant.identity}")
+            
+            # Connect to the room
+            await self.room.connect(livekit_url, livekit_token)
+            logger.info(f"Avatar connected to LiveKit room: {room_name}")
+            
+            # Start video streaming
+            await self._start_video_streaming()
+            
+            # Start audio processing for lip sync
+            await self._setup_audio_pipeline()
+            
+            logger.info("LiveKit streaming started successfully")
+            
+        except ImportError:
+            logger.error("LiveKit SDK not available - cannot start streaming")
+            raise Exception("LiveKit SDK not installed")
+        except Exception as e:
+            logger.error(f"Failed to start LiveKit streaming: {e}")
+            raise
     
     def get_metrics(self) -> Dict[str, Any]:
         """

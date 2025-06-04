@@ -105,7 +105,7 @@ class PerformanceConfig(BaseModel):
     """Performance and resource configuration."""
     
     gpu_enabled: bool = Field(default=False, description="Enable GPU acceleration")
-    max_concurrent_avatars: int = Field(default=10, description="Max concurrent avatars")
+    max_concurrent_avatars: int = Field(default=100, description="Max concurrent avatars")
     memory_limit_mb: int = Field(default=2048, description="Memory limit in MB")
     cpu_cores: Optional[int] = Field(default=None, description="CPU cores to use")
     
@@ -124,6 +124,11 @@ class AvatarConfig(BaseModel):
     host: str = Field(default="0.0.0.0", description="Host to bind to")
     port: int = Field(default=8080, description="Port to bind to")
     debug: bool = Field(default=False, description="Enable debug mode")
+    
+    # Debug rendering options
+    debug_wireframe: bool = Field(default=False, description="Show wireframe overlay")
+    debug_vertices: bool = Field(default=False, description="Show vertex points")
+    debug_overlay: bool = Field(default=True, description="Show debug info overlay")
     
     # Paths
     assets_path: Path = Field(default=Path("assets"), description="Assets directory path")
@@ -168,6 +173,11 @@ class AvatarConfig(BaseModel):
         config.port = int(os.getenv("AVATAR_ENGINE_PORT", str(config.port)))
         config.debug = os.getenv("DEBUG", "false").lower() == "true"
         config.log_level = os.getenv("LOG_LEVEL", config.log_level)
+        
+        # Debug rendering options
+        config.debug_wireframe = os.getenv("DEBUG_WIREFRAME", "false").lower() == "true"
+        config.debug_vertices = os.getenv("DEBUG_VERTICES", "false").lower() == "true"
+        config.debug_overlay = os.getenv("DEBUG_OVERLAY", "true").lower() == "true"
         
         # Load LiveKit config from environment
         config.livekit = LiveKitConfig.from_env()
