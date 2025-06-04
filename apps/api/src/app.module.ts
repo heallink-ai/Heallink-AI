@@ -12,6 +12,7 @@ import { LoggingModule } from './modules/logging/logging.module';
 import { EmailModule } from './modules/emails/email.module';
 import { AwsModule } from './modules/aws';
 import * as Joi from 'joi';
+import { ProvidersModule } from './modules/providers/providers.module';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import * as Joi from 'joi';
     AuthModule,
     EmailModule,
     AwsModule,
+    ProvidersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

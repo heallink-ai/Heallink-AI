@@ -1,52 +1,52 @@
 services:
-  heallink:
-    build:
-      context: .
-      dockerfile: ./apps/heallink/Dockerfile.dev
-    container_name: heallink
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./apps/heallink:/app/apps/heallink
-      - ./packages:/app/packages
-      - heallink-node-modules:/app/apps/heallink/node_modules
-    environment:
-      - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-      # For browser-side requests (must be accessible from user's browser)
-      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
-      # For server-side requests (within Docker network)
-      - API_URL=http://api:3003/api/v1
-    depends_on:
-      - api
-    networks:
-      - heallink-network
-    restart: unless-stopped
+  # heallink:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/heallink/Dockerfile.dev
+  #   container_name: heallink
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./apps/heallink:/app/apps/heallink
+  #     - ./packages:/app/packages
+  #     - heallink-node-modules:/app/apps/heallink/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     # For browser-side requests (must be accessible from user's browser)
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+  #     # For server-side requests (within Docker network)
+  #     - API_URL=http://api:3003/api/v1
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - heallink-network
+  #   restart: unless-stopped
 
-  heallink-admin:
-    build:
-      context: .
-      dockerfile: ./apps/heallink-admin/Dockerfile.dev
-    container_name: heallink-admin
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./apps/heallink-admin:/app/apps/heallink-admin
-      - ./packages:/app/packages
-      - heallink-admin-node-modules:/app/apps/heallink-admin/node_modules
-    environment:
-      - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-      - PORT=3001
-      - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
-      - API_URL=http://api:3003/api/v1
-      - NEXTAUTH_URL=http://localhost:3001
-      - NEXTAUTH_SECRET=heallink-admin-dev-auth-secret-key-123
-    depends_on:
-      - api
-    networks:
-      - heallink-network
-    restart: unless-stopped
+  # heallink-admin:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/heallink-admin/Dockerfile.dev
+  #   container_name: heallink-admin
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #     - ./apps/heallink-admin:/app/apps/heallink-admin
+  #     - ./packages:/app/packages
+  #     - heallink-admin-node-modules:/app/apps/heallink-admin/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #     - NEXT_TELEMETRY_DISABLED=1
+  #     - PORT=3001
+  #     - NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+  #     - API_URL=http://api:3003/api/v1
+  #     - NEXTAUTH_URL=http://localhost:3001
+  #     - NEXTAUTH_SECRET=heallink-admin-dev-auth-secret-key-123
+  #   depends_on:
+  #     - api
+  #   networks:
+  #     - heallink-network
+  #   restart: unless-stopped
 
   heallink-providers:
     build:
