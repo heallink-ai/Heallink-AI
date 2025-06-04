@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -38,6 +38,18 @@ class AvatarConfig(BaseSettings):
         description="Avatar image resolution (width, height)"
     )
     
+    @field_validator('avatar_image_size', mode='before')
+    @classmethod
+    def parse_avatar_image_size(cls, v):
+        """Parse avatar image size from string or keep as tuple."""
+        if isinstance(v, str):
+            try:
+                width, height = map(int, v.split(','))
+                return (width, height)
+            except (ValueError, TypeError):
+                return (512, 512)  # Default fallback
+        return v
+    
     # Performance configuration
     max_concurrent_sessions: int = Field(
         default=10,
@@ -69,7 +81,7 @@ class AvatarConfig(BaseSettings):
     log_file: Optional[Path] = Field(default=None, description="Log file path")
     
     class Config:
-        env_prefix = "AVATAR_"
+        env_prefix = ""
         case_sensitive = False
         
     def __post_init__(self) -> None:

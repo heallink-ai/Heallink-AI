@@ -141,28 +141,8 @@ services:
       - ./logs:/app/logs
       - avatar-engine-models:/app/models
       - avatar-engine-temp:/tmp/avatar_engine
-    environment:
-      # LiveKit Configuration
-      - AVATAR_LIVEKIT_URL=wss://heallink-dev-jvc8ya2i.livekit.cloud
-      - AVATAR_LIVEKIT_API_KEY=APIg4HSyNcniUrh
-      - AVATAR_LIVEKIT_API_SECRET=zOpB6T7Li049CauuJ6UcuAbYHrwJZygj8H9avh0rdkC
-      
-      # Avatar Engine Configuration
-      - AVATAR_HOST=0.0.0.0
-      - AVATAR_PORT=8080
-      - AVATAR_DEBUG=true
-      - AVATAR_LOG_LEVEL=INFO
-      - AVATAR_DEVICE=cpu  # Use CPU for development
-      - AVATAR_MAX_CONCURRENT_SESSIONS=5
-      - AVATAR_VIDEO_FPS=30
-      - AVATAR_ENABLE_GPU_ACCELERATION=false
-      
-      # Paths
-      - AVATAR_MODELS_PATH=/app/models
-      - AVATAR_ASSETS_PATH=/app/assets
-      - AVATAR_TEMP_PATH=/tmp/avatar_engine
-      - AVATAR_DEFAULT_AVATAR_IMAGE=/app/assets/avatars/default.png
-      - AVATAR_LOG_FILE=/app/logs/avatar-engine-v2.log
+    env_file:
+      - ./apps/avatar-engine/.env
     networks:
       - heallink-network
     restart: unless-stopped

@@ -33,7 +33,6 @@ from livekit.agents import (
 )
 from livekit.plugins import (
     openai,
-    cartesia,
     deepgram,
     noise_cancellation,
     silero,
@@ -337,9 +336,9 @@ async def entrypoint(ctx: JobContext):
                 temperature=0.3,
                 max_completion_tokens=150,
             ),
-            tts=cartesia.TTS(
-                voice="95856005-0332-41b0-935f-352e296aa0df",
-                speed=0.9,
+            tts=openai.TTS(
+                voice="alloy",
+                speed=1.0,
             ),
             vad=silero.VAD.load(
                 min_speech_duration=0.2,

@@ -34,9 +34,9 @@ CMD echo "Starting model download check..." && \
     [ ! -f ~/.cache/livekit/silero/silero_vad.onnx ] || \
     [ ! -f ~/.cache/livekit/noise-cancellation/bvccfg.bin ]; then \
     echo "Downloading model files..." && \
-    python avatar_agent_test.py download-files; \
+    python avatar_agent_v2.py download-files; \
     else \
     echo "Model files already exist, skipping download."; \
     fi && \
-    echo "Starting Heallink Agent in dev mode..." && \
-    python avatar_agent_test.py dev
+    echo "Starting Heallink Agent v2 with MuseTalk integration..." && \
+    python avatar_agent_v2.py dev

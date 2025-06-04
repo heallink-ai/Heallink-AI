@@ -86,7 +86,7 @@ class LiveKitStreamer:
         """Setup video source and track for publishing."""
         try:
             # Create video source with avatar dimensions
-            width, height = self.config.avatar_image_size
+            width, height = getattr(self.config, 'avatar_image_size', (512, 512))
             self.video_source = rtc.VideoSource(width, height)
             
             # Create local video track
@@ -173,7 +173,7 @@ class LiveKitStreamer:
             
             # Ensure frame is the correct size
             height, width = frame_rgb.shape[:2]
-            target_width, target_height = self.config.avatar_image_size
+            target_width, target_height = getattr(self.config, 'avatar_image_size', (512, 512))
             
             if width != target_width or height != target_height:
                 frame_rgb = cv2.resize(frame_rgb, (target_width, target_height))

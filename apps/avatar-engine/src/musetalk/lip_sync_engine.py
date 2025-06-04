@@ -213,7 +213,7 @@ class MuseTalkLipSyncEngine:
                 raise ValueError(f"Could not load image: {image_path}")
             
             # Resize to standard size
-            target_size = self.config.avatar_image_size
+            target_size = getattr(self.config, 'avatar_image_size', (512, 512))
             image = cv2.resize(image, target_size)
             
             # Detect face region and landmarks
@@ -482,7 +482,7 @@ class MuseTalkLipSyncEngine:
             decoded_image = cv2.cvtColor(decoded_image, cv2.COLOR_RGB2BGR)
             
             # Resize back to avatar size
-            decoded_image = cv2.resize(decoded_image, self.config.avatar_image_size)
+            decoded_image = cv2.resize(decoded_image, getattr(self.config, 'avatar_image_size', (512, 512)))
             
             # Blend with original image (only update mouth region)
             result_image = self.current_avatar_image.copy()
