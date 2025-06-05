@@ -167,6 +167,8 @@ export class EmailService {
       this.logger.error(
         'Frontend URL not configured properly for password reset email',
       );
+      // Without a valid URL we cannot generate a proper reset link
+      return false;
     }
 
     const resetLink = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
