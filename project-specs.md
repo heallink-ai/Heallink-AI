@@ -93,7 +93,7 @@ And the root `tsconfig.json` uses `references` to each package for fast, isolate
 /apps
 /heallink-admin # Next.js admin panel
 /heallink # Next.js user portal
-/heallink-provider # Next.js provider portal
+/heallink-providers # Next.js provider portal
 /libs
 /ui # Shared React components
 /hooks # Shared React hooks
