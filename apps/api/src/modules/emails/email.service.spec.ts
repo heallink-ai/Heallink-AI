@@ -119,6 +119,9 @@ describe('EmailService', () => {
         subject: 'Reset Your Heallink Password',
         html: expect.any(String),
       });
+
+      const html = (sendSpy.mock.calls[0][0] as any).html as string;
+      expect(html).toContain(token);
     });
   });
 
