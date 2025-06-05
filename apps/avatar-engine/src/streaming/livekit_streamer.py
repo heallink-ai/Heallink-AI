@@ -59,17 +59,27 @@ class LiveKitStreamer:
         try:
             logger.info(f"Connecting to LiveKit room: {livekit_url}")
             
+            # Add a small delay to allow the room to be established
+            await asyncio.sleep(2)
+            
             # Create room instance
-            self.room = rtc.Room(
-                adaptive_stream=True,
-                dynacast=True,
-            )
+            self.room = rtc.Room()
             
             # Setup room event handlers
             self._setup_room_events()
             
-            # Connect to the room
-            await self.room.connect(livekit_url, livekit_token)
+            # Connect to the room with retries
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"Connection attempt {attempt + 1}/{max_retries}")
+                    await self.room.connect(livekit_url, livekit_token)
+                    break
+                except Exception as e:
+                    if attempt == max_retries - 1:
+                        raise e
+                    logger.warning(f"Connection attempt {attempt + 1} failed: {e}, retrying in 3 seconds...")
+                    await asyncio.sleep(3)
             
             # Create video source and track
             await self._setup_video_publishing()

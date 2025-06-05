@@ -33,22 +33,7 @@ class AvatarConfig(BaseSettings):
         default=Path("/app/assets/avatars/default.png"),
         description="Default avatar image path"
     )
-    avatar_image_size: tuple[int, int] = Field(
-        default=(512, 512),
-        description="Avatar image resolution (width, height)"
-    )
-    
-    @field_validator('avatar_image_size', mode='before')
-    @classmethod
-    def parse_avatar_image_size(cls, v):
-        """Parse avatar image size from string or keep as tuple."""
-        if isinstance(v, str):
-            try:
-                width, height = map(int, v.split(','))
-                return (width, height)
-            except (ValueError, TypeError):
-                return (512, 512)  # Default fallback
-        return v
+    # Removed avatar_image_size - using hardcoded (512, 512) in code with getattr
     
     # Performance configuration
     max_concurrent_sessions: int = Field(

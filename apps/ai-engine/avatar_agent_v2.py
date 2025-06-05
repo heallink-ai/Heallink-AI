@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 # Avatar Engine v2.0 Configuration
 AVATAR_ENGINE_URL = os.getenv("AVATAR_ENGINE_URL", "http://avatar-engine:8080")
 USE_MUSETALK_AVATAR = os.getenv("USE_MUSETALK_AVATAR", "true").lower() == "true"
-AVATAR_IMAGE_PATH = os.getenv("AVATAR_IMAGE_PATH", "/app/assets/avatars/default.jpg")
+AVATAR_IMAGE_PATH = os.getenv("AVATAR_IMAGE_PATH", "/app/assets/avatars/default.png")
 
 class MuseTalkAvatarSession:
     """
