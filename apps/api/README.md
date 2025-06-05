@@ -42,6 +42,8 @@ APPLE_ID=your-apple-id
 APPLE_SECRET=your-apple-secret
 ```
 
+> **Note**: The Facebook OAuth variables were previously named `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET`. They have been renamed to `FACEBOOK_CLIENT_ID` and `FACEBOOK_CLIENT_SECRET`.
+
 ## Running the app
 
 ```bash
