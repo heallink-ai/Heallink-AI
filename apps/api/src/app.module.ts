@@ -47,8 +47,8 @@ import { ProvidersModule } from './modules/providers/providers.module';
         // OAuth providers
         GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
         GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
-        FACEBOOK_APP_ID: Joi.string().optional().allow(''),
-        FACEBOOK_APP_SECRET: Joi.string().optional().allow(''),
+        FACEBOOK_CLIENT_ID: Joi.string().optional().allow(''),
+        FACEBOOK_CLIENT_SECRET: Joi.string().optional().allow(''),
         APPLE_CLIENT_ID: Joi.string().optional().allow(''),
         APPLE_TEAM_ID: Joi.string().optional().allow(''),
         APPLE_KEY_ID: Joi.string().optional().allow(''),
@@ -86,8 +86,8 @@ import { ProvidersModule } from './modules/providers/providers.module';
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           },
           facebook: {
-            appId: process.env.FACEBOOK_APP_ID,
-            appSecret: process.env.FACEBOOK_APP_SECRET,
+            appId: process.env.FACEBOOK_CLIENT_ID,
+            appSecret: process.env.FACEBOOK_CLIENT_SECRET,
           },
           apple: {
             clientId: process.env.APPLE_CLIENT_ID,
