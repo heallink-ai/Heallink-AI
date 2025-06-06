@@ -1,0 +1,1 @@
+- Always make sure that for every task or feature you are asked to implement you also go through the CLAUDE.md file and make sure it is aligning with it before continuing
