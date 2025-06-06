@@ -209,3 +209,11 @@ npm run clean
 
 ---
 For full details on each service, see the individual READMEs inside the `apps/` directory.
+
+## Deploying the Heallink App to Vercel
+
+The repository now includes a `vercel.json` file that tells Vercel to build the
+user application located in `apps/heallink`. When connecting this GitHub repo to
+Vercel, ensure the **root directory** is set to the repository root so that the
+configuration file is picked up. Vercel will then execute the build for the
+`apps/heallink` project automatically on every push to `main`.
