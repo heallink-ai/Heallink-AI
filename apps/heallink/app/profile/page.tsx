@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
-import { ProfileContainer } from '@/app/features/profile/containers/ProfileContainer';
+import ProfileContainer from '@/app/features/profile/containers/ProfileContainer';
 
 export default function ProfilePage() {
   return (
