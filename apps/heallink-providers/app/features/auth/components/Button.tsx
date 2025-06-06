@@ -10,7 +10,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-[#5a2dcf] to-[#2066e4] text-white font-semibold shadow-lg hover:shadow-xl hover:from-[#5a2dcf]/90 hover:to-[#2066e4]/90 active:scale-95",
+        default: "bg-[#5a2dcf] bg-gradient-to-r from-[#5a2dcf] to-[#2066e4] !text-white font-bold shadow-lg hover:shadow-xl hover:from-[#4a1faf] hover:to-[#1650c4] active:scale-95 !border-0",
         secondary: "bg-[color:var(--secondary)] text-white hover:bg-[color:var(--secondary)]/90",
         outline: "border border-gray-300 dark:border-gray-600 bg-transparent text-[color:var(--foreground)] hover:bg-[color:var(--muted)] neumorph-flat",
         ghost: "bg-transparent text-[color:var(--foreground)] hover:bg-[color:var(--muted)]",
@@ -52,8 +52,7 @@ export function Button({
     <button
       className={cn(
         buttonVariants({ variant, size, className }),
-        isPressed && "scale-95",
-        variant === "default" && "neumorph-button"
+        isPressed && "scale-95"
       )}
       disabled={disabled || loading}
       onMouseDown={() => setIsPressed(true)}
