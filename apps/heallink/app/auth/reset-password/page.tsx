@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/app/components/auth/AuthLayout";
@@ -8,7 +10,9 @@ import Button from "@/app/components/ui/Button";
 import { useResetPassword } from "@/app/hooks/auth/use-auth";
 import { ApiError } from "@/app/api-types";
 
-export default function ResetPasswordPage() {
+import { Suspense } from "react";
+
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -233,5 +237,13 @@ export default function ResetPasswordPage() {
         </div>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
