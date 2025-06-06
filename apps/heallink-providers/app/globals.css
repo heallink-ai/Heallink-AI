@@ -160,7 +160,7 @@
   }
 
   .neumorph-button {
-    @apply dark:shadow-[4px_4px_8px_#101010,_-4px_-4px_8px_#303030] shadow-[4px_4px_8px_#d1d5db,_-4px_-4px_8px_#ffffff] bg-transparent transition-all duration-200 hover:shadow-[2px_2px_4px_#d1d5db,_-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#101010,_-2px_-2px_4px_#303030] active:shadow-[inset_2px_2px_4px_#d1d5db,_inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#101010,_inset_-2px_-2px_4px_#303030];
+    @apply dark:shadow-[4px_4px_8px_#101010,_-4px_-4px_8px_#303030] shadow-[4px_4px_8px_#d1d5db,_-4px_-4px_8px_#ffffff] transition-all duration-200 hover:shadow-[2px_2px_4px_#d1d5db,_-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#101010,_-2px_-2px_4px_#303030] active:shadow-[inset_2px_2px_4px_#d1d5db,_inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#101010,_inset_-2px_-2px_4px_#303030];
   }
 
   .neumorph-card {

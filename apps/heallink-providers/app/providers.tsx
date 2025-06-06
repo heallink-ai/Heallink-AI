@@ -1,8 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
-import ThemeProvider from "@/app/theme/ThemeProvider";
-import ReactQueryProvider from "@/app/lib/react-query/provider";
+import { QueryProvider } from "./providers/QueryProvider";
 
 export default function Providers({
   children,
@@ -11,9 +10,9 @@ export default function Providers({
 }>) {
   return (
     <SessionProvider>
-      <ReactQueryProvider>
-        <ThemeProvider>{children}</ThemeProvider>
-      </ReactQueryProvider>
+      <QueryProvider>
+        {children}
+      </QueryProvider>
     </SessionProvider>
   );
 }
