@@ -29,9 +29,9 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
 
         <div
           className={cn(
-            "relative rounded-xl transition-all duration-300 neumorph-input",
-            focused && "ring-2 ring-purple-heart/30 shadow-[inset_6px_6px_12px_#e6eaf6,_inset_-6px_-6px_12px_#ffffff] dark:shadow-[inset_6px_6px_12px_#0f1222,_inset_-6px_-6px_12px_#1f2545]",
-            error && "ring-2 ring-red-500/30"
+            "relative rounded-xl transition-all duration-300",
+            focused ? "neumorph-input-purple ring-2 ring-purple-heart/40" : "neumorph-input",
+            error && "ring-2 ring-red-500/40 border-red-500/40"
           )}
         >
           <div className="flex items-center">

@@ -1,5 +1,5 @@
-import { VerifyOTPPageContainer } from "@/features/auth";
+import { VerifyOTPPage } from "@/features/auth";
 
-export default function VerifyOTPPage() {
-  return <VerifyOTPPageContainer />;
+export default function Page() {
+  return <VerifyOTPPage />;
 }

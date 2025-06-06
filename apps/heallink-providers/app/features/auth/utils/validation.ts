@@ -3,10 +3,19 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
   phone: z.string().min(10, 'Please enter a valid phone number').optional().or(z.literal('')),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
+  password: z.string().optional(),
   remember: z.boolean().default(false),
 }).refine((data) => data.email || data.phone, {
   message: "Please provide either email or phone number",
+}).refine((data) => {
+  // Password is required only for email authentication
+  if (data.email && !data.phone) {
+    return data.password && data.password.length >= 8;
+  }
+  return true;
+}, {
+  message: "Password must be at least 8 characters long",
+  path: ["password"],
 });
 
 const signupStepOneBase = z.object({

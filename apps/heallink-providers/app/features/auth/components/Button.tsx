@@ -10,9 +10,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-purple-heart to-royal-blue text-white shadow-lg hover:shadow-xl hover:from-purple-heart/90 hover:to-royal-blue/90",
+        default: "bg-gradient-to-r from-[#5a2dcf] to-[#2066e4] text-white font-semibold shadow-lg hover:shadow-xl hover:from-[#5a2dcf]/90 hover:to-[#2066e4]/90 active:scale-95",
         secondary: "bg-[color:var(--secondary)] text-white hover:bg-[color:var(--secondary)]/90",
-        outline: "border-2 border-[color:var(--border)] bg-transparent text-[color:var(--foreground)] hover:bg-[color:var(--muted)] neumorph-flat",
+        outline: "border border-gray-300 dark:border-gray-600 bg-transparent text-[color:var(--foreground)] hover:bg-[color:var(--muted)] neumorph-flat",
         ghost: "bg-transparent text-[color:var(--foreground)] hover:bg-[color:var(--muted)]",
         destructive: "bg-red-500 text-white hover:bg-red-600",
       },

@@ -10,7 +10,7 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { Button } from "../components/Button";
 import { useAuth } from "../hooks/useAuth";
 
-export function VerifyOTPPageContainer() {
+export function VerifyOTPPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);

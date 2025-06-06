@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, UserCheck, Activity } from "lucide-react";
+import { Shield, Zap, Settings, Plus } from "lucide-react";
 
-import { LoginContainer } from "./LoginContainer";
+import { SignupFormContainer } from "./SignupFormContainer";
 import { LogoSection } from "../components/LogoSection";
 import { ThemeToggle } from "../components/ThemeToggle";
 
-export function LoginPageContainer() {
+export function SignupPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -43,7 +43,7 @@ export function LoginPageContainer() {
             opacity: [0.3, 0.6, 0.3],
           }}
           transition={{ 
-            duration: 8,
+            duration: 6,
             repeat: Infinity,
             ease: "easeInOut"
           }}
@@ -55,7 +55,21 @@ export function LoginPageContainer() {
             opacity: [0.4, 0.7, 0.4],
           }}
           transition={{ 
-            duration: 6,
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1.5
+          }}
+        />
+        <motion.div 
+          className="absolute top-20 right-20 w-32 h-32 bg-biloba-flower/30 rounded-full filter blur-2xl"
+          animate={{ 
+            x: [0, 20, 0],
+            y: [0, -15, 0],
+            opacity: [0.2, 0.5, 0.2],
+          }}
+          transition={{ 
+            duration: 4,
             repeat: Infinity,
             ease: "easeInOut",
             delay: 2
@@ -72,87 +86,111 @@ export function LoginPageContainer() {
             <LogoSection />
           </motion.div>
 
-          {/* Main content */}
+          {/* Main illustration area */}
           <div className="flex-1 flex flex-col items-center justify-center">
             <motion.div 
-              className="max-w-md w-full text-center mb-8"
+              className="max-w-lg w-full text-center mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <h2 className="text-4xl font-bold text-[color:var(--foreground)] mb-4">
-                Welcome Back to
-                <span className="gradient-text block">Heallink Providers</span>
+                Join the Future of
+                <span className="gradient-text block">Healthcare Delivery</span>
               </h2>
-              <p className="text-lg text-[color:var(--muted-foreground)]">
-                Your trusted platform for managing patient care and practice operations
+              <p className="text-lg text-[color:var(--muted-foreground)] leading-relaxed">
+                Transform your practice with cutting-edge tools, seamless patient management, and intelligent insights.
               </p>
             </motion.div>
 
-            {/* Feature highlights */}
+            {/* Feature illustration */}
             <motion.div 
-              className="grid grid-cols-1 gap-4 w-full max-w-md"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+              className="relative w-80 h-80 neumorph-card rounded-3xl p-8 mb-8"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
+              whileHover={{ scale: 1.02 }}
             >
+              <div className="w-full h-full flex items-center justify-center">
+                <motion.div
+                  animate={{ 
+                    rotateY: [0, 180, 360],
+                  }}
+                  transition={{ 
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Plus className="w-32 h-32 text-purple-heart opacity-80" />
+                </motion.div>
+              </div>
               <motion.div 
-                className="neumorph-card p-4 rounded-xl flex items-center gap-4"
-                whileHover={{ scale: 1.02, x: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-heart/10 to-royal-blue/10">
-                  <Shield className="w-6 h-6 text-purple-heart" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-[color:var(--foreground)]">HIPAA Compliant</h3>
-                  <p className="text-sm text-[color:var(--muted-foreground)]">Your data is secure and protected</p>
-                </div>
-              </motion.div>
-
+                className="absolute -top-2 -right-2 w-6 h-6 bg-purple-heart rounded-full"
+                animate={{ 
+                  scale: [1, 1.4, 1],
+                  rotate: [0, 180, 360]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
               <motion.div 
-                className="neumorph-card p-4 rounded-xl flex items-center gap-4"
-                whileHover={{ scale: 1.02, x: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="p-3 rounded-lg bg-gradient-to-br from-royal-blue/10 to-havelock-blue/10">
-                  <UserCheck className="w-6 h-6 text-royal-blue" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-[color:var(--foreground)]">Patient Management</h3>
-                  <p className="text-sm text-[color:var(--muted-foreground)]">Streamline your practice workflow</p>
-                </div>
-              </motion.div>
-
-              <motion.div 
-                className="neumorph-card p-4 rounded-xl flex items-center gap-4"
-                whileHover={{ scale: 1.02, x: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="p-3 rounded-lg bg-gradient-to-br from-havelock-blue/10 to-portage/10">
-                  <Activity className="w-6 h-6 text-havelock-blue" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-[color:var(--foreground)]">Real-time Analytics</h3>
-                  <p className="text-sm text-[color:var(--muted-foreground)]">Track your practice performance</p>
-                </div>
-              </motion.div>
+                className="absolute -bottom-2 -left-2 w-4 h-4 bg-royal-blue rounded-full"
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  rotate: [360, 180, 0]
+                }}
+                transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+              />
             </motion.div>
           </div>
 
-          {/* Footer */}
+          {/* Provider benefits */}
           <motion.div 
-            className="text-center text-sm text-[color:var(--muted-foreground)]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            className="grid grid-cols-3 gap-3"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <p>Trusted by thousands of healthcare providers nationwide</p>
+            <motion.div 
+              className="neumorph-card p-3 rounded-xl text-center"
+              whileHover={{ scale: 1.1, y: -5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="flex justify-center mb-2">
+                <Shield className="w-6 h-6 text-purple-heart" />
+              </div>
+              <h3 className="font-medium text-xs text-[color:var(--foreground)]">Secure</h3>
+              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">HIPAA Compliant</p>
+            </motion.div>
+
+            <motion.div 
+              className="neumorph-card p-3 rounded-xl text-center"
+              whileHover={{ scale: 1.1, y: -5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="flex justify-center mb-2">
+                <Zap className="w-6 h-6 text-royal-blue" />
+              </div>
+              <h3 className="font-medium text-xs text-[color:var(--foreground)]">Fast</h3>
+              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">AI-Powered</p>
+            </motion.div>
+
+            <motion.div 
+              className="neumorph-card p-3 rounded-xl text-center"
+              whileHover={{ scale: 1.1, y: -5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="flex justify-center mb-2">
+                <Settings className="w-6 h-6 text-havelock-blue" />
+              </div>
+              <h3 className="font-medium text-xs text-[color:var(--foreground)]">Simple</h3>
+              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Easy Setup</p>
+            </motion.div>
           </motion.div>
         </div>
       </div>
 
-      {/* Right panel (login form) */}
+      {/* Right panel (signup form) */}
       <div className="w-full lg:w-1/2 flex flex-col p-6 md:p-10 lg:p-16">
         <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
           {/* Mobile only logo */}
@@ -174,10 +212,10 @@ export function LoginPageContainer() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <h1 className="text-3xl font-bold mb-3 text-[color:var(--foreground)]">
-                Sign in to your account
+                Create Your Provider Account
               </h1>
               <p className="text-[color:var(--muted-foreground)]">
-                Access your provider dashboard and manage your practice
+                Join thousands of healthcare providers using Heallink to deliver exceptional patient care
               </p>
             </motion.div>
 
@@ -186,7 +224,7 @@ export function LoginPageContainer() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <LoginContainer />
+              <SignupFormContainer />
             </motion.div>
           </div>
 

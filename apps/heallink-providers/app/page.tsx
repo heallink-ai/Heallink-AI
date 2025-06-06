@@ -1,5 +1,5 @@
-import { LoginPageContainer } from "@/features/auth";
+import { LoginPage } from "@/features/auth";
 
-export default function LoginPage() {
-  return <LoginPageContainer />;
+export default function Page() {
+  return <LoginPage />;
 }

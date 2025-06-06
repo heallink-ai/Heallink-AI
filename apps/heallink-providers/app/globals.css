@@ -150,66 +150,86 @@
 
 /* Custom utilities */
 @layer utilities {
-  /* Neumorphic design classes */
+  /* Neumorphic design classes - improved for dark mode */
   .neumorph-flat {
-    @apply dark:shadow-[6px_6px_12px_#101010,_-6px_-6px_12px_#303030] shadow-[6px_6px_12px_#cacaca,_-6px_-6px_12px_#ffffff] bg-transparent;
+    @reference dark:shadow-[6px_6px_12px_#0a0a0a,_-6px_-6px_12px_#1a1a1a] shadow-[6px_6px_12px_#d0d0d0,_-6px_-6px_12px_#ffffff] bg-transparent;
   }
 
   .neumorph-pressed {
-    @apply dark:shadow-[inset_6px_6px_12px_#101010,_inset_-6px_-6px_12px_#303030] shadow-[inset_6px_6px_12px_#cacaca,_inset_-6px_-6px_12px_#ffffff] bg-transparent;
+    @reference dark:shadow-[inset_6px_6px_12px_#0a0a0a,_inset_-6px_-6px_12px_#1a1a1a] shadow-[inset_6px_6px_12px_#d0d0d0,_inset_-6px_-6px_12px_#ffffff] bg-transparent;
   }
 
   .neumorph-button {
-    @apply dark:shadow-[4px_4px_8px_#101010,_-4px_-4px_8px_#303030] shadow-[4px_4px_8px_#d1d5db,_-4px_-4px_8px_#ffffff] transition-all duration-200 hover:shadow-[2px_2px_4px_#d1d5db,_-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#101010,_-2px_-2px_4px_#303030] active:shadow-[inset_2px_2px_4px_#d1d5db,_inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#101010,_inset_-2px_-2px_4px_#303030];
+    @reference dark:shadow-[4px_4px_8px_#0a0a0a,_-4px_-4px_8px_#1a1a1a] shadow-[4px_4px_8px_#d0d0d0,_-4px_-4px_8px_#ffffff] transition-all duration-200 hover:shadow-[2px_2px_4px_#d0d0d0,_-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#0a0a0a,_-2px_-2px_4px_#1a1a1a] active:shadow-[inset_2px_2px_4px_#d0d0d0,_inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#0a0a0a,_inset_-2px_-2px_4px_#1a1a1a];
   }
 
   .neumorph-card {
-    @apply dark:shadow-[8px_8px_16px_#0f1222,_-8px_-8px_16px_#1f2545] shadow-[8px_8px_16px_#e6eaf6,_-8px_-8px_16px_#ffffff] bg-[color:var(--card)] border-0;
+    @reference dark:shadow-[8px_8px_16px_#0a0a0a,_-8px_-8px_16px_#1a1a1a] shadow-[8px_8px_16px_#d0d0d0,_-8px_-8px_16px_#ffffff] bg-[color:var(--card)] border-0;
   }
 
   .neumorph-input {
-    @apply dark:shadow-[inset_4px_4px_8px_#0f1222,_inset_-4px_-4px_8px_#1f2545] shadow-[inset_4px_4px_8px_#e6eaf6,_inset_-4px_-4px_8px_#ffffff] bg-[color:var(--input)];
+    @reference dark:shadow-[inset_4px_4px_8px_#0a0a0a,_inset_-4px_-4px_8px_#1a1a1a] shadow-[inset_4px_4px_8px_#d0d0d0,_inset_-4px_-4px_8px_#ffffff] bg-[color:var(--input)];
   }
 
   /* Gradient text utility */
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-heart to-royal-blue;
+    @reference bg-clip-text text-transparent bg-gradient-to-r from-purple-heart to-royal-blue;
   }
 
   /* Brand colors for easier use */
-  .bg-purple-heart { background-color: #5a2dcf; }
-  .bg-royal-blue { background-color: #2066e4; }
-  .bg-biloba-flower { background-color: #bda8e5; }
-  .bg-portage { background-color: #9aa5ec; }
-  .bg-havelock-blue { background-color: #6578e4; }
-  
-  .text-purple-heart { color: #5a2dcf; }
-  .text-royal-blue { color: #2066e4; }
-  .text-biloba-flower { color: #bda8e5; }
-  .text-portage { color: #9aa5ec; }
-  .text-havelock-blue { color: #6578e4; }
+  .bg-purple-heart {
+    background-color: #5a2dcf;
+  }
+  .bg-royal-blue {
+    background-color: #2066e4;
+  }
+  .bg-biloba-flower {
+    background-color: #bda8e5;
+  }
+  .bg-portage {
+    background-color: #9aa5ec;
+  }
+  .bg-havelock-blue {
+    background-color: #6578e4;
+  }
+
+  .text-purple-heart {
+    color: #5a2dcf;
+  }
+  .text-royal-blue {
+    color: #2066e4;
+  }
+  .text-biloba-flower {
+    color: #bda8e5;
+  }
+  .text-portage {
+    color: #9aa5ec;
+  }
+  .text-havelock-blue {
+    color: #6578e4;
+  }
 
   /* Improved light mode text classes for better contrast */
   .light-nav-link {
-    @apply text-[color:var(--nav-text)] hover:text-[color:var(--nav-text-hover)];
+    @reference text-[color:var(--nav-text)] hover:text-[color:var(--nav-text-hover)];
   }
 
   /* We need darker text on light backgrounds for sufficient contrast */
   .light-text-contrast {
-    @apply dark:text-gray-300 text-gray-700;
+    @reference dark:text-gray-300 text-gray-700;
   }
 
   /* Specific button styles for better contrast */
   .header-btn-light {
-    @apply text-[color:var(--header-btn-text-light)] bg-[color:var(--header-btn-bg-light)];
+    @reference text-[color:var(--header-btn-text-light)] bg-[color:var(--header-btn-bg-light)];
   }
 
   .hero-text-light {
-    @apply text-[color:var(--hero-text-light)];
+    @reference text-[color:var(--hero-text-light)];
   }
 
   .app-store-btn-light {
-    @apply text-[color:var(--app-store-btn-text-light)] bg-[color:var(--app-store-btn-bg-light)];
+    @reference text-[color:var(--app-store-btn-text-light)] bg-[color:var(--app-store-btn-bg-light)];
   }
 }
 
