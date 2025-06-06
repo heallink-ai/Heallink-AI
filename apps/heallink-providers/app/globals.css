@@ -159,10 +159,35 @@
     @apply dark:shadow-[inset_6px_6px_12px_#101010,_inset_-6px_-6px_12px_#303030] shadow-[inset_6px_6px_12px_#cacaca,_inset_-6px_-6px_12px_#ffffff] bg-transparent;
   }
 
+  .neumorph-button {
+    @apply dark:shadow-[4px_4px_8px_#101010,_-4px_-4px_8px_#303030] shadow-[4px_4px_8px_#d1d5db,_-4px_-4px_8px_#ffffff] bg-transparent transition-all duration-200 hover:shadow-[2px_2px_4px_#d1d5db,_-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#101010,_-2px_-2px_4px_#303030] active:shadow-[inset_2px_2px_4px_#d1d5db,_inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#101010,_inset_-2px_-2px_4px_#303030];
+  }
+
+  .neumorph-card {
+    @apply dark:shadow-[8px_8px_16px_#0f1222,_-8px_-8px_16px_#1f2545] shadow-[8px_8px_16px_#e6eaf6,_-8px_-8px_16px_#ffffff] bg-[color:var(--card)] border-0;
+  }
+
+  .neumorph-input {
+    @apply dark:shadow-[inset_4px_4px_8px_#0f1222,_inset_-4px_-4px_8px_#1f2545] shadow-[inset_4px_4px_8px_#e6eaf6,_inset_-4px_-4px_8px_#ffffff] bg-[color:var(--input)];
+  }
+
   /* Gradient text utility */
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-heart to-royal-blue;
   }
+
+  /* Brand colors for easier use */
+  .bg-purple-heart { background-color: #5a2dcf; }
+  .bg-royal-blue { background-color: #2066e4; }
+  .bg-biloba-flower { background-color: #bda8e5; }
+  .bg-portage { background-color: #9aa5ec; }
+  .bg-havelock-blue { background-color: #6578e4; }
+  
+  .text-purple-heart { color: #5a2dcf; }
+  .text-royal-blue { color: #2066e4; }
+  .text-biloba-flower { color: #bda8e5; }
+  .text-portage { color: #9aa5ec; }
+  .text-havelock-blue { color: #6578e4; }
 
   /* Improved light mode text classes for better contrast */
   .light-nav-link {

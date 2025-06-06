@@ -4,69 +4,142 @@ import { useState } from "react";
 
 interface InputFieldProps {
   id: string;
-  type: string;
   label: string;
-  placeholder: string;
+  type: string;
+  placeholder?: string;
   required?: boolean;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  autoComplete?: string;
+  error?: string;
   icon?: React.ReactNode;
+  autoComplete?: string;
+  disabled?: boolean;
 }
 
 export default function InputField({
   id,
-  type,
   label,
+  type,
   placeholder,
   required = false,
   value,
   onChange,
-  autoComplete,
+  error,
   icon,
+  autoComplete,
+  disabled = false,
 }: InputFieldProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const inputType = type === "password" && showPassword ? "text" : type;
+  const [focused, setFocused] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
+  const isPassword = type === "password";
+  const inputType = isPassword ? (passwordVisible ? "text" : "password") : type;
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+    <div className="mb-4">
+      <label
+        htmlFor={id}
+        className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2"
+      >
+        {label} {required && <span className="text-purple-heart">*</span>}
       </label>
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-          {icon}
+
+      <div
+        className={`relative rounded-xl transition-all duration-300 neumorph-input ${
+          focused
+            ? "ring-2 ring-purple-heart/30 shadow-[inset_6px_6px_12px_#e6eaf6,_inset_-6px_-6px_12px_#ffffff] dark:shadow-[inset_6px_6px_12px_#0f1222,_inset_-6px_-6px_12px_#1f2545]"
+            : ""
+        } ${error ? "ring-2 ring-red-500/30" : ""}`}
+      >
+        <div className="flex items-center">
+          {icon && (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)]">
+              {icon}
+            </div>
+          )}
+
+          <input
+            id={id}
+            type={inputType}
+            placeholder={placeholder}
+            required={required}
+            value={value}
+            onChange={onChange}
+            autoComplete={autoComplete}
+            disabled={disabled}
+            className={`w-full bg-transparent px-4 py-3.5 rounded-xl text-[color:var(--foreground)] placeholder:text-[color:var(--muted-foreground)] focus:outline-none ${
+              icon ? "pl-11" : ""
+            } ${isPassword ? "pr-11" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+          />
+
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setPasswordVisible(!passwordVisible)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
+            >
+              {passwordVisible ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
-        <input
-          id={id}
-          type={inputType}
-          placeholder={placeholder}
-          required={required}
-          value={value}
-          onChange={onChange}
-          autoComplete={autoComplete}
-          className={`w-full pl-10 pr-${type === "password" ? "12" : "4"} py-3 rounded-xl neumorph-pressed bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-purple-heart/20 placeholder-gray-400 text-gray-900`}
-        />
-        {type === "password" && (
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            )}
-          </button>
-        )}
       </div>
+
+      {error && (
+        <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

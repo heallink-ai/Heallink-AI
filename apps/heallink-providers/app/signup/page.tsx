@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import LogoSection from "./components/auth/LogoSection";
-import LoginForm from "./components/auth/LoginForm";
+import LogoSection from "../components/auth/LogoSection";
+import SignupForm from "../components/auth/SignupForm";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -42,11 +41,11 @@ export default function LoginPage() {
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="max-w-lg w-full text-center mb-8">
               <h2 className="text-4xl font-bold text-[color:var(--foreground)] mb-4">
-                Welcome to Your
-                <span className="gradient-text block">Healthcare Platform</span>
+                Join the Future of
+                <span className="gradient-text block">Healthcare Delivery</span>
               </h2>
               <p className="text-lg text-[color:var(--muted-foreground)] leading-relaxed">
-                Streamline your practice, connect with patients, and deliver exceptional care with our comprehensive provider portal.
+                Transform your practice with cutting-edge tools, seamless patient management, and intelligent insights.
               </p>
             </div>
 
@@ -63,67 +62,84 @@ export default function LoginPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="1.5"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M12 6v12m6-6H6"
                   />
                 </svg>
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full animate-pulse"></div>
-              <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-heart rounded-full animate-pulse"></div>
+              <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-royal-blue rounded-full animate-pulse"></div>
             </div>
           </div>
 
-          {/* Feature highlights */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="neumorph-card p-4 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
+          {/* Provider benefits */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="neumorph-card p-3 rounded-xl text-center">
+              <div className="flex justify-center mb-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}
                   stroke="currentColor"
-                  className="w-5 h-5 text-purple-heart"
+                  className="w-6 h-6 text-purple-heart"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h16.5c1.035 0 1.875-.84 1.875-1.875v-9.75c0-1.036-.84-1.875-1.875-1.875H3.75c-1.036 0-1.875.84-1.875 1.875v9.75c0 1.035.84 1.875 1.875 1.875z"
                   />
                 </svg>
-                <h3 className="font-medium text-[color:var(--foreground)]">Patient Management</h3>
               </div>
-              <p className="text-xs text-[color:var(--muted-foreground)]">
-                Comprehensive patient records and care coordination
-              </p>
+              <h3 className="font-medium text-xs text-[color:var(--foreground)]">Secure</h3>
+              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">HIPAA Compliant</p>
             </div>
 
-            <div className="neumorph-card p-4 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="neumorph-card p-3 rounded-xl text-center">
+              <div className="flex justify-center mb-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}
                   stroke="currentColor"
-                  className="w-5 h-5 text-royal-blue"
+                  className="w-6 h-6 text-royal-blue"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 005.25 9h13.5a2.25 2.25 0 012.25 2.25v7.5"
+                    d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
                   />
                 </svg>
-                <h3 className="font-medium text-[color:var(--foreground)]">Smart Scheduling</h3>
               </div>
-              <p className="text-xs text-[color:var(--muted-foreground)]">
-                AI-powered appointment scheduling and optimization
-              </p>
+              <h3 className="font-medium text-xs text-[color:var(--foreground)]">Fast</h3>
+              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">AI-Powered</p>
+            </div>
+
+            <div className="neumorph-card p-3 rounded-xl text-center">
+              <div className="flex justify-center mb-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6 text-havelock-blue"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  />
+                </svg>
+              </div>
+              <h3 className="font-medium text-xs text-[color:var(--foreground)]">Simple</h3>
+              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">Easy Setup</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right panel (login form) */}
+      {/* Right panel (signup form) */}
       <div className="w-full lg:w-1/2 flex flex-col p-6 md:p-10 lg:p-16">
         <div className="flex-1 flex flex-col max-w-md mx-auto w-full">
           {/* Mobile only logo */}
@@ -134,14 +150,14 @@ export default function LoginPage() {
           <div className="my-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-3 text-[color:var(--foreground)]">
-                Sign In to Your Portal
+                Create Your Provider Account
               </h1>
               <p className="text-[color:var(--muted-foreground)]">
-                Access your provider dashboard to manage patients, appointments, and practice operations
+                Join thousands of healthcare providers using Heallink to deliver exceptional patient care
               </p>
             </div>
 
-            <LoginForm />
+            <SignupForm />
           </div>
 
           <div className="mt-8 pt-6 border-t border-[color:var(--border)] text-xs text-center text-[color:var(--muted-foreground)]">
