@@ -294,37 +294,6 @@ export default function OnboardingLayout({
 
       {/* Enhanced Main Content */}
       <main className="container mx-auto px-6 py-8 relative">
-        {/* Floating Design Elements */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              style={{
-                left: `${20 + i * 30}%`,
-                top: `${30 + i * 20}%`,
-                width: `${40 + i * 20}px`,
-                height: `${40 + i * 20}px`,
-                background: isDarkMode 
-                  ? `radial-gradient(circle, rgba(90, 45, 207, 0.03) 0%, transparent 70%)`
-                  : `radial-gradient(circle, rgba(90, 45, 207, 0.02) 0%, transparent 70%)`,
-                borderRadius: '50%',
-              }}
-              animate={{
-                y: [0, -20, 0],
-                rotate: [0, 180, 360],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 8 + i * 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 1.5,
-              }}
-            />
-          ))}
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
           {/* Enhanced Main Content Area */}
           <div className="lg:col-span-3">
@@ -450,7 +419,7 @@ export default function OnboardingLayout({
 
             {/* Enhanced Step Content Container */}
             <motion.div
-              className="relative overflow-hidden rounded-3xl"
+              className={`relative rounded-3xl p-10 ${className}`}
               style={{
                 background: isDarkMode 
                   ? 'linear-gradient(135deg, #1f2937 0%, #111827 100%)' 
@@ -466,57 +435,17 @@ export default function OnboardingLayout({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              {/* Animated background pattern */}
-              <motion.div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  background: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235a2dcf' fill-opacity='0.02'%3E%3Cpath d='M50 50c0-27.614-22.386-50-50-50s-50 22.386-50 50 22.386 50 50 50 50-22.386 50-50z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                }}
-                animate={{
-                  backgroundPosition: ['0px 0px', '100px 100px'],
-                }}
-                transition={{
-                  duration: 20,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
-
-              {/* Content with enhanced padding */}
-              <div className={`relative p-10 ${className}`}>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20, scale: 0.98 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: -20, scale: 0.98 }}
-                    transition={{ 
-                      duration: 0.4,
-                      ease: "easeOut"
-                    }}
-                  >
-                    {children}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Subtle border glow effect */}
-              <motion.div
-                className="absolute inset-0 rounded-3xl"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(90, 45, 207, 0.1) 0%, rgba(32, 102, 228, 0.1) 100%)',
-                  filter: 'blur(1px)',
-                  opacity: 0,
-                }}
-                animate={{
-                  opacity: [0, 0.3, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
           </div>
 
