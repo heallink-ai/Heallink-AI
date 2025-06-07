@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, Save, Lightbulb, Shield, Zap, Clock, FileCheck, Upload, Lock, CheckCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, HelpCircle, Save, Lightbulb, Shield, Zap, Clock, FileCheck, Upload, Lock, CheckCircle, Sparkles, Star, Heart, Waves } from "lucide-react";
 import OnboardingProgress from "./OnboardingProgress";
 import { ReactNode, useState, useEffect } from "react";
 
@@ -95,23 +95,157 @@ export default function OnboardingLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background: isDarkMode 
+          ? 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)'
+          : 'linear-gradient(135deg, #fdfbff 0%, #f8fafc 50%, #f1f5f9 100%)',
+      }}
+    >
+      {/* Animated Background Patterns */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Floating Orbs */}
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full blur-3xl"
+            style={{
+              width: `${100 + i * 50}px`,
+              height: `${100 + i * 50}px`,
+              background: isDarkMode 
+                ? `radial-gradient(circle, rgba(90, 45, 207, 0.1) 0%, transparent 70%)`
+                : `radial-gradient(circle, rgba(90, 45, 207, 0.05) 0%, transparent 70%)`,
+              left: `${10 + i * 20}%`,
+              top: `${20 + i * 15}%`,
+            }}
+            animate={{
+              x: [0, 30, -30, 0],
+              y: [0, -20, 20, 0],
+              scale: [1, 1.1, 0.9, 1],
+            }}
+            transition={{
+              duration: 15 + i * 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 2,
+            }}
+          />
+        ))}
+
+        {/* Grid Pattern */}
+        <motion.div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: isDarkMode 
+              ? `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235a2dcf' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+              : `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235a2dcf' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+          animate={{
+            backgroundPosition: ['0px 0px', '60px 60px'],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+      </div>
+
+      {/* Enhanced Header */}
+      <header 
+        className="sticky top-0 z-50 backdrop-blur-xl"
+        style={{
+          background: isDarkMode 
+            ? 'rgba(15, 15, 35, 0.8)'
+            : 'rgba(255, 255, 255, 0.8)',
+          borderBottom: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        }}
+      >
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo and Brand */}
+            {/* Enhanced Logo and Brand */}
             <motion.div
-              className="flex items-center gap-3"
+              className="flex items-center gap-4"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-heart to-royal-blue flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">H</span>
-              </div>
+              <motion.div 
+                className="relative"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #5a2dcf 0%, #2066e4 100%)',
+                    boxShadow: '0 8px 16px rgba(90, 45, 207, 0.3)',
+                  }}
+                >
+                  {/* Animated shimmer */}
+                  <motion.div
+                    className="absolute inset-0 -skew-x-12"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                    }}
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <span className="text-white font-bold text-xl relative z-10">H</span>
+                </div>
+                
+                {/* Floating heart */}
+                <motion.div
+                  className="absolute -top-1 -right-1"
+                  animate={{
+                    scale: [0, 1, 0],
+                    rotate: [0, 360],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: 1,
+                  }}
+                >
+                  <Heart className="w-4 h-4 text-red-400 fill-current" />
+                </motion.div>
+              </motion.div>
+              
               <div>
-                <h1 className="text-lg font-bold gradient-text">HealLink</h1>
-                <p className="text-xs text-muted-foreground">Provider Portal</p>
+                <motion.h1 
+                  className="text-xl font-bold"
+                  style={{
+                    background: 'linear-gradient(135deg, #5a2dcf 0%, #2066e4 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent',
+                  }}
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  HealLink
+                </motion.h1>
+                <p 
+                  className="text-sm font-medium"
+                  style={{ 
+                    color: isDarkMode ? '#a1a1aa' : '#71717a',
+                  }}
+                >
+                  Provider Portal ✨
+                </p>
               </div>
             </motion.div>
 
@@ -158,12 +292,43 @@ export default function OnboardingLayout({
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content Area */}
+      {/* Enhanced Main Content */}
+      <main className="container mx-auto px-6 py-8 relative">
+        {/* Floating Design Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${20 + i * 30}%`,
+                top: `${30 + i * 20}%`,
+                width: `${40 + i * 20}px`,
+                height: `${40 + i * 20}px`,
+                background: isDarkMode 
+                  ? `radial-gradient(circle, rgba(90, 45, 207, 0.03) 0%, transparent 70%)`
+                  : `radial-gradient(circle, rgba(90, 45, 207, 0.02) 0%, transparent 70%)`,
+                borderRadius: '50%',
+              }}
+              animate={{
+                y: [0, -20, 0],
+                rotate: [0, 180, 360],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 8 + i * 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 1.5,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
+          {/* Enhanced Main Content Area */}
           <div className="lg:col-span-3">
-            {/* Step Header */}
+            {/* Enhanced Step Header */}
             <motion.div
               className="mb-8"
               initial={{ opacity: 0, y: 20 }}
@@ -173,38 +338,185 @@ export default function OnboardingLayout({
               {showBackButton && onBack && (
                 <motion.button
                   onClick={onBack}
-                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-heart transition-colors mb-4"
-                  whileHover={{ x: -5 }}
+                  className="group relative flex items-center gap-3 mb-6 overflow-hidden"
+                  style={{
+                    background: isDarkMode 
+                      ? 'linear-gradient(135deg, #374151 0%, #4b5563 100%)' 
+                      : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: isDarkMode ? '#6b7280' : '#e2e8f0',
+                    borderRadius: '12px',
+                    padding: '12px 20px',
+                    boxShadow: isDarkMode 
+                      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' 
+                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }}
+                  whileHover={{ 
+                    x: -5, 
+                    scale: 1.02,
+                    boxShadow: isDarkMode 
+                      ? '0 8px 12px -2px rgba(0, 0, 0, 0.4)' 
+                      : '0 8px 12px -2px rgba(0, 0, 0, 0.15)',
+                  }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Previous Step
+                  {/* Hover gradient overlay */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(90, 45, 207, 0.05) 0%, rgba(32, 102, 228, 0.05) 100%)',
+                      borderRadius: '12px',
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  
+                  <motion.div
+                    className="relative flex items-center gap-3"
+                    animate={{
+                      x: [-2, 0, -2],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <ArrowLeft 
+                      className="w-4 h-4" 
+                      style={{ color: '#5a2dcf' }}
+                    />
+                    <span 
+                      className="text-sm font-medium"
+                      style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}
+                    >
+                      Back to Previous Step
+                    </span>
+                  </motion.div>
                 </motion.button>
               )}
               
-              <h2 className="text-3xl font-bold text-foreground mb-2">{title}</h2>
-              {subtitle && (
-                <p className="text-lg text-muted-foreground">{subtitle}</p>
-              )}
+              {/* Enhanced Title Section */}
+              <div className="relative">
+                <motion.h2 
+                  className="text-4xl font-bold mb-3 relative z-10"
+                  style={{
+                    background: 'linear-gradient(135deg, #1f2937 0%, #5a2dcf 50%, #2066e4 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent',
+                    backgroundSize: '200% 200%',
+                  }}
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  {title}
+                </motion.h2>
+                
+                {/* Title underline decoration */}
+                <motion.div
+                  className="absolute -bottom-2 left-0 h-1 rounded-full"
+                  style={{
+                    background: 'linear-gradient(90deg, #5a2dcf 0%, #2066e4 100%)',
+                  }}
+                  initial={{ width: '0%' }}
+                  animate={{ width: '60px' }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                />
+                
+                {subtitle && (
+                  <motion.p 
+                    className="text-xl mt-4 relative z-10"
+                    style={{ 
+                      color: isDarkMode ? '#a1a1aa' : '#64748b',
+                      fontWeight: '400',
+                      lineHeight: '1.6',
+                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    {subtitle}
+                  </motion.p>
+                )}
+              </div>
             </motion.div>
 
-            {/* Step Content */}
+            {/* Enhanced Step Content Container */}
             <motion.div
-              className={`neumorph-card rounded-2xl p-8 ${className}`}
+              className="relative overflow-hidden rounded-3xl"
+              style={{
+                background: isDarkMode 
+                  ? 'linear-gradient(135deg, #1f2937 0%, #111827 100%)' 
+                  : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: isDarkMode ? '#374151' : '#e2e8f0',
+                boxShadow: isDarkMode 
+                  ? '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 10px 15px -3px rgba(0, 0, 0, 0.3)' 
+                  : '0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 10px 15px -3px rgba(0, 0, 0, 0.05)',
+              }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
+              {/* Animated background pattern */}
+              <motion.div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235a2dcf' fill-opacity='0.02'%3E%3Cpath d='M50 50c0-27.614-22.386-50-50-50s-50 22.386-50 50 22.386 50 50 50 50-22.386 50-50z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                }}
+                animate={{
+                  backgroundPosition: ['0px 0px', '100px 100px'],
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+
+              {/* Content with enhanced padding */}
+              <div className={`relative p-10 ${className}`}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, x: 20, scale: 0.98 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -20, scale: 0.98 }}
+                    transition={{ 
+                      duration: 0.4,
+                      ease: "easeOut"
+                    }}
+                  >
+                    {children}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Subtle border glow effect */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(90, 45, 207, 0.1) 0%, rgba(32, 102, 228, 0.1) 100%)',
+                  filter: 'blur(1px)',
+                  opacity: 0,
+                }}
+                animate={{
+                  opacity: [0, 0.3, 0],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
             </motion.div>
           </div>
 
