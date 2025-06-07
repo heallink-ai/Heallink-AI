@@ -16,6 +16,7 @@ interface OnboardingContextType {
   addContactLocation: () => void;
   removeContactLocation: (index: number) => void;
   updatePayoutTax: (data: any) => void;
+  updateCredentials: (credentials: any[]) => void;
   goToStep: (step: number) => void;
   goToNextStep: () => void;
   goToPreviousStep: () => void;

@@ -1,11 +1,35 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import OnboardingLayout from "../../features/onboarding/components/OnboardingLayout";
+import CredentialsContainer from "../../features/onboarding/containers/CredentialsContainer";
+
+const STEP_TITLES = [
+  "Choose Roles",
+  "Profile", 
+  "Credentials",
+  "Compliance",
+  "Workflow",
+  "Review",
+];
 
 export default function CredentialsPage() {
-  // Placeholder - redirect back to core profile for now
-  redirect("/onboarding/core-profile");
+  const handleSave = () => {
+    // Handle save functionality if needed
+    console.log("Save progress");
+  };
+
+  return (
+    <OnboardingLayout
+      currentStep={3}
+      totalSteps={6}
+      stepTitles={STEP_TITLES}
+      title="Professional Credentials"
+      subtitle="Upload and verify your licenses, certifications, and qualifications"
+      showBackButton={true}
+      onSave={handleSave}
+    >
+      <CredentialsContainer />
+    </OnboardingLayout>
+  );
 }
 
-export const metadata = {
-  title: "Credentials - HealLink Providers",
-  description: "Upload and verify your professional credentials",
-};

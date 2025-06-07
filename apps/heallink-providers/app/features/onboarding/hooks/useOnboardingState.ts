@@ -26,7 +26,7 @@ const initialProgress: OnboardingProgress = {
       isTelehealthOnly: false,
     },
   ],
-  credentials: {},
+  credentials: [],
   complianceModules: [
     {
       id: "hipaa",
@@ -157,6 +157,10 @@ export function useOnboardingState() {
     updateProgress({ 
       payoutTax: { ...progress.payoutTax, ...payoutTax } as PayoutTax 
     });
+  };
+
+  const updateCredentials = (credentials: any[]) => {
+    updateProgress({ credentials });
   };
 
   const goToStep = (step: number) => {
@@ -300,6 +304,7 @@ export function useOnboardingState() {
     addContactLocation,
     removeContactLocation,
     updatePayoutTax,
+    updateCredentials,
     goToStep,
     goToNextStep,
     goToPreviousStep,
