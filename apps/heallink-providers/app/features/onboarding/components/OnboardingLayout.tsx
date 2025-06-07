@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, Save } from "lucide-react";
+import { ArrowLeft, HelpCircle, Save, Lightbulb, Shield, Zap, Clock, FileCheck, Upload, Lock, CheckCircle, Sparkles } from "lucide-react";
 import OnboardingProgress from "./OnboardingProgress";
 import { ReactNode, useState, useEffect } from "react";
 
@@ -266,36 +266,296 @@ export default function OnboardingLayout({
                 </motion.div>
               )}
 
-              {/* Tips Card */}
+              {/* Enhanced Tips Card */}
               <motion.div
-                className="neumorph-card rounded-xl p-6"
+                className="relative overflow-hidden rounded-2xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
+                style={{
+                  background: isDarkMode 
+                    ? 'linear-gradient(135deg, #1f2937 0%, #111827 100%)' 
+                    : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: isDarkMode ? '#374151' : '#e2e8f0',
+                  boxShadow: isDarkMode 
+                    ? '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15)' 
+                    : '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
+                }}
               >
-                <h3 className="font-semibold text-foreground mb-3">💡 Quick Tips</h3>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>• All information is auto-saved as you type</p>
-                  <p>• You can come back and edit anytime</p>
-                  <p>• Upload documents in PDF or image format</p>
-                  <p>• Need to step away? Your progress is saved</p>
+                {/* Animated gradient background */}
+                <motion.div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    background: 'linear-gradient(45deg, rgba(90, 45, 207, 0.1) 0%, rgba(32, 102, 228, 0.1) 50%, rgba(90, 45, 207, 0.1) 100%)',
+                    backgroundSize: '200% 200%',
+                  }}
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+
+                <div className="relative p-6">
+                  {/* Header with animated icon */}
+                  <div className="flex items-center gap-3 mb-5">
+                    <motion.div
+                      className="relative"
+                      animate={{
+                        rotate: [0, 10, -10, 0],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, #5a2dcf 0%, #2066e4 100%)',
+                          boxShadow: '0 4px 12px rgba(90, 45, 207, 0.3)',
+                        }}
+                      >
+                        <Lightbulb 
+                          className="w-5 h-5" 
+                          style={{ color: '#ffffff' }}
+                        />
+                      </div>
+                      
+                      {/* Sparkle effect */}
+                      <motion.div
+                        className="absolute -top-1 -right-1"
+                        animate={{
+                          scale: [0, 1, 0],
+                          rotate: [0, 180, 360],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: 1,
+                        }}
+                      >
+                        <Sparkles 
+                          className="w-3 h-3" 
+                          style={{ color: '#5a2dcf' }}
+                        />
+                      </motion.div>
+                    </motion.div>
+                    
+                    <h3 
+                      className="font-bold text-lg"
+                      style={{ 
+                        color: isDarkMode ? '#f9fafb' : '#1f2937',
+                      }}
+                    >
+                      Quick Tips
+                    </h3>
+                  </div>
+
+                  {/* Enhanced tips with icons */}
+                  <div className="space-y-4">
+                    {[
+                      { icon: Zap, text: "All information is auto-saved as you type", delay: 0.1 },
+                      { icon: Clock, text: "You can come back and edit anytime", delay: 0.2 },
+                      { icon: Upload, text: "Upload documents in PDF or image format", delay: 0.3 },
+                      { icon: FileCheck, text: "Need to step away? Your progress is saved", delay: 0.4 },
+                    ].map((tip, index) => (
+                      <motion.div
+                        key={index}
+                        className="flex items-start gap-3"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: tip.delay }}
+                      >
+                        <motion.div
+                          className="mt-0.5"
+                          animate={{
+                            scale: [1, 1.1, 1],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: index * 0.5,
+                          }}
+                        >
+                          <tip.icon 
+                            className="w-4 h-4" 
+                            style={{ color: '#5a2dcf' }}
+                          />
+                        </motion.div>
+                        <p 
+                          className="text-sm leading-relaxed"
+                          style={{ 
+                            color: isDarkMode ? '#d1d5db' : '#64748b',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {tip.text}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
 
-              {/* Security Notice */}
+              {/* Enhanced Security Notice */}
               <motion.div
-                className="neumorph-card rounded-xl p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20"
+                className="relative overflow-hidden rounded-2xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
+                style={{
+                  background: isDarkMode 
+                    ? 'linear-gradient(135deg, #064e3b 0%, #1f2937 100%)' 
+                    : 'linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 100%)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: isDarkMode ? '#065f46' : '#a7f3d0',
+                  boxShadow: isDarkMode 
+                    ? '0 10px 15px -3px rgba(6, 78, 59, 0.3), 0 4px 6px -2px rgba(6, 78, 59, 0.15)' 
+                    : '0 10px 15px -3px rgba(16, 185, 129, 0.08), 0 4px 6px -2px rgba(16, 185, 129, 0.04)',
+                }}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <h3 className="font-semibold text-foreground text-sm">Secure & Private</h3>
+                {/* Animated security pattern */}
+                <motion.div
+                  className="absolute inset-0"
+                  style={{
+                    background: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.05'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm10 0c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                  }}
+                  animate={{
+                    x: [0, 30, 0],
+                    y: [0, -30, 0],
+                  }}
+                  transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+
+                <div className="relative p-6">
+                  {/* Header with pulsing shield */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <motion.div
+                      className="relative"
+                      animate={{
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                        }}
+                      >
+                        <Shield 
+                          className="w-4 h-4" 
+                          style={{ color: '#ffffff' }}
+                        />
+                      </div>
+
+                      {/* Pulsing ring */}
+                      <motion.div
+                        className="absolute inset-0 rounded-lg"
+                        style={{
+                          border: '2px solid #10b981',
+                          opacity: 0.3,
+                        }}
+                        animate={{
+                          scale: [1, 1.3],
+                          opacity: [0.3, 0],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeOut"
+                        }}
+                      />
+                    </motion.div>
+
+                    <h3 
+                      className="font-bold text-sm"
+                      style={{ 
+                        color: isDarkMode ? '#f9fafb' : '#1f2937',
+                      }}
+                    >
+                      Secure & Private
+                    </h3>
+
+                    {/* Status indicator */}
+                    <motion.div
+                      className="ml-auto flex items-center gap-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.2, 1],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <CheckCircle 
+                          className="w-4 h-4" 
+                          style={{ color: '#10b981' }}
+                        />
+                      </motion.div>
+                      <span 
+                        className="text-xs font-medium"
+                        style={{ color: '#10b981' }}
+                      >
+                        Protected
+                      </span>
+                    </motion.div>
+                  </div>
+
+                  {/* Enhanced security features */}
+                  <div className="space-y-3">
+                    {[
+                      { icon: Lock, text: "End-to-end encryption", delay: 0.1 },
+                      { icon: Shield, text: "HIPAA compliant", delay: 0.2 },
+                      { icon: CheckCircle, text: "Never shared without consent", delay: 0.3 },
+                    ].map((feature, index) => (
+                      <motion.div
+                        key={index}
+                        className="flex items-center gap-2"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: feature.delay }}
+                      >
+                        <feature.icon 
+                          className="w-3 h-3" 
+                          style={{ color: '#10b981' }}
+                        />
+                        <span 
+                          className="text-xs"
+                          style={{ 
+                            color: isDarkMode ? '#a7f3d0' : '#047857',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {feature.text}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Your data is encrypted and HIPAA compliant. We never share your information without consent.
-                </p>
               </motion.div>
             </motion.div>
           </div>
