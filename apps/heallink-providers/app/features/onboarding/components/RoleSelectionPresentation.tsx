@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Plus } from "lucide-react";
-import { useState } from "react";
+import { Search, X, Plus, ArrowRight, Sparkles, CheckCircle, Rocket } from "lucide-react";
+import { useState, useEffect } from "react";
 import RoleCard from "./RoleCard";
 import { ProviderRoleCategory, SelectedRole } from "../types";
 
@@ -28,6 +28,26 @@ export default function RoleSelectionPresentation({
   const [searchQuery, setSearchQuery] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customDescription, setCustomDescription] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [buttonHovered, setButtonHovered] = useState(false);
+
+  useEffect(() => {
+    // Check if dark mode is active
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Filter categories based on search
   const filteredCategories = categories.filter(
@@ -243,27 +263,291 @@ export default function RoleSelectionPresentation({
         ))}
       </div>
 
-      {/* Continue Button */}
+      {/* Enhanced Continue Button */}
       <motion.div
-        className="flex justify-center pt-8"
-        initial={{ opacity: 0, y: 20 }}
+        className="flex justify-center pt-12"
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
       >
-        <button
-          onClick={onContinue}
-          disabled={selectedRoles.length === 0 || isLoading}
-          className="px-12 py-4 bg-gradient-to-r from-purple-heart to-royal-blue text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed border-0"
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Processing...
+        <div className="relative">
+          {/* Glow Effect */}
+          <AnimatePresence>
+            {selectedRoles.length > 0 && !isLoading && (
+              <motion.div
+                className="absolute inset-0 rounded-2xl blur-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #5a2dcf 0%, #2066e4 100%)',
+                  opacity: buttonHovered ? 0.6 : 0.3,
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: buttonHovered ? 0.6 : 0.3, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Main Button */}
+          <motion.button
+            onClick={onContinue}
+            disabled={selectedRoles.length === 0 || isLoading}
+            onMouseEnter={() => setButtonHovered(true)}
+            onMouseLeave={() => setButtonHovered(false)}
+            className="relative overflow-hidden rounded-2xl"
+            style={{
+              background: selectedRoles.length > 0 && !isLoading
+                ? 'linear-gradient(135deg, #5a2dcf 0%, #2066e4 100%)'
+                : (isDarkMode ? '#374151' : '#e5e7eb'),
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: selectedRoles.length > 0 && !isLoading
+                ? 'transparent'
+                : (isDarkMode ? '#4b5563' : '#d1d5db'),
+              boxShadow: selectedRoles.length > 0 && !isLoading
+                ? (buttonHovered 
+                  ? '0 20px 25px -5px rgba(90, 45, 207, 0.4), 0 10px 10px -5px rgba(90, 45, 207, 0.3)' 
+                  : '0 10px 15px -3px rgba(90, 45, 207, 0.3), 0 4px 6px -2px rgba(90, 45, 207, 0.2)')
+                : (isDarkMode 
+                  ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' 
+                  : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'),
+              cursor: selectedRoles.length > 0 && !isLoading ? 'pointer' : 'not-allowed',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            whileHover={selectedRoles.length > 0 && !isLoading ? { 
+              scale: 1.05, 
+              y: -2 
+            } : {}}
+            whileTap={selectedRoles.length > 0 && !isLoading ? { 
+              scale: 0.98 
+            } : {}}
+          >
+            {/* Shimmer Effect for Active State */}
+            <AnimatePresence>
+              {selectedRoles.length > 0 && !isLoading && (
+                <motion.div
+                  className="absolute inset-0 -skew-x-12"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                  }}
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '200%' }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity, 
+                    repeatDelay: 3,
+                    ease: "easeInOut" 
+                  }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Button Content */}
+            <div className="relative px-12 py-5">
+              <AnimatePresence mode="wait">
+                {isLoading ? (
+                  <motion.div
+                    key="loading"
+                    className="flex items-center gap-4"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Enhanced Loading Spinner */}
+                    <div className="relative">
+                      <motion.div
+                        className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                      <motion.div
+                        className="absolute inset-0 w-6 h-6 border-3 border-transparent border-r-white/50 rounded-full"
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      />
+                    </div>
+                    <span 
+                      className="font-bold text-lg"
+                      style={{ color: '#ffffff' }}
+                    >
+                      Processing...
+                    </span>
+                  </motion.div>
+                ) : selectedRoles.length === 0 ? (
+                  <motion.div
+                    key="disabled"
+                    className="flex items-center gap-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{
+                        backgroundColor: isDarkMode ? '#6b7280' : '#9ca3af',
+                      }}
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span 
+                      className="font-bold text-lg"
+                      style={{ 
+                        color: isDarkMode ? '#9ca3af' : '#6b7280',
+                      }}
+                    >
+                      Select provider types to continue
+                    </span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="active"
+                    className="flex items-center gap-4"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* Success Icon with Animation */}
+                    <motion.div
+                      className="relative"
+                      animate={{
+                        scale: buttonHovered ? [1, 1.2, 1] : 1,
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: buttonHovered ? Infinity : 0,
+                      }}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(10px)',
+                        }}
+                      >
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      
+                      {/* Sparkles around the icon */}
+                      {buttonHovered && (
+                        <>
+                          {[...Array(4)].map((_, i) => (
+                            <motion.div
+                              key={i}
+                              className="absolute"
+                              style={{
+                                top: `${-8 + Math.sin((i * Math.PI) / 2) * 20}px`,
+                                left: `${-8 + Math.cos((i * Math.PI) / 2) * 20}px`,
+                              }}
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ 
+                                scale: [0, 1, 0], 
+                                opacity: [0, 1, 0],
+                                rotate: [0, 180, 360] 
+                              }}
+                              transition={{ 
+                                duration: 1.5, 
+                                repeat: Infinity, 
+                                delay: i * 0.2,
+                                ease: "easeInOut" 
+                              }}
+                            >
+                              <Sparkles className="w-3 h-3 text-white" />
+                            </motion.div>
+                          ))}
+                        </>
+                      )}
+                    </motion.div>
+
+                    {/* Button Text */}
+                    <div className="flex flex-col items-start">
+                      <span 
+                        className="font-bold text-lg text-white"
+                      >
+                        Continue with {selectedRoles.length} selection{selectedRoles.length > 1 ? 's' : ''}
+                      </span>
+                      <motion.span 
+                        className="text-sm text-white/80"
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        Ready to build your profile
+                      </motion.span>
+                    </div>
+
+                    {/* Arrow Icon */}
+                    <motion.div
+                      animate={{
+                        x: buttonHovered ? [0, 5, 0] : 0,
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: buttonHovered ? Infinity : 0,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <ArrowRight className="w-6 h-6 text-white" />
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          ) : (
-            `Continue with ${selectedRoles.length} selection${selectedRoles.length > 1 ? 's' : ''}`
-          )}
-        </button>
+
+            {/* Ripple Effect on Click */}
+            <AnimatePresence>
+              {buttonHovered && selectedRoles.length > 0 && !isLoading && (
+                <motion.div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+                  }}
+                  initial={{ scale: 0, opacity: 0.5 }}
+                  animate={{ scale: 1, opacity: 0 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.6 }}
+                />
+              )}
+            </AnimatePresence>
+          </motion.button>
+
+          {/* Floating Elements for Active State */}
+          <AnimatePresence>
+            {selectedRoles.length > 0 && !isLoading && (
+              <>
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute"
+                    style={{
+                      top: `${-20 + i * 10}px`,
+                      right: `${-15 + i * 8}px`,
+                    }}
+                    initial={{ opacity: 0, scale: 0, y: 20 }}
+                    animate={{ 
+                      opacity: [0, 1, 0], 
+                      scale: [0, 1, 0],
+                      y: [20, -20, -40] 
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity, 
+                      delay: i * 0.8,
+                      ease: "easeOut" 
+                    }}
+                  >
+                    <Rocket 
+                      className="w-4 h-4" 
+                      style={{ color: '#5a2dcf', opacity: 0.6 }}
+                    />
+                  </motion.div>
+                ))}
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       </motion.div>
     </div>
   );
