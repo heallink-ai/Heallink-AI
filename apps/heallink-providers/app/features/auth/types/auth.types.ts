@@ -18,9 +18,9 @@ export interface Provider {
 }
 
 export interface LoginFormData {
-  email: string;
-  phone: string;
-  password: string;
+  email?: string;
+  phone?: string;
+  password?: string;
   remember: boolean;
 }
 

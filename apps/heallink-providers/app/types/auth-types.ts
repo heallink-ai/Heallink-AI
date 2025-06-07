@@ -1,3 +1,16 @@
+export enum UserRole {
+  USER = "user",
+  PROVIDER = "provider",
+  ADMIN = "admin",
+}
+
+export enum AuthProvider {
+  LOCAL = "local",
+  GOOGLE = "google",
+  FACEBOOK = "facebook",
+  APPLE = "apple",
+}
+
 export interface User {
   id: string;
   email: string;
