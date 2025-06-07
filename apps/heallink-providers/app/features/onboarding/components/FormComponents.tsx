@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Upload, X, Check, AlertCircle } from "lucide-react";
-import { useState, forwardRef } from "react";
+import { useState, forwardRef, useEffect } from "react";
 
 // Input Field Component
 interface InputFieldProps {
@@ -39,6 +39,25 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   }, ref) => {
     const [showPasswordValue, setShowPasswordValue] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+      // Check if dark mode is active
+      const checkDarkMode = () => {
+        setIsDarkMode(document.documentElement.classList.contains('dark'));
+      };
+      
+      checkDarkMode();
+      
+      // Listen for theme changes
+      const observer = new MutationObserver(checkDarkMode);
+      observer.observe(document.documentElement, { 
+        attributes: true, 
+        attributeFilter: ['class'] 
+      });
+      
+      return () => observer.disconnect();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let newValue = e.target.value;
@@ -54,17 +73,78 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
       ? (showPasswordValue ? "text" : "password")
       : type;
 
+    // Enhanced input styling with explicit light/dark mode support
+    const getInputStyles = () => {
+      const baseStyles = {
+        width: '100%',
+        padding: '14px 16px',
+        borderRadius: '12px',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        fontSize: '16px',
+        fontWeight: '400',
+        lineHeight: '1.5',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        outline: 'none',
+      };
+
+      if (disabled) {
+        return {
+          ...baseStyles,
+          backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
+          borderColor: isDarkMode ? '#4b5563' : '#e5e7eb',
+          color: isDarkMode ? '#9ca3af' : '#6b7280',
+          cursor: 'not-allowed',
+          opacity: 0.6,
+        };
+      }
+
+      if (error) {
+        return {
+          ...baseStyles,
+          backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+          borderColor: '#ef4444',
+          color: isDarkMode ? '#f9fafb' : '#111827',
+          boxShadow: isFocused ? '0 0 0 3px rgba(239, 68, 68, 0.1)' : 'none',
+        };
+      }
+
+      return {
+        ...baseStyles,
+        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+        borderColor: isFocused ? '#5a2dcf' : (isDarkMode ? '#4b5563' : '#d1d5db'),
+        color: isDarkMode ? '#f9fafb' : '#111827',
+        boxShadow: isFocused ? '0 0 0 3px rgba(90, 45, 207, 0.1)' : 'none',
+      };
+    };
+
+    const getLabelStyles = () => ({
+      color: isDarkMode ? '#f3f4f6' : '#374151',
+      fontSize: '14px',
+      fontWeight: '600',
+      marginBottom: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+    });
+
+    const getIconStyles = () => ({
+      color: isDarkMode ? '#9ca3af' : '#6b7280',
+    });
+
     return (
       <motion.div
-        className={`space-y-2 ${className}`}
-        initial={{ opacity: 0, y: 10 }}
+        className={`space-y-3 ${className}`}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
       >
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-          {icon}
+        <label style={getLabelStyles()}>
+          {icon && <span style={getIconStyles()}>{icon}</span>}
           {label}
-          {required && <span className="text-red-500">*</span>}
+          {required && (
+            <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>
+          )}
         </label>
         
         <div className="relative">
@@ -78,42 +158,61 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             disabled={disabled}
-            className={`
-              w-full px-4 py-3 rounded-xl border transition-all duration-200
-              ${error 
-                ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" 
-                : "border-gray-200 dark:border-gray-700 focus:border-purple-heart focus:ring-purple-heart/20"
+            style={{
+              ...getInputStyles(),
+              '::placeholder': {
+                color: isDarkMode ? '#6b7280' : '#9ca3af',
+                opacity: 1,
               }
-              ${disabled 
-                ? "bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50" 
-                : "bg-white dark:bg-gray-800"
-              }
-              focus:ring-2 focus:outline-none
-              placeholder:text-gray-400 dark:placeholder:text-gray-500
-            `}
+            }}
           />
           
           {type === "password" && showPassword && (
-            <button
+            <motion.button
               type="button"
               onClick={() => setShowPasswordValue(!showPasswordValue)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 rounded-lg transition-colors"
+              style={{
+                padding: '6px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#374151' : '#f3f4f6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {showPasswordValue ? (
-                <EyeOff className="w-5 h-5 text-gray-400" />
+                <EyeOff 
+                  className="w-5 h-5" 
+                  style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                />
               ) : (
-                <Eye className="w-5 h-5 text-gray-400" />
+                <Eye 
+                  className="w-5 h-5" 
+                  style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                />
               )}
-            </button>
+            </motion.button>
           )}
         </div>
         
         {error && (
           <motion.div
-            className="flex items-center gap-2 text-sm text-red-500"
-            initial={{ opacity: 0, y: -5 }}
+            className="flex items-center gap-2"
+            style={{
+              color: '#ef4444',
+              fontSize: '14px',
+              fontWeight: '500',
+            }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             <AlertCircle className="w-4 h-4" />
             {error}
@@ -154,53 +253,150 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   className = "",
   icon,
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if dark mode is active
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  // Enhanced select styling with explicit light/dark mode support
+  const getSelectStyles = () => {
+    const baseStyles = {
+      width: '100%',
+      padding: '14px 16px',
+      paddingRight: '48px', // Space for dropdown arrow
+      borderRadius: '12px',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      fontSize: '16px',
+      fontWeight: '400',
+      lineHeight: '1.5',
+      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      outline: 'none',
+      appearance: 'none',
+      background: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${isDarkMode ? '%23a1a1aa' : '%236b7280'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E") no-repeat right 12px center`,
+      backgroundSize: '20px',
+    };
+
+    if (disabled) {
+      return {
+        ...baseStyles,
+        backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
+        borderColor: isDarkMode ? '#4b5563' : '#e5e7eb',
+        color: isDarkMode ? '#9ca3af' : '#6b7280',
+        cursor: 'not-allowed',
+        opacity: 0.6,
+      };
+    }
+
+    if (error) {
+      return {
+        ...baseStyles,
+        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+        borderColor: '#ef4444',
+        color: isDarkMode ? '#f9fafb' : '#111827',
+        boxShadow: isFocused ? '0 0 0 3px rgba(239, 68, 68, 0.1)' : 'none',
+      };
+    }
+
+    return {
+      ...baseStyles,
+      backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+      borderColor: isFocused ? '#5a2dcf' : (isDarkMode ? '#4b5563' : '#d1d5db'),
+      color: isDarkMode ? '#f9fafb' : '#111827',
+      boxShadow: isFocused ? '0 0 0 3px rgba(90, 45, 207, 0.1)' : 'none',
+    };
+  };
+
+  const getLabelStyles = () => ({
+    color: isDarkMode ? '#f3f4f6' : '#374151',
+    fontSize: '14px',
+    fontWeight: '600',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  });
+
+  const getIconStyles = () => ({
+    color: isDarkMode ? '#9ca3af' : '#6b7280',
+  });
+
   return (
     <motion.div
-      className={`space-y-2 ${className}`}
-      initial={{ opacity: 0, y: 10 }}
+      className={`space-y-3 ${className}`}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-        {icon}
+      <label style={getLabelStyles()}>
+        {icon && <span style={getIconStyles()}>{icon}</span>}
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && (
+          <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>
+        )}
       </label>
       
-      <select
-        name={name}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        className={`
-          w-full px-4 py-3 rounded-xl border transition-all duration-200
-          ${error 
-            ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" 
-            : "border-gray-200 dark:border-gray-700 focus:border-purple-heart focus:ring-purple-heart/20"
-          }
-          ${disabled 
-            ? "bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-50" 
-            : "bg-white dark:bg-gray-800"
-          }
-          focus:ring-2 focus:outline-none
-          appearance-none bg-no-repeat bg-right bg-[length:20px]
-          bg-[url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /%3E%3C/svg%3E')]
-        `}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
+      <div className="relative">
+        <select
+          name={name}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          disabled={disabled}
+          style={getSelectStyles()}
+        >
+          <option 
+            value="" 
+            style={{ 
+              color: isDarkMode ? '#6b7280' : '#9ca3af',
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff'
+            }}
+          >
+            {placeholder}
           </option>
-        ))}
-      </select>
+          {options.map((option) => (
+            <option 
+              key={option.value} 
+              value={option.value}
+              style={{ 
+                color: isDarkMode ? '#f9fafb' : '#111827',
+                backgroundColor: isDarkMode ? '#1f2937' : '#ffffff'
+              }}
+            >
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
       
       {error && (
         <motion.div
-          className="flex items-center gap-2 text-sm text-red-500"
-          initial={{ opacity: 0, y: -5 }}
+          className="flex items-center gap-2"
+          style={{
+            color: '#ef4444',
+            fontSize: '14px',
+            fontWeight: '500',
+          }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.3 }}
         >
           <AlertCircle className="w-4 h-4" />
           {error}
@@ -241,6 +437,25 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   description,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if dark mode is active
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -272,30 +487,56 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     setIsDragOver(false);
   };
 
+  const getLabelStyles = () => ({
+    color: isDarkMode ? '#f3f4f6' : '#374151',
+    fontSize: '14px',
+    fontWeight: '600',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  });
+
+  const getIconStyles = () => ({
+    color: isDarkMode ? '#9ca3af' : '#6b7280',
+  });
+
+  const getDropzoneStyles = () => ({
+    position: 'relative' as const,
+    borderWidth: '2px',
+    borderStyle: 'dashed',
+    borderRadius: '12px',
+    padding: '24px',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    backgroundColor: isDragOver 
+      ? (isDarkMode ? 'rgba(90, 45, 207, 0.1)' : 'rgba(90, 45, 207, 0.05)')
+      : (isDarkMode ? '#1f2937' : '#ffffff'),
+    borderColor: isDragOver 
+      ? '#5a2dcf'
+      : error 
+        ? '#ef4444'
+        : (isDarkMode ? '#4b5563' : '#d1d5db'),
+    opacity: disabled ? 0.6 : 1,
+  });
+
   return (
     <motion.div
-      className={`space-y-2 ${className}`}
-      initial={{ opacity: 0, y: 10 }}
+      className={`space-y-3 ${className}`}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-        {icon}
+      <label style={getLabelStyles()}>
+        {icon && <span style={getIconStyles()}>{icon}</span>}
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && (
+          <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>
+        )}
       </label>
       
       <div
-        className={`
-          relative border-2 border-dashed rounded-xl p-6 transition-all duration-200
-          ${isDragOver 
-            ? "border-purple-heart bg-purple-heart/5" 
-            : error 
-              ? "border-red-300" 
-              : "border-gray-300 dark:border-gray-600"
-          }
-          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-purple-heart/50"}
-        `}
+        style={getDropzoneStyles()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -312,39 +553,96 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         {value ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                <Check className="w-5 h-5 text-green-600" />
+              <div 
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                <Check className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="font-medium text-foreground">{value.name}</p>
-                <p className="text-sm text-muted-foreground">
+                <p 
+                  className="font-semibold text-lg"
+                  style={{ color: isDarkMode ? '#f9fafb' : '#111827' }}
+                >
+                  {value.name}
+                </p>
+                <p 
+                  className="text-sm"
+                  style={{ color: isDarkMode ? '#a1a1aa' : '#6b7280' }}
+                >
                   {(value.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
-            <button
+            <motion.button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(undefined);
               }}
-              className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+              className="rounded-lg transition-colors"
+              style={{
+                padding: '8px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <X className="w-4 h-4 text-red-500" />
-            </button>
+              <X className="w-5 h-5 text-red-500" />
+            </motion.button>
           </div>
         ) : (
           <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-gray-400" />
-            </div>
-            <p className="text-foreground font-medium mb-1">
-              Drop your file here, or <span className="text-purple-heart">browse</span>
+            <motion.div 
+              className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+              style={{
+                background: isDarkMode 
+                  ? 'linear-gradient(135deg, #374151 0%, #4b5563 100%)' 
+                  : 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                boxShadow: isDarkMode 
+                  ? '0 4px 8px rgba(0, 0, 0, 0.2)' 
+                  : '0 4px 8px rgba(0, 0, 0, 0.1)',
+              }}
+              animate={{
+                scale: isDragOver ? [1, 1.05, 1] : 1,
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <Upload 
+                className="w-8 h-8" 
+                style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+              />
+            </motion.div>
+            <p 
+              className="font-semibold text-lg mb-2"
+              style={{ color: isDarkMode ? '#f9fafb' : '#111827' }}
+            >
+              Drop your file here, or{' '}
+              <span style={{ color: '#5a2dcf' }}>browse</span>
             </p>
             {description && (
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p 
+                className="text-sm mb-3"
+                style={{ color: isDarkMode ? '#a1a1aa' : '#6b7280' }}
+              >
+                {description}
+              </p>
             )}
-            <p className="text-xs text-muted-foreground mt-2">
+            <p 
+              className="text-xs"
+              style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}
+            >
               Max size: {maxSizeMB}MB • {accept}
             </p>
           </div>
@@ -353,10 +651,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       
       {error && (
         <motion.div
-          className="flex items-center gap-2 text-sm text-red-500"
-          initial={{ opacity: 0, y: -5 }}
+          className="flex items-center gap-2"
+          style={{
+            color: '#ef4444',
+            fontSize: '14px',
+            fontWeight: '500',
+          }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.3 }}
         >
           <AlertCircle className="w-4 h-4" />
           {error}
@@ -386,44 +689,120 @@ export const ToggleField: React.FC<ToggleFieldProps> = ({
   disabled = false,
   className = "",
 }) => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if dark mode is active
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const getToggleStyles = () => ({
+    position: 'relative' as const,
+    width: '52px',
+    height: '28px',
+    borderRadius: '14px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    background: value 
+      ? 'linear-gradient(135deg, #5a2dcf 0%, #2066e4 100%)'
+      : (isDarkMode ? '#4b5563' : '#d1d5db'),
+    opacity: disabled ? 0.5 : 1,
+    border: 'none',
+    outline: 'none',
+    boxShadow: value 
+      ? '0 4px 12px rgba(90, 45, 207, 0.3)'
+      : (isDarkMode ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)'),
+  });
+
+  const getToggleKnobStyles = () => ({
+    position: 'absolute' as const,
+    top: '2px',
+    left: value ? '26px' : '2px',
+    width: '24px',
+    height: '24px',
+    borderRadius: '12px',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  });
+
+  const getLabelStyles = () => ({
+    color: isDarkMode ? '#f3f4f6' : '#374151',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    lineHeight: '1.5',
+  });
+
+  const getDescriptionStyles = () => ({
+    color: isDarkMode ? '#a1a1aa' : '#6b7280',
+    fontSize: '14px',
+    fontWeight: '400',
+    marginTop: '4px',
+    lineHeight: '1.4',
+  });
+
   return (
     <motion.div
-      className={`space-y-2 ${className}`}
-      initial={{ opacity: 0, y: 10 }}
+      className={`space-y-3 ${className}`}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <div className="flex items-start gap-4">
-        <button
+      <div className="flex items-start gap-6">
+        <motion.button
           type="button"
           onClick={() => !disabled && onChange(!value)}
           disabled={disabled}
-          className={`
-            relative w-12 h-6 rounded-full transition-all duration-200
-            ${value 
-              ? "bg-gradient-to-r from-purple-heart to-royal-blue" 
-              : "bg-gray-200 dark:bg-gray-700"
-            }
-            ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-          `}
+          style={getToggleStyles()}
+          whileHover={!disabled ? { scale: 1.05 } : {}}
+          whileTap={!disabled ? { scale: 0.95 } : {}}
         >
           <motion.div
-            className={`
-              absolute top-1 w-4 h-4 rounded-full bg-white shadow-md
-              ${value ? "right-1" : "left-1"}
-            `}
-            initial={false}
-            animate={{ x: value ? 0 : 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            style={getToggleKnobStyles()}
+            animate={{ 
+              left: value ? '26px' : '2px',
+              scale: value ? 1.1 : 1,
+            }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 25 
+            }}
           />
-        </button>
+        </motion.button>
         
         <div className="flex-1">
-          <label className="font-medium text-foreground cursor-pointer">
+          <motion.label 
+            style={getLabelStyles()}
+            onClick={() => !disabled && onChange(!value)}
+            whileHover={!disabled ? { x: 2 } : {}}
+            transition={{ duration: 0.2 }}
+          >
             {label}
-          </label>
+          </motion.label>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <motion.p 
+              style={getDescriptionStyles()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              {description}
+            </motion.p>
           )}
         </div>
       </div>
