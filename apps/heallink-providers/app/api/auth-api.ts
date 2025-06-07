@@ -4,10 +4,9 @@
  * Provider-specific version.
  */
 
-import { AuthProvider, UserRole } from "@/app/types/auth-types";
+import { AuthProvider, UserRole } from "../types/auth-types";
 import {
   ApiResponse,
-  AuthTokenResponse,
   MessageResponse,
   PasswordResetRequestPayload,
   ResetPasswordPayload,
@@ -30,6 +29,11 @@ interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: Provider;
+}
+
+// Password reset response type
+interface PasswordResetResponse {
+  message: string;
 }
 
 // Get the correct API URL based on whether we're on server or client
@@ -152,19 +156,91 @@ export async function loginProvider(credentials: {
 }
 
 /**
+ * Social login with token from provider
+ */
+export async function socialLogin(
+  provider: AuthProvider,
+  token: string,
+  email?: string,
+  name?: string
+): Promise<ApiResponse<AuthResponse>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/provider/social-login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ provider, token, email, name }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Social login failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Social login network error:", error);
+    return {
+      error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Refresh the authentication token
+ */
+export async function refreshAuthToken(
+  refreshToken: string
+): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/provider/refresh-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Token refresh failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Token refresh network error:", error);
+    return {
+      error: "Network error during token refresh.",
+    };
+  }
+}
+
+/**
  * Send password reset request
  */
 export async function requestPasswordReset(
   payload: PasswordResetRequestPayload
 ): Promise<ApiResponse<PasswordResetResponse>> {
   try {
-    const response = await fetch(`${API_URL}/auth/provider/reset-password-request`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `${API_URL}/auth/provider/reset-password-request`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     const data = await response.json();
 
@@ -213,6 +289,39 @@ export async function resetPassword(
     console.error("Password reset error:", error);
     return {
       error: "Network error. Please check your connection and try again.",
+    };
+  }
+}
+
+/**
+ * Logout user
+ */
+export async function logoutProvider(
+  accessToken: string
+): Promise<ApiResponse<{ message: string }>> {
+  try {
+    const response = await fetch(`${API_URL}/auth/provider/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.message || "Logout failed",
+        statusCode: response.status,
+      };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Logout error:", error);
+    return {
+      error: "Network error during logout.",
     };
   }
 }

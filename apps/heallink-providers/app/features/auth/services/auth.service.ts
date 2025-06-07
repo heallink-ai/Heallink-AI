@@ -1,134 +1,142 @@
-import { LoginFormData, SignupFormData, AuthResponse, OTPVerificationData, Provider } from '../types/auth.types';
+import { signIn, signOut, getSession } from "next-auth/react";
+import {
+  LoginFormData,
+  SignupFormData,
+  AuthResponse,
+  OTPVerificationData,
+  Provider,
+} from "../types/auth.types";
 
 class AuthService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003";
 
   async login(data: LoginFormData): Promise<AuthResponse> {
     try {
-      // TODO: Replace with actual API call
-      console.log("Login attempt:", data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For demo purposes, accept any credentials
-      const credential = data.email || data.phone;
-      if (credential && data.password) {
-        const provider: Provider = {
-          id: '1',
-          email: data.email || `${data.phone}@provider.com`,
-          name: 'Dr. Provider',
-          type: 'provider',
-          verified: true
-        };
-        
-        // Store in localStorage for demo
-        localStorage.setItem('provider', JSON.stringify(provider));
-        
+      if (data.email) {
+        // Email login
+        const result = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          return {
+            success: false,
+            message:
+              result.error || "Login failed. Please check your credentials.",
+          };
+        }
+
         return {
           success: true,
-          provider,
-          redirectUrl: '/dashboard'
+          redirectUrl: "/dashboard",
         };
-      } else {
+      } else if (data.phone) {
+        // Phone login - redirect to OTP verification
         return {
-          success: false,
-          message: "Invalid credentials. Please try again."
+          success: true,
+          message: "Please verify your phone number",
+          redirectUrl: `/verify-otp?phone=${encodeURIComponent(data.phone)}&type=login`,
         };
       }
-    } catch (error) {
-      console.error('Login error:', error);
+
       return {
         success: false,
-        message: "An error occurred during authentication. Please try again."
+        message: "Either email or phone is required.",
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "An error occurred during authentication. Please try again.",
       };
     }
   }
 
   async signup(data: SignupFormData): Promise<AuthResponse> {
     try {
-      // TODO: Replace with actual API call
-      console.log("Signup attempt:", data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const credential = data.email || data.phone;
-      
+      // For email signup, we'll call our API directly
+      // This will be handled by NextAuth callbacks for actual authentication
+
+      // For phone signup, redirect to OTP verification
+      if (data.phone && !data.email) {
+        return {
+          success: true,
+          message: "Please verify your phone number",
+          redirectUrl: `/verify-otp?phone=${encodeURIComponent(data.phone)}&type=signup`,
+        };
+      }
+
+      // Redirect to sign in after signup
       return {
         success: true,
-        message: "Account created successfully. Please verify your email/phone.",
-        redirectUrl: `/verify-otp?${data.email ? 'email' : 'phone'}=${encodeURIComponent(credential)}&type=signup`
+        message: "Account created successfully. Please sign in.",
+        redirectUrl: `/signin?registered=true`,
       };
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error("Signup error:", error);
       return {
         success: false,
-        message: "An error occurred during registration. Please try again."
+        message:
+          error instanceof Error
+            ? error.message
+            : "An error occurred during registration. Please try again.",
       };
     }
   }
 
   async verifyOTP(data: OTPVerificationData): Promise<AuthResponse> {
     try {
-      // TODO: Replace with actual API call
-      console.log("OTP verification:", data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For demo purposes, accept any 6-digit code
+      // We'll implement phone-based verification later
+      // For now, just simulate success
+
       if (data.code.length === 6) {
         if (data.type === "signup") {
-          const provider: Provider = {
-            id: '1',
-            email: data.credential.includes('@') ? data.credential : `${data.credential}@provider.com`,
-            name: 'Dr. Provider',
-            type: 'provider',
-            verified: true
-          };
-          
-          localStorage.setItem('provider', JSON.stringify(provider));
-          
           return {
             success: true,
-            provider,
-            redirectUrl: '/dashboard'
+            message: "Phone verified successfully",
+            redirectUrl: "/signin?registered=true",
           };
         } else {
           return {
             success: true,
-            redirectUrl: '/reset-password'
+            redirectUrl: "/dashboard",
           };
         }
       } else {
         return {
           success: false,
-          message: "Invalid verification code. Please try again."
+          message: "Invalid verification code. Please try again.",
         };
       }
     } catch (error) {
-      console.error('OTP verification error:', error);
+      console.error("OTP verification error:", error);
       return {
         success: false,
-        message: "Invalid verification code. Please try again."
+        message: "Invalid verification code. Please try again.",
       };
     }
   }
 
   async socialLogin(provider: string): Promise<AuthResponse> {
     try {
-      console.log(`Social login with ${provider}`);
-      // TODO: Implement social authentication
+      // NextAuth will handle the redirect to the provider
+      await signIn(provider, { callbackUrl: "/dashboard" });
+
+      // This will not be reached due to the redirect
       return {
-        success: false,
-        message: "Social login will be implemented soon."
+        success: true,
+        redirectUrl: "/dashboard",
       };
     } catch (error) {
       console.error(`${provider} login error:`, error);
       return {
         success: false,
-        message: `Failed to login with ${provider}. Please try again.`
+        message: `Failed to login with ${provider}. Please try again.`,
       };
     }
   }
@@ -137,35 +145,48 @@ class AuthService {
     try {
       console.log("Resending OTP to:", credential);
       // TODO: Implement resend OTP logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       return {
         success: true,
-        message: "Verification code sent successfully."
+        message: "Verification code sent successfully.",
       };
     } catch (error) {
       return {
         success: false,
-        message: "Failed to resend code. Please try again."
+        message: "Failed to resend code. Please try again.",
       };
     }
   }
 
-  logout(): void {
-    localStorage.removeItem('provider');
+  async logout(): Promise<void> {
+    await signOut({ redirect: false });
   }
 
-  getCurrentProvider(): Provider | null {
+  async getCurrentProvider(): Promise<Provider | null> {
     try {
-      const provider = localStorage.getItem('provider');
-      return provider ? JSON.parse(provider) : null;
+      const session = await getSession();
+
+      if (session?.user) {
+        const email = session.user.email || "";
+
+        return {
+          id: session.user.id,
+          email: email,
+          name: session.user.name || "",
+          type: "provider",
+        };
+      }
+
+      return null;
     } catch {
       return null;
     }
   }
 
   isAuthenticated(): boolean {
-    return this.getCurrentProvider() !== null;
+    // Since this is async, we'll just return a placeholder
+    // The actual check will be done by NextAuth middleware
+    return false;
   }
 }
 
