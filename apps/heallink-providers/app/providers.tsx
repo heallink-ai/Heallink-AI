@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { QueryProvider } from "./providers/QueryProvider";
+import ThemeProvider from "./theme/ThemeProvider";
 
 export default function Providers({
   children,
@@ -11,7 +12,9 @@ export default function Providers({
   return (
     <SessionProvider>
       <QueryProvider>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </QueryProvider>
     </SessionProvider>
   );

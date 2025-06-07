@@ -11,7 +11,7 @@ export function ThemeToggle() {
   useEffect(() => {
     setMounted(true);
     // Get theme from localStorage or system preference
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    const savedTheme = localStorage.getItem("heallink-providers-theme") as "light" | "dark" | null;
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     const initialTheme = savedTheme || systemTheme;
     
@@ -29,7 +29,7 @@ export function ThemeToggle() {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     applyTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+    localStorage.setItem("heallink-providers-theme", newTheme);
   };
 
   if (!mounted) {

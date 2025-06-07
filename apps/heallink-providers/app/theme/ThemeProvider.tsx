@@ -33,11 +33,20 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
       if (savedTheme) {
         setTheme(savedTheme);
       } else {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-          .matches
-          ? "dark"
-          : "light";
-        setTheme(systemTheme);
+        // Check for old theme key for backwards compatibility
+        const legacyTheme = localStorage.getItem("theme") as Theme | null;
+        if (legacyTheme) {
+          setTheme(legacyTheme);
+          // Migrate to new key
+          localStorage.setItem("heallink-providers-theme", legacyTheme);
+          localStorage.removeItem("theme");
+        } else {
+          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+            .matches
+            ? "dark"
+            : "light";
+          setTheme(systemTheme);
+        }
       }
     }
   }, []);

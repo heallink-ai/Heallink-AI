@@ -7,7 +7,7 @@ import { Shield, UserCheck, Activity } from "lucide-react";
 
 import { LoginFormContainer } from "./LoginFormContainer";
 import { LogoSection } from "../components/LogoSection";
-import { ThemeToggle } from "../components/ThemeToggle";
+import ThemeToggle from "../../../components/ui/ThemeToggle";
 
 export function LoginPage() {
   const router = useRouter();
@@ -31,7 +31,9 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[color:var(--background)] relative">
       {/* Theme Toggle */}
-      <ThemeToggle />
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle variant="floating" size="md" />
+      </div>
       
       {/* Left panel (decorative) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-heart/5 to-royal-blue/5 p-8 relative overflow-hidden">

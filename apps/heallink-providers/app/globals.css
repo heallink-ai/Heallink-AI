@@ -150,25 +150,25 @@
 
 /* Custom utilities */
 @layer utilities {
-  /* Neumorphic design classes - improved for dark mode */
+  /* Neumorphic design classes - optimized for both light and dark modes */
   .neumorph-flat {
-    @reference dark:shadow-[6px_6px_12px_#0a0a0a,_-6px_-6px_12px_#1a1a1a] shadow-[6px_6px_12px_#d0d0d0,_-6px_-6px_12px_#ffffff] bg-transparent;
+    @reference dark:shadow-[6px_6px_12px_#0a0a0a,_-6px_-6px_12px_#1a1a1a] shadow-[3px_3px_6px_#d0d0d0,_-3px_-3px_6px_#ffffff] bg-transparent;
   }
 
   .neumorph-pressed {
-    @reference dark:shadow-[inset_6px_6px_12px_#0a0a0a,_inset_-6px_-6px_12px_#1a1a1a] shadow-[inset_6px_6px_12px_#d0d0d0,_inset_-6px_-6px_12px_#ffffff] bg-transparent;
+    @reference dark:shadow-[inset_6px_6px_12px_#0a0a0a,_inset_-6px_-6px_12px_#1a1a1a] shadow-[inset_3px_3px_6px_#d0d0d0,_inset_-3px_-3px_6px_#ffffff] bg-transparent;
   }
 
   .neumorph-button {
-    @reference dark:shadow-[4px_4px_8px_#0a0a0a,_-4px_-4px_8px_#1a1a1a] shadow-[4px_4px_8px_#d0d0d0,_-4px_-4px_8px_#ffffff] transition-all duration-200 hover:shadow-[2px_2px_4px_#d0d0d0,_-2px_-2px_4px_#ffffff] dark:hover:shadow-[2px_2px_4px_#0a0a0a,_-2px_-2px_4px_#1a1a1a] active:shadow-[inset_2px_2px_4px_#d0d0d0,_inset_-2px_-2px_4px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#0a0a0a,_inset_-2px_-2px_4px_#1a1a1a];
+    @reference dark:shadow-[4px_4px_8px_#0a0a0a,_-4px_-4px_8px_#1a1a1a] shadow-[2px_2px_4px_#d0d0d0,_-2px_-2px_4px_#ffffff] transition-all duration-200 hover:shadow-[1px_1px_2px_#d0d0d0,_-1px_-1px_2px_#ffffff] dark:hover:shadow-[2px_2px_4px_#0a0a0a,_-2px_-2px_4px_#1a1a1a] active:shadow-[inset_1px_1px_2px_#d0d0d0,_inset_-1px_-1px_2px_#ffffff] dark:active:shadow-[inset_2px_2px_4px_#0a0a0a,_inset_-2px_-2px_4px_#1a1a1a];
   }
 
   .neumorph-card {
-    @reference dark:shadow-[8px_8px_16px_#0a0a0a,_-8px_-8px_16px_#1a1a1a] shadow-[8px_8px_16px_#d0d0d0,_-8px_-8px_16px_#ffffff] bg-[color:var(--card)] border-0;
+    @reference dark:shadow-[8px_8px_16px_#0a0a0a,_-8px_-8px_16px_#1a1a1a] shadow-[4px_4px_8px_#d0d0d0,_-4px_-4px_8px_#ffffff] bg-[color:var(--card)] border border-gray-200 dark:border-gray-700;
   }
 
   .neumorph-input {
-    @reference dark:shadow-[inset_4px_4px_8px_#0a0a0a,_inset_-4px_-4px_8px_#1a1a1a] shadow-[inset_4px_4px_8px_#d0d0d0,_inset_-4px_-4px_8px_#ffffff] bg-[color:var(--input)];
+    @reference dark:shadow-[inset_4px_4px_8px_#0a0a0a,_inset_-4px_-4px_8px_#1a1a1a] shadow-[inset_2px_2px_4px_#d0d0d0,_inset_-2px_-2px_4px_#ffffff] bg-[color:var(--input)];
   }
 
   /* Gradient text utility */
